@@ -13,6 +13,7 @@ import {
   VENUE_TYPES,
 } from '../constants'
 import { isoDateTime } from './common'
+import { EVENT_STATUSES } from './event'
 
 // Back-office admin (LKO-20) : routes /admin/*, réservées au rôle ADMIN.
 
@@ -227,7 +228,7 @@ export const adminEventSchema = z.object({
   registrationMode: z.enum(REGISTRATION_MODES),
   externalUrl: z.string().nullable(),
   seriesId: z.string().nullable(),
-  cancelledAt: isoDateTime.nullable(),
+  status: z.enum(EVENT_STATUSES),
   gameIds: z.array(z.string()),
   registered: z.number().int(),
 })

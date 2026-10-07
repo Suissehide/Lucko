@@ -155,7 +155,7 @@ export class UsersService {
         where: {
           userId,
           status: past ? 'REGISTERED' : { in: ['REGISTERED', 'WAITLISTED'] },
-          event: { startsAt, cancelledAt: null },
+          event: { startsAt, status: 'PUBLISHED' },
         },
         include: {
           event: {

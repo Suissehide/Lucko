@@ -1,3 +1,4 @@
+import type { ReportInput } from '@lucko/shared'
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { AGENDA, EVENT, EXPLORE } from '@/constants/queryKeys'
 import { api } from '@/lib/api'
@@ -44,5 +45,11 @@ export function useEventMutations(id: string) {
     onSuccess,
   })
 
-  return { register, unregister }
+  /** Signalement (contenu trompeur, inapproprié…) : traité par l'équipe Lucko. */
+  const report = useMutation({
+    mutationKey: [EVENT.REPORT, id],
+    mutationFn: (body: ReportInput) => unwrap(api.POST('/events/{id}/report', { ...params, body })),
+  })
+
+  return { register, unregister, report }
 }

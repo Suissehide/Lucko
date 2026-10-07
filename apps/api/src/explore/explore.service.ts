@@ -17,6 +17,7 @@ import {
 import { Injectable, NotFoundException } from '@nestjs/common'
 import type { z } from 'zod'
 import { eventVisibleTo, roomVisibleTo, type Viewer } from '../common/minors.rules'
+import { seriesView, withUtm } from '../events/events.rules'
 import type { Prisma } from '../generated/prisma/client'
 import { PrismaService } from '../prisma/prisma.service'
 import { distanceMeters } from '../rooms/home.rules'
@@ -123,7 +124,10 @@ export class ExploreService {
       include: {
         openingHours: true,
         closures: { where: { endsOn: { gte: yesterday } } },
-        events: { where: { startsAt: { gte: now }, cancelledAt: null }, select: { minAge: true } },
+        events: {
+          where: { startsAt: { gte: now }, status: 'PUBLISHED' },
+          select: { minAge: true },
+        },
       },
     })
     return venues
@@ -163,10 +167,11 @@ export class ExploreService {
         photos: { orderBy: { order: 'asc' }, select: { url: true, caption: true } },
         games: { select: { slug: true, name: true, kind: true }, orderBy: { name: 'asc' } },
         events: {
-          where: { startsAt: { gte: agendaFrom, lt: agendaTo }, cancelledAt: null },
+          where: { startsAt: { gte: agendaFrom, lt: agendaTo }, status: 'PUBLISHED' },
           orderBy: { startsAt: 'asc' },
           include: {
             games: { select: { slug: true, name: true }, orderBy: { name: 'asc' } },
+            series: { select: { rrule: true, startDate: true } },
             _count: { select: { registrations: { where: { status: 'REGISTERED' } } } },
             ...myRegistration(viewer),
           },
@@ -187,8 +192,10 @@ export class ExploreService {
       accessibility: accessibilityItemSchema.array().parse(venue.accessibility),
       events: venue.events
         .filter((event) => eventVisibleTo(event, viewer, now))
-        .map(({ _count, registrations, ...event }) => ({
+        .map(({ _count, registrations, series, ...event }) => ({
           ...event,
+          externalUrl: withUtm(event.externalUrl),
+          recurrenceLabel: series ? (seriesView(series)?.label ?? null) : null,
           registeredCount: _count.registrations,
           myRegistration: myStatus(registrations),
         })),
@@ -209,7 +216,7 @@ export class ExploreService {
       where: {
         venueId: { in: [...distances.keys()] },
         startsAt: { gte: now, lt: new Date(now.getTime() + query.days * DAY_MS) },
-        cancelledAt: null,
+        status: 'PUBLISHED',
       },
       include: {
         games: { select: { slug: true, name: true }, orderBy: { name: 'asc' } },

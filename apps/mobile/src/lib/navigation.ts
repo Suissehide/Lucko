@@ -39,6 +39,10 @@ export const openChat = (type: 'room' | 'event', id: string) =>
 
 export const openSettings = () => router.push('/settings')
 
+/** Espace gérant d'un lieu : ses événements (LKO-61). */
+export const openManageVenue = (venueId: string) =>
+  router.push({ pathname: '/manage/[venueId]', params: { venueId } })
+
 /** Créer une room ; `venueSlug` présélectionne le lieu. */
 export const openCreateRoom = (venueSlug?: string) =>
   router.push({ pathname: '/rooms/new', params: venueSlug ? { venue: venueSlug } : {} })

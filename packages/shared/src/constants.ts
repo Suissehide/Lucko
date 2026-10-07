@@ -281,6 +281,7 @@ export const ADMIN_ACTION_KINDS = [
   'EVENT_CREATE',
   'EVENT_UPDATE',
   'EVENT_CANCEL',
+  'EVENT_HIDE',
   'GAME_MERGE',
 ] as const
 export type AdminActionKind = (typeof ADMIN_ACTION_KINDS)[number]
@@ -297,6 +298,7 @@ export const ADMIN_ACTION_LABELS: Record<AdminActionKind, string> = {
   EVENT_CREATE: 'Événement créé',
   EVENT_UPDATE: 'Événement modifié',
   EVENT_CANCEL: 'Événement annulé',
+  EVENT_HIDE: 'Événement masqué',
   GAME_MERGE: 'Jeux fusionnés',
 }
 

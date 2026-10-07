@@ -1,6 +1,7 @@
 import {
   Banner,
   Button,
+  ChipGroup,
   ConfirmDialog,
   colors,
   ListCard,
@@ -10,30 +11,39 @@ import {
   SkeletonCard,
   StatusPill,
   Tag,
+  TextLink,
   Typography,
 } from '@lucko/design-system'
-import { EVENT_TYPE_LABELS, formatPrice } from '@lucko/shared'
+import {
+  EVENT_TYPE_LABELS,
+  formatPrice,
+  REPORT_REASON_LABELS,
+  type ReportReason,
+} from '@lucko/shared'
 import { router, useLocalSearchParams } from 'expo-router'
 import { ChevronRight } from 'lucide-react-native'
 import { useState } from 'react'
 import { Linking, View } from 'react-native'
 import { DetailScreen } from '@/components/DetailScreen'
 import { eventPlaces, eventWhen, gameLabel, isFull } from '@/lib/explore'
-import { openChat, openVenue } from '@/lib/navigation'
+import { openChat, openManageVenue, openVenue } from '@/lib/navigation'
 import { useChatUnread } from '@/queries/useChat'
 import { useEventMutations, useEventQuery } from '@/queries/useEvent'
 import { useMeQuery } from '@/queries/useMe'
+
+/** Motifs proposés pour un événement (les autres visent un joueur : triche, absence…). */
+const EVENT_REPORT_REASONS: ReportReason[] = ['INAPPROPRIATE_CONTENT', 'MINOR_SAFETY', 'OTHER']
 
 /** Fiche événement (B4, LKO-11) et inscription dans l'app, avec liste d'attente quand c'est complet. */
 export default function EventScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const me = useMeQuery()
   const { data: event, isError: failed, refetch } = useEventQuery(id)
-  const { register, unregister } = useEventMutations(id)
+  const { register, unregister, report } = useEventMutations(id)
+  const staffRole = event && me?.venues.find((venue) => venue.id === event.venue.id)?.role
   // Chat du tournoi : inscrits et staff du lieu (organisateur)
-  const member =
-    event?.myRegistration === 'REGISTERED' ||
-    (!!event && !!me?.venues.some((venue) => venue.id === event.venue.id))
+  const member = event?.myRegistration === 'REGISTERED' || !!staffRole
+  const [reportReason, setReportReason] = useState<ReportReason | null>(null)
   const unread = useChatUnread({ type: 'event', id }, member)
   const [confirmCancel, setConfirmCancel] = useState(false)
   const pending = register.isPending || unregister.isPending
@@ -63,14 +73,20 @@ export default function EventScreen() {
   const games = event.games.length ? event.games.map(gameLabel).join(', ') : 'Tous jeux'
   const details = [
     { title: 'Quand', value: eventWhen(event.startsAt, event.endsAt) },
+    { title: 'Récurrence', value: event.recurrenceLabel },
     { title: 'Prix', value: formatPrice(event.priceCents) ?? 'Non renseigné' },
     { title: 'Places', value: eventPlaces(event) },
     { title: 'Âge minimum', value: event.minAge ? `${event.minAge} ans` : null },
   ].filter((row): row is { title: string; value: string } => !!row.value)
 
   let footer = null
-  if (event.cancelledAt) {
-    footer = <Button disabled label="Événement annulé" />
+  if (event.status !== 'PUBLISHED') {
+    footer = (
+      <Button
+        disabled
+        label={event.status === 'DRAFT' ? 'Brouillon non publié' : 'Événement annulé'}
+      />
+    )
   } else if (event.registrationMode === 'EXTERNAL' && event.externalUrl) {
     const url = event.externalUrl
     footer = (
@@ -106,7 +122,9 @@ export default function EventScreen() {
     <DetailScreen title={event.title} footer={footer}>
       <PageTitle eyebrow={`${EVENT_TYPE_LABELS[event.type]} · ${games}`} title={event.title} />
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
-        {event.cancelledAt ? <StatusPill tone="err" label="Annulé" /> : null}
+        {event.status === 'CANCELLED' ? <StatusPill tone="err" label="Annulé" /> : null}
+        {event.status === 'DRAFT' ? <StatusPill tone="warn" label="Brouillon" /> : null}
+        {event.status === 'HIDDEN' ? <StatusPill tone="err" label="Masqué par Lucko" /> : null}
         {event.myRegistration === 'REGISTERED' ? <StatusPill tone="ok" label="Inscrit" /> : null}
         {event.myRegistration === 'WAITLISTED' ? (
           <StatusPill tone="warn" label="En liste d'attente" />
@@ -114,6 +132,16 @@ export default function EventScreen() {
         {event.venue.isPartner ? <Tag variant="partner" label="Lieu partenaire" /> : null}
       </View>
       {error ? <Banner tone="err" message={error.message} onClose={clearError} /> : null}
+      {staffRole === 'MANAGER' ? (
+        <View style={{ alignSelf: 'flex-start' }}>
+          <Button
+            small
+            kind="ghost"
+            label="Gérer les événements du lieu"
+            onPress={() => openManageVenue(event.venue.id)}
+          />
+        </View>
+      ) : null}
       {member ? (
         <View style={{ alignSelf: 'flex-start' }}>
           <Button
@@ -124,7 +152,7 @@ export default function EventScreen() {
           />
         </View>
       ) : null}
-      {event.registrationMode === 'NONE' && !event.cancelledAt ? (
+      {event.registrationMode === 'NONE' && event.status === 'PUBLISHED' ? (
         <Note tone="plain">Entrée libre : pas besoin de s'inscrire, viens directement.</Note>
       ) : null}
 
@@ -148,6 +176,38 @@ export default function EventScreen() {
       </ListCard>
 
       {event.description ? <Typography>{event.description}</Typography> : null}
+
+      {me && !staffRole ? (
+        report.isSuccess ? (
+          <Note tone="plain">Merci : l'équipe Lucko va regarder cet événement.</Note>
+        ) : (
+          <View style={{ alignSelf: 'flex-start' }}>
+            <TextLink label="Signaler cet événement" onPress={() => setReportReason('OTHER')} />
+          </View>
+        )
+      ) : null}
+      <ConfirmDialog
+        visible={reportReason !== null}
+        title="Signaler cet événement ?"
+        message="L'équipe Lucko vérifie l'événement et peut le masquer."
+        confirmLabel="Signaler"
+        destructive
+        confirmDisabled={report.isPending}
+        onConfirm={() => {
+          if (reportReason) report.mutate({ reason: reportReason })
+          setReportReason(null)
+        }}
+        onCancel={() => setReportReason(null)}
+      >
+        <ChipGroup
+          items={EVENT_REPORT_REASONS.map((key) => ({ key, label: REPORT_REASON_LABELS[key] }))}
+          value={reportReason ?? 'OTHER'}
+          onChange={setReportReason}
+        />
+      </ConfirmDialog>
+      {report.error ? (
+        <Banner tone="err" message={report.error.message} onClose={() => report.reset()} />
+      ) : null}
 
       <ConfirmDialog
         visible={confirmCancel}

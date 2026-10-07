@@ -1,4 +1,4 @@
-import { type AdminActionKind, addDays, fromLocalDateTime } from '@lucko/shared'
+import type { AdminActionKind } from '@lucko/shared'
 import { mailHtml } from '../mail/mail.layout'
 
 const DAY_MS = 24 * 60 * 60 * 1000
@@ -78,32 +78,6 @@ export function warningMail(pseudo: string | null, reason: string) {
   }
 }
 
-const minuteOf = (time: string) => {
-  const [hours = 0, minutes = 0] = time.split(':').map(Number)
-  return hours * 60 + minutes
-}
-
-/**
- * Dates d'un événement saisi au back-office : la première le `date`, puis une par semaine
- * à la même heure de Paris. Une fin avant le début tombe le lendemain (soirée jusqu'à 1 h).
- */
-export function eventOccurrences(input: {
-  date: string
-  startTime: string
-  endTime: string | null
-  repeatWeeks: number
-}) {
-  const start = minuteOf(input.startTime)
-  const end = input.endTime === null ? null : minuteOf(input.endTime)
-  return Array.from({ length: input.repeatWeeks + 1 }, (_, week) => {
-    const date = addDays(input.date, week * 7)
-    return {
-      startsAt: fromLocalDateTime(date, start),
-      endsAt: end === null ? null : fromLocalDateTime(end > start ? date : addDays(date, 1), end),
-    }
-  })
-}
-
 type Format = { id: string; slug: string }
 
 /**
@@ -162,5 +136,6 @@ export const ACTION_TARGET: Record<
   EVENT_CREATE: 'venue',
   EVENT_UPDATE: 'event',
   EVENT_CANCEL: 'event',
+  EVENT_HIDE: 'event',
   GAME_MERGE: 'merge',
 }

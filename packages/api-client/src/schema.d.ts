@@ -273,7 +273,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        patch: operations["EventsController_update"];
         trace?: never;
     };
     "/events/{id}/registration": {
@@ -287,6 +287,54 @@ export interface paths {
         put?: never;
         post: operations["EventsController_register"];
         delete: operations["EventsController_cancel"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/events/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["EventsController_cancelEvent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/events/{id}/report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["EventsController_report"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/venues/{venueId}/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["VenueEventsController_list"];
+        put?: never;
+        post: operations["VenueEventsController_create"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -702,6 +750,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["AdminCatalogController_cancelEvent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/events/{id}/hide": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AdminCatalogController_hideEvent"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1593,6 +1657,7 @@ export interface operations {
                                 name: string;
                             }[];
                             seriesId: string | null;
+                            recurrenceLabel: string | null;
                             externalUrl: string | null;
                         }[];
                         rooms: {
@@ -1801,8 +1866,9 @@ export interface operations {
                         startsAt: string;
                         /** Format: date-time */
                         endsAt: string | null;
-                        /** Format: date-time */
-                        cancelledAt: string | null;
+                        /** @enum {string} */
+                        status: "DRAFT" | "PUBLISHED" | "CANCELLED" | "HIDDEN";
+                        recurrenceLabel: string | null;
                         priceCents: number | null;
                         capacity: number | null;
                         minAge: number | null;
@@ -1824,6 +1890,145 @@ export interface operations {
                         /** @enum {string|null} */
                         myRegistration: "REGISTERED" | "WAITLISTED" | null;
                     };
+                };
+            };
+        };
+    };
+    EventsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    scope: "occurrence";
+                    /** @enum {string} */
+                    type: "GAME_NIGHT" | "INITIATION" | "TOURNAMENT" | "PRERELEASE" | "THEMED";
+                    title: string;
+                    /** @default null */
+                    description?: string | null;
+                    /** @default [] */
+                    gameIds?: string[];
+                    startTime: string;
+                    /** @default null */
+                    endTime?: string | null;
+                    /** @default null */
+                    capacity?: number | null;
+                    /** @default null */
+                    priceCents?: number | null;
+                    /** @default null */
+                    minAge?: number | null;
+                    /**
+                     * @default IN_APP
+                     * @enum {string}
+                     */
+                    registrationMode?: "NONE" | "IN_APP" | "EXTERNAL";
+                    /**
+                     * Format: uri
+                     * @default null
+                     */
+                    externalUrl?: string | null;
+                    /**
+                     * @default PUBLISHED
+                     * @enum {string}
+                     */
+                    status?: "DRAFT" | "PUBLISHED";
+                    /** Format: date */
+                    date: string;
+                } | {
+                    /** @enum {string} */
+                    scope: "series";
+                    /** @enum {string} */
+                    type: "GAME_NIGHT" | "INITIATION" | "TOURNAMENT" | "PRERELEASE" | "THEMED";
+                    title: string;
+                    /** @default null */
+                    description?: string | null;
+                    /** @default [] */
+                    gameIds?: string[];
+                    startTime: string;
+                    /** @default null */
+                    endTime?: string | null;
+                    /** @default null */
+                    capacity?: number | null;
+                    /** @default null */
+                    priceCents?: number | null;
+                    /** @default null */
+                    minAge?: number | null;
+                    /**
+                     * @default IN_APP
+                     * @enum {string}
+                     */
+                    registrationMode?: "NONE" | "IN_APP" | "EXTERNAL";
+                    /**
+                     * Format: uri
+                     * @default null
+                     */
+                    externalUrl?: string | null;
+                    /**
+                     * @default PUBLISHED
+                     * @enum {string}
+                     */
+                    status?: "DRAFT" | "PUBLISHED";
+                    /**
+                     * Format: date
+                     * @default null
+                     */
+                    untilDate?: string | null;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        id: string;
+                        /** @enum {string} */
+                        type: "GAME_NIGHT" | "INITIATION" | "TOURNAMENT" | "PRERELEASE" | "THEMED";
+                        title: string;
+                        description: string | null;
+                        /** Format: date-time */
+                        startsAt: string;
+                        /** Format: date-time */
+                        endsAt: string | null;
+                        capacity: number | null;
+                        priceCents: number | null;
+                        minAge: number | null;
+                        /** @enum {string} */
+                        registrationMode: "NONE" | "IN_APP" | "EXTERNAL";
+                        externalUrl: string | null;
+                        /** @enum {string} */
+                        status: "DRAFT" | "PUBLISHED" | "CANCELLED" | "HIDDEN";
+                        gameIds: string[];
+                        registered: number;
+                        waitlisted: number;
+                        overridden: boolean;
+                        series: {
+                            id: string;
+                            recurrence: {
+                                /** @enum {string} */
+                                freq: "WEEKLY";
+                                interval: 1 | 2;
+                            } | {
+                                /** @enum {string} */
+                                freq: "MONTHLY";
+                                nth: 1 | 2 | 3 | 4 | -1;
+                            };
+                            label: string;
+                            /** Format: date */
+                            startDate: string;
+                            /** Format: date */
+                            untilDate: string | null;
+                        } | null;
+                    }[];
                 };
             };
         };
@@ -1854,8 +2059,9 @@ export interface operations {
                         startsAt: string;
                         /** Format: date-time */
                         endsAt: string | null;
-                        /** Format: date-time */
-                        cancelledAt: string | null;
+                        /** @enum {string} */
+                        status: "DRAFT" | "PUBLISHED" | "CANCELLED" | "HIDDEN";
+                        recurrenceLabel: string | null;
                         priceCents: number | null;
                         capacity: number | null;
                         minAge: number | null;
@@ -1907,8 +2113,9 @@ export interface operations {
                         startsAt: string;
                         /** Format: date-time */
                         endsAt: string | null;
-                        /** Format: date-time */
-                        cancelledAt: string | null;
+                        /** @enum {string} */
+                        status: "DRAFT" | "PUBLISHED" | "CANCELLED" | "HIDDEN";
+                        recurrenceLabel: string | null;
                         priceCents: number | null;
                         capacity: number | null;
                         minAge: number | null;
@@ -1930,6 +2137,235 @@ export interface operations {
                         /** @enum {string|null} */
                         myRegistration: "REGISTERED" | "WAITLISTED" | null;
                     };
+                };
+            };
+        };
+    };
+    EventsController_cancelEvent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @default false */
+                    series?: boolean;
+                };
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    EventsController_report: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    reason: "HARASSMENT" | "INAPPROPRIATE_CONTENT" | "CHEATING" | "NO_SHOW" | "MINOR_SAFETY" | "SAFETY" | "OTHER";
+                    /** @default  */
+                    details?: string;
+                };
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    VenueEventsController_list: {
+        parameters: {
+            query?: {
+                when?: "upcoming" | "past";
+            };
+            header?: never;
+            path: {
+                venueId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        id: string;
+                        /** @enum {string} */
+                        type: "GAME_NIGHT" | "INITIATION" | "TOURNAMENT" | "PRERELEASE" | "THEMED";
+                        title: string;
+                        description: string | null;
+                        /** Format: date-time */
+                        startsAt: string;
+                        /** Format: date-time */
+                        endsAt: string | null;
+                        capacity: number | null;
+                        priceCents: number | null;
+                        minAge: number | null;
+                        /** @enum {string} */
+                        registrationMode: "NONE" | "IN_APP" | "EXTERNAL";
+                        externalUrl: string | null;
+                        /** @enum {string} */
+                        status: "DRAFT" | "PUBLISHED" | "CANCELLED" | "HIDDEN";
+                        gameIds: string[];
+                        registered: number;
+                        waitlisted: number;
+                        overridden: boolean;
+                        series: {
+                            id: string;
+                            recurrence: {
+                                /** @enum {string} */
+                                freq: "WEEKLY";
+                                interval: 1 | 2;
+                            } | {
+                                /** @enum {string} */
+                                freq: "MONTHLY";
+                                nth: 1 | 2 | 3 | 4 | -1;
+                            };
+                            label: string;
+                            /** Format: date */
+                            startDate: string;
+                            /** Format: date */
+                            untilDate: string | null;
+                        } | null;
+                    }[];
+                };
+            };
+        };
+    };
+    VenueEventsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    type: "GAME_NIGHT" | "INITIATION" | "TOURNAMENT" | "PRERELEASE" | "THEMED";
+                    title: string;
+                    /** @default null */
+                    description?: string | null;
+                    /** @default [] */
+                    gameIds?: string[];
+                    startTime: string;
+                    /** @default null */
+                    endTime?: string | null;
+                    /** @default null */
+                    capacity?: number | null;
+                    /** @default null */
+                    priceCents?: number | null;
+                    /** @default null */
+                    minAge?: number | null;
+                    /**
+                     * @default IN_APP
+                     * @enum {string}
+                     */
+                    registrationMode?: "NONE" | "IN_APP" | "EXTERNAL";
+                    /**
+                     * Format: uri
+                     * @default null
+                     */
+                    externalUrl?: string | null;
+                    /**
+                     * @default PUBLISHED
+                     * @enum {string}
+                     */
+                    status?: "DRAFT" | "PUBLISHED";
+                    /** Format: date */
+                    date: string;
+                    /** @default null */
+                    recurrence?: ({
+                        /** @enum {string} */
+                        freq: "WEEKLY";
+                        interval: 1 | 2;
+                    } | {
+                        /** @enum {string} */
+                        freq: "MONTHLY";
+                        nth: 1 | 2 | 3 | 4 | -1;
+                    }) | null;
+                    /**
+                     * Format: date
+                     * @default null
+                     */
+                    untilDate?: string | null;
+                };
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        id: string;
+                        /** @enum {string} */
+                        type: "GAME_NIGHT" | "INITIATION" | "TOURNAMENT" | "PRERELEASE" | "THEMED";
+                        title: string;
+                        description: string | null;
+                        /** Format: date-time */
+                        startsAt: string;
+                        /** Format: date-time */
+                        endsAt: string | null;
+                        capacity: number | null;
+                        priceCents: number | null;
+                        minAge: number | null;
+                        /** @enum {string} */
+                        registrationMode: "NONE" | "IN_APP" | "EXTERNAL";
+                        externalUrl: string | null;
+                        /** @enum {string} */
+                        status: "DRAFT" | "PUBLISHED" | "CANCELLED" | "HIDDEN";
+                        gameIds: string[];
+                        registered: number;
+                        waitlisted: number;
+                        overridden: boolean;
+                        series: {
+                            id: string;
+                            recurrence: {
+                                /** @enum {string} */
+                                freq: "WEEKLY";
+                                interval: 1 | 2;
+                            } | {
+                                /** @enum {string} */
+                                freq: "MONTHLY";
+                                nth: 1 | 2 | 3 | 4 | -1;
+                            };
+                            label: string;
+                            /** Format: date */
+                            startDate: string;
+                            /** Format: date */
+                            untilDate: string | null;
+                        } | null;
+                    }[];
                 };
             };
         };
@@ -2781,7 +3217,7 @@ export interface operations {
                         actions: {
                             id: string;
                             /** @enum {string} */
-                            action: "REPORT_DISMISS" | "REPORT_WARN" | "REPORT_SUSPEND" | "USER_SUSPEND" | "USER_UNSUSPEND" | "AVATAR_APPROVE" | "AVATAR_REJECT" | "VENUE_UPDATE" | "EVENT_CREATE" | "EVENT_UPDATE" | "EVENT_CANCEL" | "GAME_MERGE";
+                            action: "REPORT_DISMISS" | "REPORT_WARN" | "REPORT_SUSPEND" | "USER_SUSPEND" | "USER_UNSUSPEND" | "AVATAR_APPROVE" | "AVATAR_REJECT" | "VENUE_UPDATE" | "EVENT_CREATE" | "EVENT_UPDATE" | "EVENT_CANCEL" | "EVENT_HIDE" | "GAME_MERGE";
                             targetId: string;
                             target: {
                                 /** @enum {string} */
@@ -2939,7 +3375,7 @@ export interface operations {
                     "application/json": {
                         id: string;
                         /** @enum {string} */
-                        action: "REPORT_DISMISS" | "REPORT_WARN" | "REPORT_SUSPEND" | "USER_SUSPEND" | "USER_UNSUSPEND" | "AVATAR_APPROVE" | "AVATAR_REJECT" | "VENUE_UPDATE" | "EVENT_CREATE" | "EVENT_UPDATE" | "EVENT_CANCEL" | "GAME_MERGE";
+                        action: "REPORT_DISMISS" | "REPORT_WARN" | "REPORT_SUSPEND" | "USER_SUSPEND" | "USER_UNSUSPEND" | "AVATAR_APPROVE" | "AVATAR_REJECT" | "VENUE_UPDATE" | "EVENT_CREATE" | "EVENT_UPDATE" | "EVENT_CANCEL" | "EVENT_HIDE" | "GAME_MERGE";
                         targetId: string;
                         target: {
                             /** @enum {string} */
@@ -3091,8 +3527,8 @@ export interface operations {
                         registrationMode: "NONE" | "IN_APP" | "EXTERNAL";
                         externalUrl: string | null;
                         seriesId: string | null;
-                        /** Format: date-time */
-                        cancelledAt: string | null;
+                        /** @enum {string} */
+                        status: "DRAFT" | "PUBLISHED" | "CANCELLED" | "HIDDEN";
                         gameIds: string[];
                         registered: number;
                     }[];
@@ -3168,8 +3604,8 @@ export interface operations {
                         registrationMode: "NONE" | "IN_APP" | "EXTERNAL";
                         externalUrl: string | null;
                         seriesId: string | null;
-                        /** Format: date-time */
-                        cancelledAt: string | null;
+                        /** @enum {string} */
+                        status: "DRAFT" | "PUBLISHED" | "CANCELLED" | "HIDDEN";
                         gameIds: string[];
                         registered: number;
                     }[];
@@ -3243,8 +3679,8 @@ export interface operations {
                         registrationMode: "NONE" | "IN_APP" | "EXTERNAL";
                         externalUrl: string | null;
                         seriesId: string | null;
-                        /** Format: date-time */
-                        cancelledAt: string | null;
+                        /** @enum {string} */
+                        status: "DRAFT" | "PUBLISHED" | "CANCELLED" | "HIDDEN";
                         gameIds: string[];
                         registered: number;
                     };
@@ -3253,6 +3689,33 @@ export interface operations {
         };
     };
     AdminCatalogController_cancelEvent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    reason: string;
+                    /** @default false */
+                    series?: boolean;
+                };
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminCatalogController_hideEvent: {
         parameters: {
             query?: never;
             header?: never;

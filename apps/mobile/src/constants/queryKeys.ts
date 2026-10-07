@@ -29,6 +29,15 @@ export const EVENT = {
   GET: 'event',
   REGISTER: 'register_event',
   UNREGISTER: 'unregister_event',
+  REPORT: 'report_event',
+} as const
+
+/** Espace gérant (LKO-61) : événements publiés par le lieu. */
+export const VENUE_EVENTS = {
+  LIST: 'venue_events',
+  CREATE: 'create_venue_event',
+  UPDATE: 'update_venue_event',
+  CANCEL: 'cancel_venue_event',
 } as const
 
 export const VENUE = {
