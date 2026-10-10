@@ -10,6 +10,8 @@ import {
   MAX_OPEN_ROOMS_PER_HOST,
   promotedStatus,
   type RoomContext,
+  reminderContent,
+  reminderTimes,
 } from './rooms.rules'
 
 const now = new Date('2026-10-05T12:00:00Z')
@@ -222,5 +224,55 @@ describe('hostActionRefusal', () => {
     const cancelled = { ...room, status: 'CANCELLED' as const }
     expect(hostActionRefusal(cancelled, { type: 'cancel' }, null, now)).toMatch(/annulée/)
     expect(hostActionRefusal(room, { type: 'cancel' }, null, now)).toBeNull()
+  })
+})
+
+describe('reminderTimes (LKO-59)', () => {
+  it('la veille à 18 h (heure de Paris) et 2 h avant', () => {
+    expect(reminderTimes(new Date('2026-10-10T18:00:00Z'), now)).toEqual([
+      ['eve', new Date('2026-10-09T16:00:00Z')],
+      ['soon', new Date('2026-10-10T16:00:00Z')],
+    ])
+  })
+
+  it('suit le changement d’heure (heure d’hiver le 25 octobre)', () => {
+    const [eve] = reminderTimes(new Date('2026-10-26T19:00:00Z'), now)
+    expect(eve).toEqual(['eve', new Date('2026-10-25T17:00:00Z')])
+  })
+
+  it('saute les rappels déjà passés', () => {
+    // Room ce soir à 20 h (Paris) créée à 14 h : plus de veille
+    expect(reminderTimes(new Date('2026-10-05T18:00:00Z'), now)).toEqual([
+      ['soon', new Date('2026-10-05T16:00:00Z')],
+    ])
+    expect(reminderTimes(new Date('2026-10-05T13:00:00Z'), now)).toEqual([])
+  })
+})
+
+describe('reminderContent (LKO-59)', () => {
+  const base = {
+    startsAt: new Date('2026-10-10T18:00:00Z'),
+    game: { name: 'Magic' },
+    venue: { name: 'Le Dé Bordelais' },
+    homeAreaLabel: null,
+    addressVisible: null,
+  }
+
+  it('jeu, heure et lieu', () => {
+    expect(reminderContent('eve', base)).toEqual({
+      title: 'Demain : Magic à 20:00',
+      body: 'Le Dé Bordelais · 20:00.',
+    })
+    expect(reminderContent('soon', base).title).toBe('Magic dans 2 h')
+  })
+
+  it('à domicile : où trouver l’adresse, jamais l’adresse elle-même', () => {
+    const home = { ...base, venue: null, homeAreaLabel: 'Chartrons' }
+    expect(reminderContent('eve', { ...home, addressVisible: false }).body).toBe(
+      'À domicile · Chartrons · 20:00. L’adresse sera visible dans la room 24 h avant.',
+    )
+    expect(reminderContent('soon', { ...home, addressVisible: true }).body).toMatch(
+      /adresse est visible/,
+    )
   })
 })

@@ -53,6 +53,9 @@ import {
   joinOutcome,
   lifecycleStatus,
   promotedStatus,
+  type ReminderKind,
+  reminderContent,
+  reminderTimes,
 } from './rooms.rules'
 
 type Tx = Prisma.TransactionClient
@@ -61,6 +64,8 @@ type Tx = Prisma.TransactionClient
 const HOME_REVEAL_JOB = 'rooms.home-reveal'
 /** Suppression des adresses des rooms passées (filet de sécurité, l'annulation les supprime tout de suite). */
 const HOME_PURGE_JOB = 'rooms.home-purge'
+/** Rappels la veille et 2 h avant (LKO-59). */
+const REMINDER_JOB = 'rooms.reminder'
 
 const detailInclude = {
   host: { select: { pseudo: true } },
@@ -128,6 +133,10 @@ export class RoomsService implements OnModuleInit {
         })
       },
       { cron: '0 * * * *' },
+    )
+    await this.jobs.handle<{ roomId: string; kind: ReminderKind }>(
+      REMINDER_JOB,
+      ({ roomId, kind }) => this.remind(roomId, kind),
     )
   }
 
@@ -209,6 +218,13 @@ export class RoomsService implements OnModuleInit {
         { roomId: room.id },
         { startAfter: revealAt(input.startsAt), singletonKey: room.id },
       )
+    // L'heure d'une room ne change pas : les rappels sont programmés une fois pour toutes
+    for (const [kind, at] of reminderTimes(input.startsAt, now))
+      await this.jobs.send(
+        REMINDER_JOB,
+        { roomId: room.id, kind },
+        { startAfter: at, singletonKey: `${room.id}:${kind}` },
+      )
     // Joueurs qui attendent ce jeu près du lieu (LKO-17)
     await this.intents.roomOpened(room.id)
     return room
@@ -252,6 +268,34 @@ export class RoomsService implements OnModuleInit {
       {
         title: 'Adresse disponible',
         body: 'L’adresse de la room à domicile est visible dans la room.',
+        url: `/rooms/${roomId}`,
+      },
+    )
+  }
+
+  /**
+   * Rappel aux joueurs acceptés à ce moment-là, hôte compris (LKO-59) : un joueur parti ou retiré
+   * n'est plus dans la liste ; rien pour une room annulée ou déjà commencée.
+   */
+  // ponytail: un mineur aux heures calmes reçoit le rappel « dans 2 h » à 8 h (quietUntil) ; le jeter s'il arrive après la partie
+  private async remind(roomId: string, kind: ReminderKind) {
+    const now = new Date()
+    const room = await this.prisma.room.findUnique({
+      where: { id: roomId },
+      include: {
+        game: { select: { name: true } },
+        venue: { select: { name: true } },
+        privateAddress: { select: { keyVersion: true } },
+        participants: { where: { status: 'ACCEPTED' }, select: { userId: true } },
+      },
+    })
+    if (!room || room.status === 'CANCELLED' || room.startsAt <= now) return
+    const addressVisible = room.privateAddress ? now >= revealAt(room.startsAt) : null
+    await this.push.notify(
+      room.participants.map((p) => p.userId),
+      'ROOMS',
+      {
+        ...reminderContent(kind, { ...room, addressVisible }),
         url: `/rooms/${roomId}`,
       },
     )

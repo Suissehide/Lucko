@@ -1,7 +1,11 @@
 import {
+  addDays,
   type createRoomSchema,
+  formatTime,
+  fromLocalDateTime,
   type GameKind,
   type HostAction,
+  localDateTime,
   type ParticipantStatus,
   ROOM_MAX_DAYS_AHEAD,
   type RoomStatus,
@@ -156,5 +160,49 @@ export function hostActionRefusal(
       return status === 'CONFIRMED' ? null : 'Les inscriptions sont déjà ouvertes'
     case 'cancel':
       return null
+  }
+}
+
+export type ReminderKind = 'eve' | 'soon'
+
+const SOON_MS = 2 * 60 * 60 * 1000
+
+/**
+ * Rappels d'une room (LKO-59) : la veille à 18 h (heure de Paris) et 2 h avant.
+ * Ceux déjà passés à la création de la room sont sautés.
+ */
+export function reminderTimes(startsAt: Date, now = new Date()): [ReminderKind, Date][] {
+  const eve = fromLocalDateTime(addDays(localDateTime(startsAt).date, -1), 18 * 60)
+  const soon = new Date(startsAt.getTime() - SOON_MS)
+  return (
+    [
+      ['eve', eve],
+      ['soon', soon],
+    ] as [ReminderKind, Date][]
+  ).filter(([, at]) => at > now)
+}
+
+/** Texte du rappel : jeu, heure, lieu ; pour une room à domicile, où trouver l'adresse. */
+export function reminderContent(
+  kind: ReminderKind,
+  room: {
+    startsAt: Date
+    game: { name: string }
+    venue: { name: string } | null
+    homeAreaLabel: string | null
+    addressVisible: boolean | null
+  },
+) {
+  const time = formatTime(room.startsAt)
+  const place = room.venue?.name ?? `À domicile · ${room.homeAreaLabel ?? 'zone dans la room'}`
+  const address =
+    room.addressVisible === null
+      ? ''
+      : room.addressVisible
+        ? ' L’adresse est visible dans la room.'
+        : ' L’adresse sera visible dans la room 24 h avant.'
+  return {
+    title: kind === 'eve' ? `Demain : ${room.game.name} à ${time}` : `${room.game.name} dans 2 h`,
+    body: `${place} · ${time}.${address}`,
   }
 }
