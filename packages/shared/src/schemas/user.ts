@@ -123,6 +123,8 @@ export const meSchema = z.object({
       id: z.string(),
       slug: z.string(),
       name: z.string(),
+      /** Lieu partenaire : son staff scanne les QR Lucko (LKO-77). */
+      isPartner: z.boolean(),
       role: z.enum(VENUE_STAFF_ROLES),
     }),
   ),

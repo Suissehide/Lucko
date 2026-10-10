@@ -612,6 +612,9 @@
                           "name": {
                             "type": "string"
                           },
+                          "isPartner": {
+                            "type": "boolean"
+                          },
                           "role": {
                             "type": "string",
                             "enum": [
@@ -624,6 +627,7 @@
                           "id",
                           "slug",
                           "name",
+                          "isPartner",
                           "role"
                         ]
                       }
@@ -931,6 +935,9 @@
                           "name": {
                             "type": "string"
                           },
+                          "isPartner": {
+                            "type": "boolean"
+                          },
                           "role": {
                             "type": "string",
                             "enum": [
@@ -943,6 +950,7 @@
                           "id",
                           "slug",
                           "name",
+                          "isPartner",
                           "role"
                         ]
                       }
@@ -1201,6 +1209,9 @@
                           "name": {
                             "type": "string"
                           },
+                          "isPartner": {
+                            "type": "boolean"
+                          },
                           "role": {
                             "type": "string",
                             "enum": [
@@ -1213,6 +1224,7 @@
                           "id",
                           "slug",
                           "name",
+                          "isPartner",
                           "role"
                         ]
                       }
@@ -1463,6 +1475,9 @@
                           "name": {
                             "type": "string"
                           },
+                          "isPartner": {
+                            "type": "boolean"
+                          },
                           "role": {
                             "type": "string",
                             "enum": [
@@ -1475,6 +1490,7 @@
                           "id",
                           "slug",
                           "name",
+                          "isPartner",
                           "role"
                         ]
                       }
@@ -9908,6 +9924,113 @@
         },
         "tags": [
           "chat"
+        ]
+      }
+    },
+    "/me/qr-token": {
+      "post": {
+        "operationId": "CheckinController_token",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string"
+                    },
+                    "expiresAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    }
+                  },
+                  "required": [
+                    "token",
+                    "expiresAt"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "checkin"
+        ]
+      }
+    },
+    "/venues/{venueId}/scan": {
+      "post": {
+        "operationId": "CheckinController_scan",
+        "parameters": [
+          {
+            "name": "venueId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500
+                  }
+                },
+                "required": [
+                  "token"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pseudo": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "minor": {
+                      "type": "boolean"
+                    },
+                    "perk": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "alreadyScanned": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "pseudo",
+                    "minor",
+                    "perk",
+                    "alreadyScanned"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "checkin"
         ]
       }
     }

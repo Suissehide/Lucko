@@ -696,6 +696,8 @@ model Visit {
   businessDate DateTime    @db.Date
   spentCents   Int?
   billable     Boolean     @default(false)
+  /// Nonce du QR Lucko scanné (LKO-77) : un jeton ne sert qu'une fois, même dans un autre lieu
+  qrNonce      String?     @unique
   createdAt    DateTime    @default(now())
 
   @@unique([userId, venueId, businessDate])

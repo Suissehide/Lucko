@@ -105,3 +105,8 @@ export const CHAT = {
   READ: 'read_chat',
   MUTE: 'mute_chat',
 } as const
+
+export const CHECKIN = {
+  QR_TOKEN: 'qr_token',
+  SCAN: 'scan_qr',
+} as const
