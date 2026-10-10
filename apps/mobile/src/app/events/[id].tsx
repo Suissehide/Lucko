@@ -20,11 +20,13 @@ import {
   REPORT_REASON_LABELS,
   type ReportReason,
 } from '@lucko/shared'
+import { createURL } from 'expo-linking'
 import { router, useLocalSearchParams } from 'expo-router'
 import { ChevronRight } from 'lucide-react-native'
 import { useState } from 'react'
 import { Linking, View } from 'react-native'
 import { DetailScreen } from '@/components/DetailScreen'
+import { addToCalendar } from '@/lib/calendar'
 import { eventPlaces, eventWhen, gameLabel, isFull } from '@/lib/explore'
 import { openChat, openManageVenue, openVenue } from '@/lib/navigation'
 import { useChatUnread } from '@/queries/useChat'
@@ -70,6 +72,11 @@ export default function EventScreen() {
     )
   }
 
+  // Inscrit, ou soirée sans inscription dans l'app (entrée libre, site externe) : à venir et publiée
+  const calendar =
+    event.status === 'PUBLISHED' &&
+    new Date(event.endsAt ?? event.startsAt) > new Date() &&
+    (event.myRegistration === 'REGISTERED' || event.registrationMode !== 'IN_APP')
   const games = event.games.length ? event.games.map(gameLabel).join(', ') : 'Tous jeux'
   const details = [
     { title: 'Quand', value: eventWhen(event.startsAt, event.endsAt) },
@@ -142,14 +149,33 @@ export default function EventScreen() {
           />
         </View>
       ) : null}
-      {member ? (
-        <View style={{ alignSelf: 'flex-start' }}>
-          <Button
-            small
-            kind="soft"
-            label={`Chat de l'événement${unread ? ` · ${unread} non lu${unread > 1 ? 's' : ''}` : ''}`}
-            onPress={() => openChat('event', id)}
-          />
+      {member || calendar ? (
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+          {member ? (
+            <Button
+              small
+              kind="soft"
+              label={`Chat de l'événement${unread ? ` · ${unread} non lu${unread > 1 ? 's' : ''}` : ''}`}
+              onPress={() => openChat('event', id)}
+            />
+          ) : null}
+          {calendar ? (
+            <Button
+              small
+              kind="ghost"
+              label="Ajouter au calendrier"
+              onPress={() =>
+                void addToCalendar({
+                  uid: `event-${id}`,
+                  title: event.title,
+                  startsAt: new Date(event.startsAt),
+                  endsAt: event.endsAt ? new Date(event.endsAt) : null,
+                  location: `${event.venue.name}, ${event.venue.address}`,
+                  url: createURL(`/events/${id}`),
+                })
+              }
+            />
+          ) : null}
         </View>
       ) : null}
       {event.registrationMode === 'NONE' && event.status === 'PUBLISHED' ? (
