@@ -81,6 +81,8 @@ model User {
   messages           Message[]
   conversationReads  ConversationRead[]
   playIntents        PlayIntent[]
+  createdEvents      Event[]             @relation("EventCreatedBy")
+  createdEventSeries EventSeries[]
 }
 
 enum NotificationTopic {
@@ -200,20 +202,21 @@ enum GameKind {
 }
 
 model Game {
-  id         String       @id @default(cuid())
-  slug       String       @unique
-  name       String
-  kind       GameKind
-  minPlayers Int          @default(2)
-  maxPlayers Int          @default(4)
-  formats    GameFormat[]
-  rooms      Room[]
-  events     Event[]      @relation("EventGames")
+  id          String        @id @default(cuid())
+  slug        String        @unique
+  name        String
+  kind        GameKind
+  minPlayers  Int           @default(2)
+  maxPlayers  Int           @default(4)
+  formats     GameFormat[]
+  rooms       Room[]
+  events      Event[]       @relation("EventGames")
+  eventSeries EventSeries[] @relation("EventSeriesGames")
   /// Lieux où ce jeu est disponible sur place
-  venues     Venue[]      @relation("VenueGames")
+  venues      Venue[]       @relation("VenueGames")
   /// Joueurs qui le déclarent dans leurs jeux (LKO-46)
-  players    User[]       @relation("PlayedGames")
-  intents    PlayIntent[]
+  players     User[]        @relation("PlayedGames")
+  intents     PlayIntent[]
 }
 
 model GameFormat {
@@ -336,6 +339,7 @@ model Venue {
   staff        VenueStaff[]
   rooms        Room[]
   events       Event[]
+  eventSeries  EventSeries[]
   visits       Visit[]
   openingHours VenueOpeningHours[]
   closures     VenueClosure[]
@@ -515,8 +519,55 @@ enum RegistrationMode {
   EXTERNAL
 }
 
-/// Une occurrence datée. Un événement récurrent = plusieurs Event partageant le même `seriesId`
-/// (chaque date a ses propres inscrits). Les occurrences sont créées à la saisie (back-office, seed).
+/// Brouillon (visible du lieu seulement), publié, annulé (inscrits prévenus) ou masqué par un admin.
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  CANCELLED
+  HIDDEN
+}
+
+/// Événement récurrent (LKO-61) : la règle (RRULE, sous-ensemble dans @lucko/shared) et le modèle
+/// des occurrences. Un job quotidien crée les occurrences (Event) sur 3 mois glissants.
+model EventSeries {
+  id                String           @id @default(cuid())
+  venueId           String
+  venue             Venue            @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  createdById       String?
+  createdBy         User?            @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  /// Ex. « FREQ=WEEKLY;INTERVAL=2;BYDAY=FR », « FREQ=MONTHLY;BYDAY=1FR »
+  rrule             String
+  /// Date locale (heure de Paris) de la première occurrence
+  startDate         DateTime         @db.Date
+  /// Dernière date possible (incluse) ; null = sans fin
+  untilDate         DateTime?        @db.Date
+  /// Heure de début, en minutes depuis minuit à l'heure du lieu
+  startMinute       Int
+  durationMinutes   Int?
+  /// DRAFT / PUBLISHED : statut des nouvelles occurrences ; CANCELLED / HIDDEN : plus d'occurrence créée
+  status            EventStatus      @default(PUBLISHED)
+  /// Occurrences créées jusqu'à cette date locale (exclue)
+  materializedUntil DateTime         @db.Date
+  games             Game[]           @relation("EventSeriesGames")
+  type              EventType
+  title             String
+  description       String?
+  capacity          Int?
+  priceCents        Int?
+  minAge            Int?
+  registrationMode  RegistrationMode @default(IN_APP)
+  externalUrl       String?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  occurrences Event[]
+
+  @@index([venueId])
+  @@index([status, materializedUntil])
+}
+
+/// Une occurrence datée : ponctuelle, ou créée par sa série (`seriesId`, `occurrenceDate`).
+/// Chaque date a ses propres inscrits. `overridden` : modifiée seule, la série ne l'écrase plus.
 model Event {
   id               String           @id @default(cuid())
   venueId          String
@@ -533,17 +584,24 @@ model Event {
   minAge           Int?
   registrationMode RegistrationMode @default(IN_APP)
   externalUrl      String?
+  status           EventStatus      @default(PUBLISHED)
   seriesId         String?
-  cancelledAt      DateTime?
+  series           EventSeries?     @relation(fields: [seriesId], references: [id], onDelete: SetNull)
+  /// Date locale prévue par la série (même si l'occurrence a été déplacée) : jamais recréée
+  occurrenceDate   DateTime?        @db.Date
+  overridden       Boolean          @default(false)
+  createdById      String?
+  createdBy        User?            @relation("EventCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
 
   registrations EventRegistration[]
   conversation  Conversation?
+  reports       Report[]
 
+  @@unique([seriesId, occurrenceDate])
   @@index([venueId, startsAt])
   @@index([startsAt])
-  @@index([seriesId])
 }
 
 enum RegistrationStatus {
@@ -684,13 +742,16 @@ enum ReportReason {
   OTHER
 }
 
-/// Signalement d'un joueur, traité par un admin. Gardé après la suppression des comptes (preuve).
+/// Signalement d'un joueur (ou d'un événement, LKO-61), traité par un admin. Gardé après la suppression des comptes (preuve).
 model Report {
   id         String            @id @default(cuid())
   reporterId String
   reporter   User              @relation("ReportsMade", fields: [reporterId], references: [id])
   targetId   String
   target     User              @relation("ReportsReceived", fields: [targetId], references: [id])
+  /// Événement signalé (LKO-61) ; la cible est alors son créateur
+  eventId    String?
+  event      Event?            @relation(fields: [eventId], references: [id], onDelete: SetNull)
   reason     ReportReason
   details    String            @default("")
   createdAt  DateTime          @default(now())
@@ -722,6 +783,7 @@ enum AdminActionKind {
   EVENT_CREATE
   EVENT_UPDATE
   EVENT_CANCEL
+  EVENT_HIDE
   GAME_MERGE
 }
 

@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import {
-  eventOccurrences,
   isSuspended,
   planFormatMerge,
   planProfileMerge,
@@ -20,29 +19,6 @@ describe('isSuspended', () => {
       false,
     )
     expect(isSuspended({ suspendedAt: null, suspendedUntil: null }, now)).toBe(false)
-  })
-})
-
-describe('eventOccurrences', () => {
-  it("répète chaque semaine à la même heure de Paris, changement d'heure compris", () => {
-    const dates = eventOccurrences({
-      date: '2026-10-24',
-      startTime: '19:00',
-      endTime: '01:00',
-      repeatWeeks: 1,
-    })
-    expect(dates.map((d) => d.startsAt.toISOString())).toEqual([
-      '2026-10-24T17:00:00.000Z',
-      '2026-10-31T18:00:00.000Z',
-    ])
-    // Fin après minuit : le lendemain
-    expect(dates[0]?.endsAt?.toISOString()).toBe('2026-10-24T23:00:00.000Z')
-  })
-
-  it('sans heure de fin ni répétition : une seule date', () => {
-    expect(
-      eventOccurrences({ date: '2026-11-03', startTime: '18:30', endTime: null, repeatWeeks: 0 }),
-    ).toEqual([{ startsAt: new Date('2026-11-03T17:30:00Z'), endsAt: null }])
   })
 })
 

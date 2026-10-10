@@ -1,5 +1,5 @@
-import { randomUUID } from 'node:crypto'
 import {
+  addDays,
   adminEventInputSchema,
   adminEventSchema,
   adminEventUpdateSchema,
@@ -11,7 +11,6 @@ import {
   updateVenueSchema,
 } from '@lucko/shared'
 import {
-  BadRequestException,
   Controller,
   Get,
   HttpCode,
@@ -23,12 +22,12 @@ import {
 } from '@nestjs/common'
 import { ApiNoContentResponse, ApiTags } from '@nestjs/swagger'
 import { z } from 'zod'
+import { CurrentUser } from '../auth/auth.decorators'
 import { ZodBody, ZodQuery, ZodResponse } from '../common/zod'
-import type { Prisma } from '../generated/prisma/client'
+import { VenueEventsService } from '../events/venue-events.service'
+import type { Prisma, User } from '../generated/prisma/client'
 import { PrismaService } from '../prisma/prisma.service'
-import { PushService } from '../push/push.service'
 import { Admin } from './admin.decorators'
-import { eventOccurrences } from './admin.rules'
 import { AdminService } from './admin.service'
 
 const DAY_MS = 24 * 60 * 60 * 1000
@@ -66,14 +65,6 @@ const toAdminEvent = ({
   registered: _count.registrations,
 })
 
-/** Champs d'un événement saisi au back-office, hors dates et jeux. */
-function eventData(input: z.output<typeof adminEventUpdateSchema>) {
-  const { date: _date, startTime: _start, endTime: _end, gameIds: _games, ...data } = input
-  return data
-}
-
-const gameRefs = (ids: string[]) => ids.map((id) => ({ id }))
-
 /** Back-office (LKO-20) : validation des lieux, événements (démarrage à froid), fusion des jeux. */
 @ApiTags('admin')
 @Controller('admin')
@@ -81,7 +72,7 @@ export class AdminCatalogController {
   constructor(
     private readonly prisma: PrismaService,
     private readonly admin: AdminService,
-    private readonly push: PushService,
+    private readonly venueEvents: VenueEventsService,
   ) {}
 
   /** Lieux, ceux en attente de validation d'abord. */
@@ -129,7 +120,10 @@ export class AdminCatalogController {
     return events.map(toAdminEvent)
   }
 
-  /** Crée un événement, ou une série (une occurrence par semaine) avec `repeatWeeks`. */
+  /**
+   * Crée un événement, ou une série chaque semaine pendant `repeatWeeks` semaines de plus
+   * (dates des 3 prochains mois tout de suite, les suivantes par le job de nuit).
+   */
   @Post('venues/:id/events')
   @Admin('EVENT_CREATE')
   @ZodResponse(z.array(adminEventSchema), 201)
@@ -139,46 +133,36 @@ export class AdminCatalogController {
       repeatWeeks,
       ...input
     }: z.output<typeof adminEventInputSchema>,
+    @CurrentUser() admin: User,
   ) {
-    await this.venueOr404(venueId)
-    await this.gamesOr400(input.gameIds)
-    const seriesId = repeatWeeks > 0 ? randomUUID() : null
-    const events = await this.prisma.$transaction(
-      eventOccurrences({ ...input, repeatWeeks }).map((dates) =>
-        this.prisma.event.create({
-          data: {
-            ...eventData(input),
-            ...dates,
-            venueId,
-            seriesId,
-            games: { connect: gameRefs(input.gameIds) },
-          },
-          include: eventInclude,
-        }),
-      ),
+    const ids = await this.venueEvents.create(
+      venueId,
+      {
+        ...input,
+        status: 'PUBLISHED',
+        recurrence: repeatWeeks > 0 ? { freq: 'WEEKLY', interval: 1 } : null,
+        untilDate: repeatWeeks > 0 ? addDays(input.date, repeatWeeks * 7) : null,
+      },
+      admin,
+      { limit: false },
     )
-    return events.map(toAdminEvent)
+    return this.adminEvents(ids)
   }
 
-  /** Modifie une occurrence (les autres dates d'une série ne bougent pas). */
+  /** Modifie une occurrence (les autres dates d'une série ne bougent pas) ; les inscrits sont prévenus d'un nouvel horaire. */
   @Put('events/:id')
   @Admin('EVENT_UPDATE')
   @ZodResponse(adminEventSchema)
   async updateEvent(
     @Param('id') id: string,
     @ZodBody(adminEventUpdateSchema) input: z.output<typeof adminEventUpdateSchema>,
+    @CurrentUser() admin: User,
   ) {
-    const event = await this.prisma.event.findFirst({ where: { id, cancelledAt: null } })
-    if (!event) throw new NotFoundException('Événement introuvable ou annulé')
-    await this.gamesOr400(input.gameIds)
-    const [dates] = eventOccurrences({ ...input, repeatWeeks: 0 })
-    return toAdminEvent(
-      await this.prisma.event.update({
-        where: { id },
-        data: { ...eventData(input), ...dates, games: { set: gameRefs(input.gameIds) } },
-        include: eventInclude,
-      }),
-    )
+    const event = await this.prisma.event.findUnique({ where: { id }, select: { status: true } })
+    const status = event?.status === 'DRAFT' ? 'DRAFT' : 'PUBLISHED'
+    await this.venueEvents.update(id, { ...input, scope: 'occurrence', status }, admin)
+    const [updated] = await this.adminEvents([id])
+    return updated
   }
 
   /** Annule l'occurrence, ou avec `series` toute la série à partir de celle-ci ; les inscrits sont prévenus. */
@@ -189,32 +173,25 @@ export class AdminCatalogController {
   async cancelEvent(
     @Param('id') id: string,
     @ZodBody(cancelEventSchema) { series }: z.output<typeof cancelEventSchema>,
+    @CurrentUser() admin: User,
   ) {
-    await this.prisma.$transaction(async (tx) => {
-      const event = await tx.event.findFirst({ where: { id, cancelledAt: null } })
-      if (!event) throw new NotFoundException('Événement introuvable ou déjà annulé')
-      const where =
-        series && event.seriesId
-          ? { seriesId: event.seriesId, startsAt: { gte: event.startsAt }, cancelledAt: null }
-          : { id }
-      const cancelled = await tx.event.findMany({
-        where,
-        select: { id: true, registrations: { where: { status: { not: 'CANCELLED' } } } },
-      })
-      await tx.event.updateMany({ where, data: { cancelledAt: new Date() } })
-      for (const { id: eventId, registrations } of cancelled) {
-        await this.push.notify(
-          registrations.map((r) => r.userId),
-          'VENUES',
-          {
-            title: 'Événement annulé',
-            body: `« ${event.title} » est annulé.`,
-            url: `/events/${eventId}`,
-          },
-          tx,
-        )
-      }
-    })
+    await this.venueEvents.stop(id, admin, series, 'CANCELLED')
+  }
+
+  /**
+   * Masque un événement signalé (LKO-61), ou avec `series` toute la suite de sa série : il disparaît
+   * de l'app, les inscrits sont prévenus comme d'une annulation.
+   */
+  @Post('events/:id/hide')
+  @Admin('EVENT_HIDE')
+  @HttpCode(204)
+  @ApiNoContentResponse()
+  async hideEvent(
+    @Param('id') id: string,
+    @ZodBody(cancelEventSchema) { series }: z.output<typeof cancelEventSchema>,
+    @CurrentUser() admin: User,
+  ) {
+    await this.venueEvents.stop(id, admin, series, 'HIDDEN')
   }
 
   /** Catalogue avec de quoi repérer les doublons : formats, rooms, événements et joueurs liés. */
@@ -244,13 +221,17 @@ export class AdminCatalogController {
     await this.admin.mergeGames(id, intoId)
   }
 
+  private async adminEvents(ids: string[]) {
+    const events = await this.prisma.event.findMany({
+      where: { id: { in: ids } },
+      orderBy: { startsAt: 'asc' },
+      include: eventInclude,
+    })
+    return events.map(toAdminEvent)
+  }
+
   private async venueOr404(id: string) {
     const venue = await this.prisma.venue.findUnique({ where: { id }, select: { id: true } })
     if (!venue) throw new NotFoundException('Lieu introuvable')
-  }
-
-  private async gamesOr400(ids: string[]) {
-    const count = await this.prisma.game.count({ where: { id: { in: ids } } })
-    if (count !== new Set(ids).size) throw new BadRequestException('Jeu introuvable')
   }
 }

@@ -177,6 +177,7 @@ const ACTION_GROUP: Record<AdminActionKind, Exclude<JournalFilter, 'all'>> = {
   EVENT_CREATE: 'catalogue',
   EVENT_UPDATE: 'catalogue',
   EVENT_CANCEL: 'catalogue',
+  EVENT_HIDE: 'moderation',
   GAME_MERGE: 'catalogue',
 }
 
@@ -196,6 +197,7 @@ export const ACTION_COLOR: Record<AdminActionKind, string> = {
   EVENT_CREATE: colors.event,
   EVENT_UPDATE: colors.event,
   EVENT_CANCEL: colors.event,
+  EVENT_HIDE: colors.room,
   GAME_MERGE: colors.muted,
 }
 
@@ -373,7 +375,8 @@ export type EventFormValues = Omit<
   repeatWeeks: string
 }
 
-const localParts = (date: string) => {
+/** Date et heure locales (heure du lieu) d'un instant ISO, pour préremplir un formulaire. */
+export const localParts = (date: string) => {
   const { date: day, minute } = localDateTime(new Date(date), VENUE_TIME_ZONE)
   const pad = (n: number) => String(n).padStart(2, '0')
   return { day, time: `${pad(Math.floor(minute / 60))}:${pad(minute % 60)}` }

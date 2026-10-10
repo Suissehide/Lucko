@@ -4,7 +4,7 @@ import type { z } from 'zod'
 import type { User } from '../generated/prisma/client'
 import { PrismaService } from '../prisma/prisma.service'
 import { RealtimeGateway } from '../realtime/realtime.gateway'
-import { registrationOutcome } from './events.rules'
+import { registrationOutcome, seriesView, withUtm } from './events.rules'
 
 const registered = { registrations: { where: { status: 'REGISTERED' as const } } }
 
@@ -15,23 +15,49 @@ export class EventsService {
     private readonly realtime: RealtimeGateway,
   ) {}
 
-  /** Fiche événement ; `userId` ajoute l'inscription du joueur connecté. */
-  async detail(id: string, userId?: string): Promise<z.output<typeof eventDetailSchema>> {
+  /**
+   * Fiche événement ; `user` ajoute l'inscription du joueur connecté. Un brouillon ou un événement
+   * masqué n'existe que pour le staff du lieu et les admins.
+   */
+  async detail(id: string, user?: User): Promise<z.output<typeof eventDetailSchema>> {
+    const userId = user?.id
     const event = await this.prisma.event.findUnique({
       where: { id },
       include: {
         games: { select: { slug: true, name: true }, orderBy: { name: 'asc' } },
-        venue: { select: { id: true, slug: true, name: true, address: true, isPartner: true } },
+        venue: {
+          select: {
+            id: true,
+            slug: true,
+            name: true,
+            address: true,
+            isPartner: true,
+            staff: { where: { userId: userId ?? '' }, select: { userId: true } },
+          },
+        },
+        series: { select: { rrule: true, startDate: true } },
         _count: { select: registered },
         // Sans joueur connecté, aucun id ne correspond : liste vide
         registrations: { where: { userId: userId ?? '' }, select: { status: true } },
       },
     })
     if (!event) throw new NotFoundException('Événement introuvable')
-    const { _count, registrations, ...rest } = event
+    const hidden = event.status === 'DRAFT' || event.status === 'HIDDEN'
+    if (hidden && user?.role !== 'ADMIN' && !event.venue.staff.length)
+      throw new NotFoundException('Événement introuvable')
+    const {
+      _count,
+      registrations,
+      series,
+      venue: { staff: _staff, ...venue },
+      ...rest
+    } = event
     const mine = registrations[0]?.status
     return {
       ...rest,
+      venue,
+      externalUrl: withUtm(rest.externalUrl),
+      recurrenceLabel: series ? (seriesView(series)?.label ?? null) : null,
       registeredCount: _count.registrations,
       myRegistration: mine && mine !== 'CANCELLED' ? mine : null,
     }
@@ -62,7 +88,7 @@ export class EventsService {
       })
     })
     this.realtime.changed({ type: 'event', id })
-    return this.detail(id, user.id)
+    return this.detail(id, user)
   }
 
   /** Désinscription ; la place libérée revient au premier de la liste d'attente. */
@@ -92,6 +118,6 @@ export class EventsService {
     })
     await this.realtime.revoke({ type: 'event-chat', id }, [user.id])
     this.realtime.changed({ type: 'event', id })
-    return this.detail(id, user.id)
+    return this.detail(id, user)
   }
 }

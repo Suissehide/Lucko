@@ -253,7 +253,7 @@ export function agendaItem(event: VenueEvent, playFeeCents: number | null) {
     title: event.title,
     hour,
     price,
-    meta: [hour, price, event.seriesId ? `Chaque ${weekday}` : null].filter(Boolean).join(' · '),
+    meta: [hour, price, event.recurrenceLabel].filter(Boolean).join(' · '),
     places: spots.text,
     placesAlert: spots.alert,
     action: agendaAction(event),

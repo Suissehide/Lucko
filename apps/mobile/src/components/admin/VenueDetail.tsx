@@ -44,7 +44,7 @@ export function VenueDetail({ venue }: { venue: AdminVenue }) {
   const pending = venue.status === 'PENDING'
   const update = (body: Parameters<typeof updateVenue.mutate>[0]) => updateVenue.mutate(body)
   const upcoming = (events.data ?? []).filter(
-    (e) => e.cancelledAt === null && new Date(e.startsAt) >= new Date(),
+    (e) => e.status !== 'CANCELLED' && e.status !== 'HIDDEN' && new Date(e.startsAt) >= new Date(),
   )
 
   return (

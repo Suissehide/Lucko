@@ -5,6 +5,7 @@ import {
   IconButton,
   LevelCard,
   ListCard,
+  ListRow,
   Panel,
   ProfileIdentity,
   RankCard,
@@ -20,7 +21,7 @@ import { router } from 'expo-router'
 import { Settings } from 'lucide-react-native'
 import { useWindowDimensions, View } from 'react-native'
 import { PlayerScreen } from '@/components/PlayerScreen'
-import { openSettings } from '@/lib/navigation'
+import { openManageVenue, openSettings } from '@/lib/navigation'
 import { placeLine, rankProps, vibeLabels, visibleAvatar } from '@/lib/profile'
 import { useMeQuery } from '@/queries/useMe'
 
@@ -111,10 +112,30 @@ export default function ProfileScreen() {
     </Typography>
   )
 
+  // Espace gérant (LKO-61) : publier les événements de son lieu, partenaire ou non
+  const managed = me.venues.filter((v) => v.role === 'MANAGER')
+  const myVenues = managed.length ? (
+    <Section title={managed.length > 1 ? 'Mes lieux' : 'Mon lieu'}>
+      <ListCard>
+        {managed.map((venue, i) => (
+          <ListRow
+            key={venue.id}
+            inset={16}
+            title={venue.name}
+            subtitle="Publier et gérer les événements"
+            last={i === managed.length - 1}
+            onPress={() => openManageVenue(venue.id)}
+          />
+        ))}
+      </ListCard>
+    </Section>
+  ) : null
+
   if (!wide) {
     return (
       <PlayerScreen tab="profil" wide={false} header={header}>
         {identity}
+        {myVenues}
         <Section title="Classements" link="Mes jeux" onLink={openGames}>
           {rankings}
         </Section>
@@ -138,6 +159,7 @@ export default function ProfileScreen() {
         </View>
         {rankings}
       </View>
+      {myVenues}
       <Section title="Disponibilités" link="Modifier" onLink={openEdit}>
         <Panel>
           <AvailabilityGrid value={me.availability} />

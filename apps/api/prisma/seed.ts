@@ -466,6 +466,29 @@ async function main() {
 
   // ---------- Événements ----------
 
+  // Série du mardi (LKO-61) : le job de nuit crée les dates suivantes, 3 mois à l'avance
+  const commanderSeries = {
+    venueId: bar.id,
+    createdById: 'staff-demo',
+    rrule: 'FREQ=WEEKLY;INTERVAL=1;BYDAY=TU',
+    startDate: localDate(nextWeekday(2, 19, 30, 0)),
+    untilDate: null,
+    startMinute: 19 * 60 + 30,
+    materializedUntil: localDate(nextWeekday(2, 19, 30, 11)),
+    type: 'GAME_NIGHT' as const,
+    title: 'Soirée Commander',
+    capacity: 12,
+  }
+  await prisma.eventSeries.upsert({
+    where: { id: 'demo-serie-commander-mardi' },
+    update: commanderSeries,
+    create: {
+      id: 'demo-serie-commander-mardi',
+      ...commanderSeries,
+      games: { connect: [{ slug: 'magic' }] },
+    },
+  })
+
   const events = [
     // Ce soir (accueil)
     {
@@ -526,15 +549,18 @@ async function main() {
       minAge: 8,
       games: [],
     },
-    // Les prochaines semaines (pas de soirée pendant les congés, semaine 6)
-    ...[0, 1, 2, 3, 4, 5, 7, 8, 9, 10].map((week) => ({
+    // Les prochaines semaines (soirée annulée pendant les congés, semaine 6)
+    ...[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((week) => ({
       id: `demo-commander-${week + 1}`,
       venueId: bar.id,
       type: 'GAME_NIGHT' as const,
       title: 'Soirée Commander',
       startsAt: nextWeekday(2, 19, 30, week),
       capacity: 12,
+      status: week === 6 ? ('CANCELLED' as const) : ('PUBLISHED' as const),
       seriesId: 'demo-serie-commander-mardi',
+      occurrenceDate: localDate(nextWeekday(2, 19, 30, week)),
+      createdById: 'staff-demo',
       games: ['magic'],
     })),
     {
