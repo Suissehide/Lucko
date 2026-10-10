@@ -14,7 +14,11 @@
       "supportsTablet": false
     },
     "android": {
-      "package": "fr.lucko.app"
+      "package": "fr.lucko.app",
+      "blockedPermissions": [
+        "android.permission.READ_CALENDAR",
+        "android.permission.WRITE_CALENDAR"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -39,6 +43,15 @@
           "photosPermission": "Lucko accède à tes photos pour que tu choisisses ta photo de profil.",
           "cameraPermission": false,
           "microphonePermission": false
+        }
+      ],
+      [
+        "expo-calendar",
+        {
+          "calendarPermission": "Lucko ajoute tes parties à ton calendrier quand tu le demandes.",
+          "writeOnlyAccess": true,
+          "writeOnlyCalendarPermission": "Lucko ajoute tes parties à ton calendrier quand tu le demandes.",
+          "remindersPermission": false
         }
       ]
     ],
