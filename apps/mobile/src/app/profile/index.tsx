@@ -21,7 +21,7 @@ import { router } from 'expo-router'
 import { Settings } from 'lucide-react-native'
 import { useWindowDimensions, View } from 'react-native'
 import { PlayerScreen } from '@/components/PlayerScreen'
-import { openManageVenue, openSettings } from '@/lib/navigation'
+import { openManageVenue, openQr, openScan, openSettings } from '@/lib/navigation'
 import { placeLine, rankProps, vibeLabels, visibleAvatar } from '@/lib/profile'
 import { useMeQuery } from '@/queries/useMe'
 
@@ -112,29 +112,57 @@ export default function ProfileScreen() {
     </Typography>
   )
 
-  // Espace gérant (LKO-61) : publier les événements de son lieu, partenaire ou non
-  const managed = me.venues.filter((v) => v.role === 'MANAGER')
-  const myVenues = managed.length ? (
-    <Section title={managed.length > 1 ? 'Mes lieux' : 'Mon lieu'}>
+  // Espace gérant (LKO-61) : publier les événements de son lieu, partenaire ou non ;
+  // scan des QR Lucko (LKO-77) pour tout le staff d'un lieu partenaire
+  const venueRows = me.venues.flatMap((venue) => [
+    ...(venue.role === 'MANAGER'
+      ? [
+          {
+            key: `${venue.id}-manage`,
+            title: venue.name,
+            subtitle: 'Publier et gérer les événements',
+            onPress: () => openManageVenue(venue.id),
+          },
+        ]
+      : []),
+    ...(venue.isPartner
+      ? [
+          {
+            key: `${venue.id}-scan`,
+            title: venue.name,
+            subtitle: 'Scanner un QR Lucko',
+            onPress: () => openScan(venue.id),
+          },
+        ]
+      : []),
+  ])
+  const myVenues = venueRows.length ? (
+    <Section title={me.venues.length > 1 ? 'Mes lieux' : 'Mon lieu'}>
       <ListCard>
-        {managed.map((venue, i) => (
-          <ListRow
-            key={venue.id}
-            inset={16}
-            title={venue.name}
-            subtitle="Publier et gérer les événements"
-            last={i === managed.length - 1}
-            onPress={() => openManageVenue(venue.id)}
-          />
+        {venueRows.map(({ key, ...row }, i) => (
+          <ListRow key={key} inset={16} {...row} last={i === venueRows.length - 1} />
         ))}
       </ListCard>
     </Section>
   ) : null
 
+  const qr = (
+    <ListCard>
+      <ListRow
+        inset={16}
+        title="Mon QR Lucko"
+        subtitle="À montrer au comptoir d’un lieu partenaire"
+        last
+        onPress={openQr}
+      />
+    </ListCard>
+  )
+
   if (!wide) {
     return (
       <PlayerScreen tab="profil" wide={false} header={header}>
         {identity}
+        {qr}
         {myVenues}
         <Section title="Classements" link="Mes jeux" onLink={openGames}>
           {rankings}
@@ -159,6 +187,7 @@ export default function ProfileScreen() {
         </View>
         {rankings}
       </View>
+      {qr}
       {myVenues}
       <Section title="Disponibilités" link="Modifier" onLink={openEdit}>
         <Panel>
