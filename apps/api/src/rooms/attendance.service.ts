@@ -15,6 +15,7 @@ import type { Prisma, User, VisitSource } from '../generated/prisma/client'
 import { JobsService } from '../jobs/jobs.service'
 import { PrismaService } from '../prisma/prisma.service'
 import { PushService } from '../push/push.service'
+import { XpService } from '../xp/xp.service'
 import { attendanceClosed, type Marker, presenceLocked } from './attendance.rules'
 import { lifecycleStatus } from './rooms.rules'
 
@@ -45,7 +46,7 @@ const dbDate = (date: string) => new Date(`${date}T00:00:00Z`)
  * La présence est gardée sur la place du joueur dans la room ; dans un lieu, elle crée aussi la venue
  * du soir (Visit) qui porte le montant du ticket, visible du lieu seulement.
  */
-// ponytail: effets à brancher quand ils existeront : no-show sur la note de confiance (LKO-84), XP (LKO-89) ;
+// ponytail: effets à brancher quand ils existeront : no-show sur la note de confiance (LKO-84) ;
 // pas encore de détection des pointages massifs suspects
 @Injectable()
 export class AttendanceService implements OnModuleInit {
@@ -54,6 +55,7 @@ export class AttendanceService implements OnModuleInit {
     private readonly jobs: JobsService,
     private readonly push: PushService,
     private readonly billing: BillingService,
+    private readonly xp: XpService,
   ) {}
 
   async onModuleInit() {
@@ -101,30 +103,33 @@ export class AttendanceService implements OnModuleInit {
               checkedInAt: now,
             },
           })
-        if (!room.venueId) continue
-        const key = { userId: entry.userId, venueId: room.venueId, businessDate: dbDate(date) }
-        const where = { userId_venueId_businessDate: key }
-        const ticket = entry.ticketCents === undefined ? {} : { spentCents: entry.ticketCents }
-        if (locked) {
-          // Joueur scanné : le lieu peut quand même saisir son ticket
-          if (visit && role === 'VENUE') await tx.visit.update({ where, data: ticket })
-        } else if (entry.present) {
-          await tx.visit.upsert({
-            where,
-            create: {
-              ...key,
-              source: 'CHECK_IN',
-              ...ticket,
-              ...(await this.billing.visitFields(tx, room.venueId, entry.userId)),
-            },
-            update: ticket,
-          })
-        } else if (
-          visit?.source === 'CHECK_IN' &&
-          !(await this.presentElsewhere(tx, entry.userId, room.venueId, date, roomId))
-        ) {
-          await tx.visit.delete({ where })
+        if (room.venueId) {
+          const key = { userId: entry.userId, venueId: room.venueId, businessDate: dbDate(date) }
+          const where = { userId_venueId_businessDate: key }
+          const ticket = entry.ticketCents === undefined ? {} : { spentCents: entry.ticketCents }
+          if (locked) {
+            // Joueur scanné : le lieu peut quand même saisir son ticket
+            if (visit && role === 'VENUE') await tx.visit.update({ where, data: ticket })
+          } else if (entry.present) {
+            await tx.visit.upsert({
+              where,
+              create: {
+                ...key,
+                source: 'CHECK_IN',
+                ...ticket,
+                ...(await this.billing.visitFields(tx, room.venueId, entry.userId)),
+              },
+              update: ticket,
+            })
+          } else if (
+            visit?.source === 'CHECK_IN' &&
+            !(await this.presentElsewhere(tx, entry.userId, room.venueId, date, roomId))
+          ) {
+            await tx.visit.delete({ where })
+          }
         }
+        // XP de participation (LKO-89) : gagnée ou retirée selon la présence
+        if (!locked) await this.xp.syncRoom(tx, roomId, entry.userId)
       }
     })
     return this.sheet(roomId, user)

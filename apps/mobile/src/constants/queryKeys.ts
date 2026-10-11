@@ -123,3 +123,8 @@ export const BILLING = {
   VISITS: 'venue_visits',
   DISPUTE: 'dispute_visit',
 } as const
+
+/** XP de participation et niveaux (LKO-89). */
+export const XP = {
+  GET: 'my_xp',
+} as const

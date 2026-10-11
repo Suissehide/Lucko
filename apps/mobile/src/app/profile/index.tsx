@@ -28,6 +28,7 @@ import {
   openSettings,
   openVenueAttendance,
   openVenueBilling,
+  openXp,
 } from '@/lib/navigation'
 import { placeLine, rankProps, vibeLabels, visibleAvatar } from '@/lib/profile'
 import { useMeQuery } from '@/queries/useMe'
@@ -176,8 +177,14 @@ export default function ProfileScreen() {
         inset={16}
         title="Mon QR Lucko"
         subtitle="À montrer au comptoir d’un lieu partenaire"
-        last
         onPress={openQr}
+      />
+      <ListRow
+        inset={16}
+        title="Mon XP et mes niveaux"
+        subtitle={`Niveau ${xp.level} · ${xp.name}`}
+        last
+        onPress={openXp}
       />
     </ListCard>
   )

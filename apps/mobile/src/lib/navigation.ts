@@ -62,6 +62,9 @@ export const openVenueAttendance = (venueId: string) =>
 export const openVenueBilling = (venueId: string) =>
   router.push({ pathname: '/billing/[venueId]', params: { venueId } })
 
+/** Mon XP : niveau, derniers gains et paliers nommés (LKO-89). */
+export const openXp = () => router.push('/xp')
+
 /** Créer une room ; `venueSlug` présélectionne le lieu. */
 export const openCreateRoom = (venueSlug?: string) =>
   router.push({ pathname: '/rooms/new', params: venueSlug ? { venue: venueSlug } : {} })
