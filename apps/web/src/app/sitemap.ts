@@ -5,6 +5,11 @@ import { siteUrl } from './site'
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
     { url: siteUrl, changeFrequency: 'weekly', priority: 1 },
+    ...['/about', '/help'].map((path) => ({
+      url: siteUrl + path,
+      changeFrequency: 'monthly' as const,
+      priority: 0.5,
+    })),
     ...['/terms', '/privacy', '/legal-notice'].map((path) => ({
       url: siteUrl + path,
       changeFrequency: 'yearly' as const,
