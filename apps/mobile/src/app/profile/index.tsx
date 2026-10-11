@@ -27,6 +27,7 @@ import {
   openScan,
   openSettings,
   openVenueAttendance,
+  openVenueBilling,
 } from '@/lib/navigation'
 import { placeLine, rankProps, vibeLabels, visibleAvatar } from '@/lib/profile'
 import { useMeQuery } from '@/queries/useMe'
@@ -138,6 +139,17 @@ export default function ProfileScreen() {
             title: venue.name,
             subtitle: 'Scanner un QR Lucko',
             onPress: () => openScan(venue.id),
+          },
+        ]
+      : []),
+    // Venues facturables du mois (LKO-79) : gérant d'un lieu partenaire
+    ...(venue.isPartner && venue.role === 'MANAGER'
+      ? [
+          {
+            key: `${venue.id}-billing`,
+            title: venue.name,
+            subtitle: 'Venues facturables du mois',
+            onPress: () => openVenueBilling(venue.id),
           },
         ]
       : []),

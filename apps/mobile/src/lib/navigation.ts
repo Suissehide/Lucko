@@ -58,6 +58,10 @@ export const openAttendance = (roomId: string) =>
 export const openVenueAttendance = (venueId: string) =>
   router.push({ pathname: '/presence/[venueId]', params: { venueId } })
 
+/** Venues facturables du mois d'un lieu partenaire, pour le gérant (LKO-79). */
+export const openVenueBilling = (venueId: string) =>
+  router.push({ pathname: '/billing/[venueId]', params: { venueId } })
+
 /** Créer une room ; `venueSlug` présélectionne le lieu. */
 export const openCreateRoom = (venueSlug?: string) =>
   router.push({ pathname: '/rooms/new', params: venueSlug ? { venue: venueSlug } : {} })

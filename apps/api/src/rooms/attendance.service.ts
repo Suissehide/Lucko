@@ -8,6 +8,7 @@ import {
   type OnModuleInit,
 } from '@nestjs/common'
 import type { z } from 'zod'
+import { BillingService } from '../billing/billing.service'
 import { businessDate } from '../checkin/qr.rules'
 import { formatLabel } from '../explore/explore.service'
 import type { Prisma, User, VisitSource } from '../generated/prisma/client'
@@ -44,14 +45,15 @@ const dbDate = (date: string) => new Date(`${date}T00:00:00Z`)
  * La présence est gardée sur la place du joueur dans la room ; dans un lieu, elle crée aussi la venue
  * du soir (Visit) qui porte le montant du ticket, visible du lieu seulement.
  */
-// ponytail: effets à brancher quand ils existeront : no-show sur la note de confiance (LKO-84), XP (LKO-89),
-// venue facturable (LKO-79) ; pas encore de détection des pointages massifs suspects
+// ponytail: effets à brancher quand ils existeront : no-show sur la note de confiance (LKO-84), XP (LKO-89) ;
+// pas encore de détection des pointages massifs suspects
 @Injectable()
 export class AttendanceService implements OnModuleInit {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jobs: JobsService,
     private readonly push: PushService,
+    private readonly billing: BillingService,
   ) {}
 
   async onModuleInit() {
@@ -109,7 +111,12 @@ export class AttendanceService implements OnModuleInit {
         } else if (entry.present) {
           await tx.visit.upsert({
             where,
-            create: { ...key, source: 'CHECK_IN', ...ticket },
+            create: {
+              ...key,
+              source: 'CHECK_IN',
+              ...ticket,
+              ...(await this.billing.visitFields(tx, room.venueId, entry.userId)),
+            },
             update: ticket,
           })
         } else if (

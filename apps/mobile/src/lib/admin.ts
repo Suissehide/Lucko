@@ -179,6 +179,7 @@ const ACTION_GROUP: Record<AdminActionKind, Exclude<JournalFilter, 'all'>> = {
   EVENT_CANCEL: 'catalogue',
   EVENT_HIDE: 'moderation',
   GAME_MERGE: 'catalogue',
+  VISIT_DECIDE: 'moderation',
 }
 
 export const inJournal = (filter: JournalFilter) => (a: AdminActionItem) =>
@@ -199,6 +200,7 @@ export const ACTION_COLOR: Record<AdminActionKind, string> = {
   EVENT_CANCEL: colors.event,
   EVENT_HIDE: colors.room,
   GAME_MERGE: colors.muted,
+  VISIT_DECIDE: colors.rating,
 }
 
 export function openTarget(target: NonNullable<AdminActionItem['target']>) {
