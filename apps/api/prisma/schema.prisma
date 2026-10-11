@@ -66,6 +66,7 @@ model User {
   hostedRooms        Room[]              @relation("RoomHost")
   participations     RoomParticipant[]
   visits             Visit[]
+  xpEvents           XpEvent[]
   staffOf            VenueStaff[]
   eventRegistrations EventRegistration[]
   sessions           Session[]
@@ -464,6 +465,7 @@ model Room {
   updatedAt            DateTime    @updatedAt
 
   participants   RoomParticipant[]
+  xpEvents       XpEvent[]
   ratingChanges  RatingChange[]
   conversation   Conversation?
   privateAddress RoomPrivateAddress?
@@ -725,6 +727,25 @@ model Visit {
   createdAt    DateTime    @default(now())
 
   @@unique([userId, venueId, businessDate])
+}
+
+/// Gain d'XP (LKO-89) : une présence vérifiée dans une room (scan ou pointage), une seule fois par joueur
+/// et par room ; retiré si la présence est corrigée. User.xp en est la somme.
+model XpEvent {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roomId       String
+  room         Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  amount       Int
+  /// Bonus appliqués (XpBonus de @lucko/shared), ex. PARTNER
+  bonuses      String[] @default([])
+  /// Soirée de rattachement (date locale), pour le plafond de rooms par soirée
+  businessDate DateTime @db.Date
+  createdAt    DateTime @default(now())
+
+  @@unique([userId, roomId])
+  @@index([userId, businessDate])
 }
 
 // ---------- Modération (LKO-19) ----------

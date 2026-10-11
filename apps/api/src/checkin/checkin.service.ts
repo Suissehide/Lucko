@@ -12,6 +12,7 @@ import { isMinor } from '../common/minors.rules'
 import { loadEnv } from '../config/env'
 import { Prisma } from '../generated/prisma/client'
 import { PrismaService } from '../prisma/prisma.service'
+import { XpService } from '../xp/xp.service'
 import { businessDate, qrKey, signQrToken, verifyQrToken } from './qr.rules'
 
 /**
@@ -25,13 +26,13 @@ export class CheckinService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly billing: BillingService,
+    private readonly xp: XpService,
   ) {}
 
   token(userId: string) {
     return signQrToken(this.key, userId)
   }
 
-  // ponytail: XP bonus partenaire (LKO-89) reste à brancher sur la Visit créée ici
   async scan(venueId: string, token: string): Promise<ScanResult> {
     const now = new Date()
     const check = verifyQrToken(this.key, token, now)
@@ -79,6 +80,8 @@ export class CheckinService {
         throw new ConflictException('QR déjà utilisé : demande au joueur de rouvrir son QR Lucko')
       alreadyScanned = true
     }
+    // Le scan valide la présence dans ses rooms du soir ici : XP de participation (LKO-89)
+    if (!alreadyScanned) await this.xp.scanned(check.userId, venueId, businessDate(now))
     return {
       pseudo: player.pseudo,
       minor: isMinor(player, now),
