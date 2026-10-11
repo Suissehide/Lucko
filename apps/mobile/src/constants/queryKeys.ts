@@ -110,3 +110,10 @@ export const CHECKIN = {
   QR_TOKEN: 'qr_token',
   SCAN: 'scan_qr',
 } as const
+
+/** Pointage des présents (LKO-78) : par l'hôte d'une room ou le staff du lieu. */
+export const ATTENDANCE = {
+  ROOM: 'room_attendance',
+  VENUE: 'venue_attendance',
+  MARK: 'mark_attendance',
+} as const

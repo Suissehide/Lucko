@@ -31,7 +31,7 @@ import { HomeSafetyDialog } from '@/components/HomeSafetyDialog'
 import { HomeZoneCard } from '@/components/rooms/HomeZoneCard'
 import { addToCalendar } from '@/lib/calendar'
 import { eventWhen, gameLabel } from '@/lib/explore'
-import { openChat, openVenue } from '@/lib/navigation'
+import { openAttendance, openChat, openVenue } from '@/lib/navigation'
 import { useChatUnread } from '@/queries/useChat'
 import { useMeQuery } from '@/queries/useMe'
 import { useParticipationMutations, useRoomQuery } from '@/queries/useRoom'
@@ -130,7 +130,12 @@ export default function RoomScreen() {
   ]
 
   let footer = null
-  if (room.isHost || over) {
+  if (room.isHost && (room.status === 'IN_PROGRESS' || room.status === 'FINISHED')) {
+    // Pointage des présents (LKO-78)
+    footer = (
+      <Button kind="room" label="Pointer les présents" onPress={() => openAttendance(room.id)} />
+    )
+  } else if (room.isHost || over) {
     footer = null
   } else if (!me) {
     footer = (

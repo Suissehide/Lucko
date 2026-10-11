@@ -50,6 +50,14 @@ export const openQr = () => router.push('/qr')
 export const openScan = (venueId: string) =>
   router.push({ pathname: '/scan/[venueId]', params: { venueId } })
 
+/** Pointage des présents d'une room, par l'hôte (LKO-78). */
+export const openAttendance = (roomId: string) =>
+  router.push({ pathname: '/attendance/[roomId]', params: { roomId } })
+
+/** Pointage de la soirée par le staff du lieu (LKO-78). */
+export const openVenueAttendance = (venueId: string) =>
+  router.push({ pathname: '/presence/[venueId]', params: { venueId } })
+
 /** Créer une room ; `venueSlug` présélectionne le lieu. */
 export const openCreateRoom = (venueSlug?: string) =>
   router.push({ pathname: '/rooms/new', params: venueSlug ? { venue: venueSlug } : {} })

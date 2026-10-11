@@ -35,6 +35,7 @@ import { PlayIntentsService } from '../play-intents/play-intents.service'
 import { PrismaService } from '../prisma/prisma.service'
 import { PushService } from '../push/push.service'
 import { RealtimeGateway } from '../realtime/realtime.gateway'
+import { ATTENDANCE_REMINDER_JOB } from './attendance.service'
 import {
   addressKeys,
   addressRefusal,
@@ -54,6 +55,7 @@ import {
   lifecycleStatus,
   promotedStatus,
   type ReminderKind,
+  ROOM_PLAY_MS,
   reminderContent,
   reminderTimes,
 } from './rooms.rules'
@@ -225,6 +227,11 @@ export class RoomsService implements OnModuleInit {
         { roomId: room.id, kind },
         { startAfter: at, singletonKey: `${room.id}:${kind}` },
       )
+    await this.jobs.send(
+      ATTENDANCE_REMINDER_JOB,
+      { roomId: room.id },
+      { startAfter: new Date(input.startsAt.getTime() + ROOM_PLAY_MS), singletonKey: room.id },
+    )
     // Joueurs qui attendent ce jeu près du lieu (LKO-17)
     await this.intents.roomOpened(room.id)
     return room
