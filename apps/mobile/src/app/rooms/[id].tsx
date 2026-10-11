@@ -21,6 +21,7 @@ import {
   type RoomCandidate,
   type RoomDetail,
 } from '@lucko/shared'
+import * as Linking from 'expo-linking'
 import { router, useLocalSearchParams } from 'expo-router'
 import { ChevronRight } from 'lucide-react-native'
 import { useState } from 'react'
@@ -28,6 +29,7 @@ import { View } from 'react-native'
 import { DetailScreen } from '@/components/DetailScreen'
 import { HomeSafetyDialog } from '@/components/HomeSafetyDialog'
 import { HomeZoneCard } from '@/components/rooms/HomeZoneCard'
+import { addToCalendar } from '@/lib/calendar'
 import { eventWhen, gameLabel } from '@/lib/explore'
 import { openChat, openVenue } from '@/lib/navigation'
 import { useChatUnread } from '@/queries/useChat'
@@ -177,13 +179,33 @@ export default function RoomScreen() {
       </View>
       {error ? <Banner tone="err" message={error.message} onClose={clearError} /> : null}
       {member ? (
-        <View style={{ alignSelf: 'flex-start' }}>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
           <Button
             small
             kind="soft"
             label={`Chat de la room${unread ? ` · ${unread} non lu${unread > 1 ? 's' : ''}` : ''}`}
             onPress={() => openChat('room', id)}
           />
+          {over ? null : (
+            <Button
+              small
+              kind="ghost"
+              label="Ajouter au calendrier"
+              onPress={() =>
+                void addToCalendar({
+                  uid: `room-${id}`,
+                  title: `${room.game.name} · ${title}`,
+                  startsAt: new Date(room.startsAt),
+                  endsAt: null,
+                  // Zone floue seulement pour une room à domicile : l'adresse reste dans l'app
+                  location: room.venue
+                    ? `${room.venue.name}, ${room.venue.address}`
+                    : (room.home?.areaLabel ?? null),
+                  url: Linking.createURL(`/rooms/${id}`),
+                })
+              }
+            />
+          )}
         </View>
       ) : null}
 
