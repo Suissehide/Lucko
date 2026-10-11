@@ -21,7 +21,13 @@ import { router } from 'expo-router'
 import { Settings } from 'lucide-react-native'
 import { useWindowDimensions, View } from 'react-native'
 import { PlayerScreen } from '@/components/PlayerScreen'
-import { openManageVenue, openQr, openScan, openSettings } from '@/lib/navigation'
+import {
+  openManageVenue,
+  openQr,
+  openScan,
+  openSettings,
+  openVenueAttendance,
+} from '@/lib/navigation'
 import { placeLine, rankProps, vibeLabels, visibleAvatar } from '@/lib/profile'
 import { useMeQuery } from '@/queries/useMe'
 
@@ -113,7 +119,7 @@ export default function ProfileScreen() {
   )
 
   // Espace gérant (LKO-61) : publier les événements de son lieu, partenaire ou non ;
-  // scan des QR Lucko (LKO-77) pour tout le staff d'un lieu partenaire
+  // pointage du soir (LKO-78) pour tout le staff ; scan des QR Lucko (LKO-77) dans un lieu partenaire
   const venueRows = me.venues.flatMap((venue) => [
     ...(venue.role === 'MANAGER'
       ? [
@@ -135,6 +141,12 @@ export default function ProfileScreen() {
           },
         ]
       : []),
+    {
+      key: `${venue.id}-attendance`,
+      title: venue.name,
+      subtitle: 'Pointer les présents du soir',
+      onPress: () => openVenueAttendance(venue.id),
+    },
   ])
   const myVenues = venueRows.length ? (
     <Section title={me.venues.length > 1 ? 'Mes lieux' : 'Mon lieu'}>

@@ -500,6 +500,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/rooms/{id}/attendance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AttendanceController_sheet"];
+        put: operations["AttendanceController_mark"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/venues/{venueId}/attendance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AttendanceController_venue"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/dashboard": {
         parameters: {
             query?: never;
@@ -3046,6 +3078,141 @@ export interface operations {
                             appliedAt: string;
                         }[];
                     };
+                };
+            };
+        };
+    };
+    AttendanceController_sheet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        roomId: string;
+                        title: string;
+                        /** Format: date-time */
+                        startsAt: string;
+                        /** @enum {string} */
+                        status: "OPEN" | "FULL" | "CONFIRMED" | "IN_PROGRESS" | "FINISHED" | "CANCELLED";
+                        /** @enum {string} */
+                        role: "HOST" | "VENUE";
+                        closed: string | null;
+                        players: {
+                            userId: string;
+                            pseudo: string | null;
+                            isHost: boolean;
+                            present: boolean | null;
+                            /** @enum {string|null} */
+                            source: "HOST" | "VENUE" | "SCAN" | null;
+                            ticketCents: number | null;
+                            locked: string | null;
+                        }[];
+                    };
+                };
+            };
+        };
+    };
+    AttendanceController_mark: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    entries: {
+                        userId: string;
+                        present: boolean;
+                        ticketCents?: number | null;
+                    }[];
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        roomId: string;
+                        title: string;
+                        /** Format: date-time */
+                        startsAt: string;
+                        /** @enum {string} */
+                        status: "OPEN" | "FULL" | "CONFIRMED" | "IN_PROGRESS" | "FINISHED" | "CANCELLED";
+                        /** @enum {string} */
+                        role: "HOST" | "VENUE";
+                        closed: string | null;
+                        players: {
+                            userId: string;
+                            pseudo: string | null;
+                            isHost: boolean;
+                            present: boolean | null;
+                            /** @enum {string|null} */
+                            source: "HOST" | "VENUE" | "SCAN" | null;
+                            ticketCents: number | null;
+                            locked: string | null;
+                        }[];
+                    };
+                };
+            };
+        };
+    };
+    AttendanceController_venue: {
+        parameters: {
+            query?: {
+                date?: string;
+            };
+            header?: never;
+            path: {
+                venueId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        roomId: string;
+                        title: string;
+                        /** Format: date-time */
+                        startsAt: string;
+                        /** @enum {string} */
+                        status: "OPEN" | "FULL" | "CONFIRMED" | "IN_PROGRESS" | "FINISHED" | "CANCELLED";
+                        /** @enum {string} */
+                        role: "HOST" | "VENUE";
+                        closed: string | null;
+                        players: {
+                            userId: string;
+                            pseudo: string | null;
+                            isHost: boolean;
+                            present: boolean | null;
+                            /** @enum {string|null} */
+                            source: "HOST" | "VENUE" | "SCAN" | null;
+                            ticketCents: number | null;
+                            locked: string | null;
+                        }[];
+                    }[];
                 };
             };
         };

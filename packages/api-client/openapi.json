@@ -7131,6 +7131,431 @@
         ]
       }
     },
+    "/rooms/{id}/attendance": {
+      "get": {
+        "operationId": "AttendanceController_sheet",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "roomId": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "startsAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "OPEN",
+                        "FULL",
+                        "CONFIRMED",
+                        "IN_PROGRESS",
+                        "FINISHED",
+                        "CANCELLED"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "HOST",
+                        "VENUE"
+                      ]
+                    },
+                    "closed": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "players": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "userId": {
+                            "type": "string"
+                          },
+                          "pseudo": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "isHost": {
+                            "type": "boolean"
+                          },
+                          "present": {
+                            "nullable": true,
+                            "type": "boolean"
+                          },
+                          "source": {
+                            "nullable": true,
+                            "type": "string",
+                            "enum": [
+                              "HOST",
+                              "VENUE",
+                              "SCAN"
+                            ]
+                          },
+                          "ticketCents": {
+                            "nullable": true,
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "locked": {
+                            "nullable": true,
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "userId",
+                          "pseudo",
+                          "isHost",
+                          "present",
+                          "source",
+                          "ticketCents",
+                          "locked"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "roomId",
+                    "title",
+                    "startsAt",
+                    "status",
+                    "role",
+                    "closed",
+                    "players"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "rooms"
+        ]
+      },
+      "put": {
+        "operationId": "AttendanceController_mark",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "entries": {
+                    "minItems": 1,
+                    "maxItems": 100,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "userId": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "present": {
+                          "type": "boolean"
+                        },
+                        "ticketCents": {
+                          "nullable": true,
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 50000
+                        }
+                      },
+                      "required": [
+                        "userId",
+                        "present"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "entries"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "roomId": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "startsAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "OPEN",
+                        "FULL",
+                        "CONFIRMED",
+                        "IN_PROGRESS",
+                        "FINISHED",
+                        "CANCELLED"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "HOST",
+                        "VENUE"
+                      ]
+                    },
+                    "closed": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "players": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "userId": {
+                            "type": "string"
+                          },
+                          "pseudo": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "isHost": {
+                            "type": "boolean"
+                          },
+                          "present": {
+                            "nullable": true,
+                            "type": "boolean"
+                          },
+                          "source": {
+                            "nullable": true,
+                            "type": "string",
+                            "enum": [
+                              "HOST",
+                              "VENUE",
+                              "SCAN"
+                            ]
+                          },
+                          "ticketCents": {
+                            "nullable": true,
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "locked": {
+                            "nullable": true,
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "userId",
+                          "pseudo",
+                          "isHost",
+                          "present",
+                          "source",
+                          "ticketCents",
+                          "locked"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "roomId",
+                    "title",
+                    "startsAt",
+                    "status",
+                    "role",
+                    "closed",
+                    "players"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "rooms"
+        ]
+      }
+    },
+    "/venues/{venueId}/attendance": {
+      "get": {
+        "operationId": "AttendanceController_venue",
+        "parameters": [
+          {
+            "name": "venueId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "date",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "roomId": {
+                        "type": "string"
+                      },
+                      "title": {
+                        "type": "string"
+                      },
+                      "startsAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                      },
+                      "status": {
+                        "type": "string",
+                        "enum": [
+                          "OPEN",
+                          "FULL",
+                          "CONFIRMED",
+                          "IN_PROGRESS",
+                          "FINISHED",
+                          "CANCELLED"
+                        ]
+                      },
+                      "role": {
+                        "type": "string",
+                        "enum": [
+                          "HOST",
+                          "VENUE"
+                        ]
+                      },
+                      "closed": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "players": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "userId": {
+                              "type": "string"
+                            },
+                            "pseudo": {
+                              "nullable": true,
+                              "type": "string"
+                            },
+                            "isHost": {
+                              "type": "boolean"
+                            },
+                            "present": {
+                              "nullable": true,
+                              "type": "boolean"
+                            },
+                            "source": {
+                              "nullable": true,
+                              "type": "string",
+                              "enum": [
+                                "HOST",
+                                "VENUE",
+                                "SCAN"
+                              ]
+                            },
+                            "ticketCents": {
+                              "nullable": true,
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "locked": {
+                              "nullable": true,
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "userId",
+                            "pseudo",
+                            "isHost",
+                            "present",
+                            "source",
+                            "ticketCents",
+                            "locked"
+                          ]
+                        }
+                      }
+                    },
+                    "required": [
+                      "roomId",
+                      "title",
+                      "startsAt",
+                      "status",
+                      "role",
+                      "closed",
+                      "players"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "rooms"
+        ]
+      }
+    },
     "/admin/dashboard": {
       "get": {
         "operationId": "AdminModerationController_dashboard",

@@ -488,13 +488,23 @@ enum ParticipantStatus {
   LEFT
 }
 
+/// Qui a pointé : le lieu fait foi sur l'hôte (LKO-78). Le scan du QR, lui, crée une Visit.
+enum PresenceSource {
+  HOST
+  VENUE
+}
+
 model RoomParticipant {
   roomId      String
   room        Room              @relation(fields: [roomId], references: [id], onDelete: Cascade)
   userId      String
   user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   status      ParticipantStatus @default(PENDING)
-  checkedInAt DateTime?
+  /// Pointage (LKO-78) : null = pas encore pointé ; checkedInAt = quand, presenceMarkedById = par qui
+  present            Boolean?
+  presenceSource     PresenceSource?
+  presenceMarkedById String?
+  checkedInAt        DateTime?
   createdAt   DateTime          @default(now())
 
   @@id([roomId, userId])
