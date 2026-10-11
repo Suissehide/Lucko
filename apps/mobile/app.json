@@ -41,7 +41,7 @@
         "expo-image-picker",
         {
           "photosPermission": "Lucko accède à tes photos pour que tu choisisses ta photo de profil.",
-          "cameraPermission": false,
+          "cameraPermission": "Lucko utilise la caméra pour scanner le QR Lucko des joueurs au comptoir.",
           "microphonePermission": false
         }
       ],
@@ -52,6 +52,14 @@
           "writeOnlyAccess": true,
           "writeOnlyCalendarPermission": "Lucko ajoute tes parties à ton calendrier quand tu le demandes.",
           "remindersPermission": false
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Lucko utilise la caméra pour scanner le QR Lucko des joueurs au comptoir.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false
         }
       ]
     ],

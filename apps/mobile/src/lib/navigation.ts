@@ -43,6 +43,13 @@ export const openSettings = () => router.push('/settings')
 export const openManageVenue = (venueId: string) =>
   router.push({ pathname: '/manage/[venueId]', params: { venueId } })
 
+/** Mon QR Lucko, à montrer au comptoir d'un lieu partenaire (LKO-77). */
+export const openQr = () => router.push('/qr')
+
+/** Scan des QR Lucko par le staff d'un lieu partenaire (LKO-77). */
+export const openScan = (venueId: string) =>
+  router.push({ pathname: '/scan/[venueId]', params: { venueId } })
+
 /** Créer une room ; `venueSlug` présélectionne le lieu. */
 export const openCreateRoom = (venueSlug?: string) =>
   router.push({ pathname: '/rooms/new', params: venueSlug ? { venue: venueSlug } : {} })

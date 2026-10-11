@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common'
 import { AdminModule } from './admin/admin.module'
 import { AuthModule } from './auth/auth.module'
 import { ChatModule } from './chat/chat.module'
+import { CheckinModule } from './checkin/checkin.module'
 import { EventsModule } from './events/events.module'
 import { ExploreModule } from './explore/explore.module'
 import { GamesModule } from './games/games.module'
@@ -38,6 +39,7 @@ import { WaitlistModule } from './waitlist/waitlist.module'
     RoomsModule,
     AdminModule,
     ChatModule,
+    CheckinModule,
   ],
 })
 export class AppModule {}

@@ -49,7 +49,10 @@ export class UsersService {
       this.prisma.venueStaff.findMany({
         where: { userId: user.id },
         orderBy: { venue: { name: 'asc' } },
-        select: { role: true, venue: { select: { id: true, slug: true, name: true } } },
+        select: {
+          role: true,
+          venue: { select: { id: true, slug: true, name: true, isPartner: true } },
+        },
       }),
     ])
     const main = profiles[0]
