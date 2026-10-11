@@ -283,6 +283,7 @@ export const ADMIN_ACTION_KINDS = [
   'EVENT_CANCEL',
   'EVENT_HIDE',
   'GAME_MERGE',
+  'VISIT_DECIDE',
 ] as const
 export type AdminActionKind = (typeof ADMIN_ACTION_KINDS)[number]
 
@@ -300,6 +301,7 @@ export const ADMIN_ACTION_LABELS: Record<AdminActionKind, string> = {
   EVENT_CANCEL: 'Événement annulé',
   EVENT_HIDE: 'Événement masqué',
   GAME_MERGE: 'Jeux fusionnés',
+  VISIT_DECIDE: 'Venue contestée tranchée',
 }
 
 /** Suspension : 1 jour à 1 an, ou définitive. */

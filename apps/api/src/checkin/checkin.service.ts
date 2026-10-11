@@ -7,6 +7,7 @@ import {
   NotFoundException,
 } from '@nestjs/common'
 import { isSuspended } from '../admin/admin.rules'
+import { BillingService } from '../billing/billing.service'
 import { isMinor } from '../common/minors.rules'
 import { loadEnv } from '../config/env'
 import { Prisma } from '../generated/prisma/client'
@@ -21,13 +22,16 @@ import { businessDate, qrKey, signQrToken, verifyQrToken } from './qr.rules'
 export class CheckinService {
   private readonly key = qrKey(loadEnv().BETTER_AUTH_SECRET)
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly billing: BillingService,
+  ) {}
 
   token(userId: string) {
     return signQrToken(this.key, userId)
   }
 
-  // ponytail: XP bonus partenaire (LKO-89) et venue facturable (LKO-79) restent à brancher sur la Visit créée ici
+  // ponytail: XP bonus partenaire (LKO-89) reste à brancher sur la Visit créée ici
   async scan(venueId: string, token: string): Promise<ScanResult> {
     const now = new Date()
     const check = verifyQrToken(this.key, token, now)
@@ -64,6 +68,7 @@ export class CheckinService {
           source: 'QR_SCAN',
           businessDate: new Date(`${businessDate(now)}T00:00:00Z`),
           qrNonce: check.nonce,
+          ...(await this.billing.visitFields(this.prisma, venueId, check.userId)),
         },
       })
     } catch (error) {

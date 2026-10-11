@@ -117,3 +117,9 @@ export const ATTENDANCE = {
   VENUE: 'venue_attendance',
   MARK: 'mark_attendance',
 } as const
+
+/** Venues facturables d'un lieu partenaire (LKO-79). */
+export const BILLING = {
+  VISITS: 'venue_visits',
+  DISPUTE: 'dispute_visit',
+} as const

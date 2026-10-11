@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common'
 import { AdminModule } from './admin/admin.module'
 import { AuthModule } from './auth/auth.module'
+import { BillingModule } from './billing/billing.module'
 import { ChatModule } from './chat/chat.module'
 import { CheckinModule } from './checkin/checkin.module'
 import { EventsModule } from './events/events.module'
@@ -40,6 +41,7 @@ import { WaitlistModule } from './waitlist/waitlist.module'
     AdminModule,
     ChatModule,
     CheckinModule,
+    BillingModule,
   ],
 })
 export class AppModule {}
