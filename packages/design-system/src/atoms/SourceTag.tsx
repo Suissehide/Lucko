@@ -1,9 +1,11 @@
 import { Text, View } from 'react-native'
 import { border, colors, font, radius } from '../tokens'
 
-export type DataSource = 'google' | 'lucko' | 'missing'
+export type DataSource = 'google' | 'osm' | 'ban' | 'lucko' | 'missing'
 const sources: Record<DataSource, { label: string; bg: string }> = {
   google: { label: 'Google', bg: colors.eventSoft },
+  osm: { label: 'OpenStreetMap', bg: colors.eventSoft },
+  ban: { label: 'Base Adresse Nationale', bg: colors.eventSoft },
   lucko: { label: 'Lucko', bg: colors.venueSoft },
   missing: { label: 'À choisir', bg: colors.ratingSoft },
 }

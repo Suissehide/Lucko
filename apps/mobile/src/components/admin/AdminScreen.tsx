@@ -24,19 +24,22 @@ const WIDE = 900
 
 /**
  * Écran du back-office : barre latérale sombre et en-tête de section sur desktop ; sur téléphone,
- * en-tête avec retour (vers le tableau de bord, ou l'app depuis le tableau de bord).
+ * en-tête avec retour (vers le tableau de bord, ou l'app depuis le tableau de bord). `subpage` : page
+ * dans une section (nouveau lieu), avec son titre et un retour vers la section.
  */
 export function AdminScreen({
   section,
   title = ADMIN_TITLES[section],
   kicker = ADMIN_KICKERS[section],
   note,
+  subpage,
   children,
 }: {
   section: AdminSection
   title?: string
   kicker?: string
   note?: string
+  subpage?: boolean
   children: ReactNode
 }) {
   const wide = useWindowDimensions().width >= WIDE
@@ -44,12 +47,16 @@ export function AdminScreen({
   const dashboard = useAdminDashboardQuery().data
 
   if (!wide) {
-    const onBack = section === 'dashboard' ? openHome : () => openAdmin('dashboard')
+    const onBack = subpage
+      ? () => openAdmin(section)
+      : section === 'dashboard'
+        ? openHome
+        : () => openAdmin('dashboard')
     return (
       <MobileScreen
         insets={insets}
         siteFooter={false}
-        header={<ScreenHeader title={ADMIN_TITLES[section]} onBack={onBack} />}
+        header={<ScreenHeader title={subpage ? title : ADMIN_TITLES[section]} onBack={onBack} />}
       >
         {children}
       </MobileScreen>
