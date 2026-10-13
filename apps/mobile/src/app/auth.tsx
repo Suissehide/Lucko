@@ -31,6 +31,10 @@ import { forgetMe, meQueryOptions, useMeMutations } from '@/queries/useMe'
 
 type Step = 'welcome' | 'email' | 'birth' | AgeRegime
 
+/** Page à rouvrir après la connexion (`/auth?next=/consent/…`), seulement un chemin de l'app. */
+const afterAuth = { next: '/' }
+const goNext = () => router.replace(afterAuth.next as '/')
+
 /**
  * Accueil (A1), e-mail (A2) et date de naissance obligatoire (A3, LKO-44), branchés sur Better Auth (LKO-9).
  * Téléphone et navigateur desktop.
@@ -44,7 +48,8 @@ export default function AuthScreen() {
   /** Connecté par Apple / Google, il ne manque que la date de naissance (le compte existe déjà). */
   const [social, setSocial] = useState(false)
   const [providerError, setProviderError] = useState(false)
-  const { signedOut } = useLocalSearchParams<{ signedOut?: string }>()
+  const { signedOut, next } = useLocalSearchParams<{ signedOut?: string; next?: string }>()
+  afterAuth.next = next?.startsWith('/') && !next.startsWith('//') ? next : '/'
   const wide = width >= WIDE
   const { setBirthDate } = useMeMutations()
 
@@ -54,7 +59,7 @@ export default function AuthScreen() {
     if (!session) return
     const me = await queryClient.fetchQuery(meQueryOptions).catch(() => null)
     if (!me) return
-    if (me.hasBirthDate) return router.replace('/')
+    if (me.hasBirthDate) return goNext()
     setSocial(true)
     setStep('birth')
   }, [])
@@ -236,7 +241,7 @@ function AccountStep({
         return formApi.setErrorMap({
           onSubmit: { fields: { password: 'E-mail ou mot de passe incorrect.' } },
         })
-      router.replace('/')
+      goNext()
     },
   })
 
@@ -431,8 +436,12 @@ function Outcome({ regime, onRestart }: { regime: AgeRegime; onRestart: () => vo
         regime === 'too-young' ? (
           <StepButton label="Revenir à l’accueil" kind="ghost" onPress={onRestart} />
         ) : (
-          // ponytail: le consentement parent (A7, LKO-49) n'est pas encore fait ; l'accueil renvoie vers l'onboarding
-          <StepButton label="Continuer" onPress={() => router.replace('/')} />
+          <StepButton
+            label="Continuer"
+            onPress={() =>
+              regime === 'parental-consent' ? router.replace('/parental-consent') : goNext()
+            }
+          />
         )
       }
     >

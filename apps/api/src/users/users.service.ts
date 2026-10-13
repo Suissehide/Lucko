@@ -16,6 +16,7 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common'
 import type { z } from 'zod'
+import { needsParentalConsent } from '../common/minors.rules'
 import { loadEnv } from '../config/env'
 import { Prisma, type User } from '../generated/prisma/client'
 import { PrismaService } from '../prisma/prisma.service'
@@ -59,6 +60,7 @@ export class UsersService {
     return {
       ...user,
       hasBirthDate: user.birthDate !== null,
+      parentalConsentPending: needsParentalConsent(user),
       homeSafetyAccepted: (user.homeSafetyVersion ?? 0) >= HOME_SAFETY_VERSION,
       mainRating: main
         ? { game: main.format.game.name, format: main.format.name, rating: main.rating }

@@ -1,4 +1,4 @@
-import { ageOn, MIN_AGE } from '@lucko/shared'
+import { ageOn, ageRegime, MIN_AGE } from '@lucko/shared'
 
 /** Joueur qui consulte une liste ; null = pas connecté (site public). */
 export type Viewer = { id: string; birthDate: Date | null; parentId: string | null } | null
@@ -66,3 +66,12 @@ export const roomVisibleTo = (...args: Parameters<typeof minorRefusal>) =>
 export function eventVisibleTo(event: { minAge: number | null }, viewer: Viewer, now = new Date()) {
   return viewer === null || event.minAge === null || viewerAge(viewer, now) >= event.minAge
 }
+
+/** 13-14 ans sans accord d'un parent (LKO-49) : compte en lecture seule. */
+export const needsParentalConsent = (
+  user: { birthDate: Date | null; parentalConsentAt: Date | null },
+  now = new Date(),
+) =>
+  user.birthDate !== null &&
+  user.parentalConsentAt === null &&
+  ageRegime(user.birthDate, now) === 'parental-consent'

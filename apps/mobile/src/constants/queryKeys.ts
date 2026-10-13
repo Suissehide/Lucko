@@ -9,6 +9,13 @@ export const ME = {
   ACCEPT_HOME_SAFETY: 'accept_home_safety',
 } as const
 
+export const PARENTAL_CONSENT = {
+  MINE: 'my_parental_consent',
+  REQUEST: 'request_parental_consent',
+  GET: 'parental_consent',
+  GRANT: 'grant_parental_consent',
+} as const
+
 export const BLOCKS = {
   GET: 'blocks',
   UNBLOCK: 'unblock_player',

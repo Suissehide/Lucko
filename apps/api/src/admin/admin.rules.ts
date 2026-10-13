@@ -1,4 +1,4 @@
-import type { AdminActionKind } from '@lucko/shared'
+import { type AdminActionKind, formatLongDay } from '@lucko/shared'
 import { mailHtml } from '../mail/mail.layout'
 
 const DAY_MS = 24 * 60 * 60 * 1000
@@ -29,17 +29,10 @@ const SUPPORT_EMAIL = 'contact@lucko.fr'
 
 const greeting = (pseudo: string | null) => (pseudo ? `Bonjour ${pseudo},` : 'Bonjour,')
 
-const longDay = (date: Date) =>
-  new Intl.DateTimeFormat('fr-FR', {
-    timeZone: 'Europe/Paris',
-    day: 'numeric',
-    month: 'long',
-  }).format(date)
-
 /** E-mail au joueur suspendu : durée, motif, contact pour contester. */
 export function suspensionMail(user: Suspendable & { pseudo: string | null }, reason: string) {
   const until = user.suspendedUntil
-    ? `Jusqu’au ${longDay(user.suspendedUntil)}`
+    ? `Jusqu’au ${formatLongDay(user.suspendedUntil)}`
     : 'Suspension définitive'
   return {
     subject: 'Ton compte Lucko est suspendu',

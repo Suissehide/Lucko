@@ -34,6 +34,8 @@ const envSchema = z
     /** Serveur d'envoi des e-mails (Resend en SMTP en production) ; hors production, Mailpit par défaut. */
     SMTP_URL: z.string().url().optional(),
     MAIL_FROM: z.string().default('Lucko <noreply@lucko.fr>'),
+    /** Adresse de l'app web (Expo), pour les liens des e-mails. */
+    APP_URL: z.string().url().default('http://localhost:8081'),
     /** Stockage objet S3 (RustFS en local, voir deploy/compose.yaml) ; sans bucket, l'envoi de photo répond 503. */
     S3_ENDPOINT: z.string().url().optional(),
     S3_REGION: z.string().default('fr-par'),

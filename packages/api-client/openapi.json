@@ -447,6 +447,9 @@
                     "hasBirthDate": {
                       "type": "boolean"
                     },
+                    "parentalConsentPending": {
+                      "type": "boolean"
+                    },
                     "role": {
                       "type": "string",
                       "enum": [
@@ -639,6 +642,7 @@
                     "pseudo",
                     "name",
                     "hasBirthDate",
+                    "parentalConsentPending",
                     "role",
                     "avatarUrl",
                     "avatarStatus",
@@ -770,6 +774,9 @@
                     "hasBirthDate": {
                       "type": "boolean"
                     },
+                    "parentalConsentPending": {
+                      "type": "boolean"
+                    },
                     "role": {
                       "type": "string",
                       "enum": [
@@ -962,6 +969,7 @@
                     "pseudo",
                     "name",
                     "hasBirthDate",
+                    "parentalConsentPending",
                     "role",
                     "avatarUrl",
                     "avatarStatus",
@@ -1044,6 +1052,9 @@
                     "hasBirthDate": {
                       "type": "boolean"
                     },
+                    "parentalConsentPending": {
+                      "type": "boolean"
+                    },
                     "role": {
                       "type": "string",
                       "enum": [
@@ -1236,6 +1247,7 @@
                     "pseudo",
                     "name",
                     "hasBirthDate",
+                    "parentalConsentPending",
                     "role",
                     "avatarUrl",
                     "avatarStatus",
@@ -1310,6 +1322,9 @@
                     "hasBirthDate": {
                       "type": "boolean"
                     },
+                    "parentalConsentPending": {
+                      "type": "boolean"
+                    },
                     "role": {
                       "type": "string",
                       "enum": [
@@ -1502,6 +1517,7 @@
                     "pseudo",
                     "name",
                     "hasBirthDate",
+                    "parentalConsentPending",
                     "role",
                     "avatarUrl",
                     "avatarStatus",
@@ -1855,6 +1871,181 @@
         },
         "tags": [
           "users"
+        ]
+      }
+    },
+    "/me/parental-consent": {
+      "get": {
+        "operationId": "ConsentController_mine",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "parentEmail": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "granted": {
+                      "type": "boolean"
+                    },
+                    "deadline": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    }
+                  },
+                  "required": [
+                    "parentEmail",
+                    "granted",
+                    "deadline"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "consent"
+        ]
+      },
+      "post": {
+        "operationId": "ConsentController_request",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "parentEmail": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "parentEmail"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "parentEmail": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "granted": {
+                      "type": "boolean"
+                    },
+                    "deadline": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    }
+                  },
+                  "required": [
+                    "parentEmail",
+                    "granted",
+                    "deadline"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "consent"
+        ]
+      }
+    },
+    "/parental-consents/{token}": {
+      "get": {
+        "operationId": "ConsentController_show",
+        "parameters": [
+          {
+            "name": "token",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "childEmail": {
+                      "type": "string"
+                    },
+                    "childAge": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "PENDING",
+                        "GRANTED"
+                      ]
+                    },
+                    "deadline": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    }
+                  },
+                  "required": [
+                    "childEmail",
+                    "childAge",
+                    "status",
+                    "deadline"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "consent"
+        ]
+      },
+      "post": {
+        "operationId": "ConsentController_grant",
+        "parameters": [
+          {
+            "name": "token",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "consent"
         ]
       }
     },

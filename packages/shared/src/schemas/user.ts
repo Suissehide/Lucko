@@ -98,6 +98,8 @@ export const meSchema = z.object({
   name: z.string(),
   /** false après une première connexion Apple / Google : l'app demande la date avant tout. */
   hasBirthDate: z.boolean(),
+  /** 13-14 ans sans accord d'un parent (LKO-49) : compte en lecture seule, l'app demande l'e-mail du parent. */
+  parentalConsentPending: z.boolean(),
   role: z.enum(USER_ROLES),
   avatarUrl: z.string().nullable(),
   avatarStatus: z.enum(AVATAR_STATUSES).nullable(),
