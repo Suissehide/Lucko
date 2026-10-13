@@ -45,6 +45,7 @@ import {
   revealAt,
   sealAddress,
 } from './home.rules'
+import { ResultsService } from './results.service'
 import {
   ACTIVE,
   acceptRefusal,
@@ -112,6 +113,7 @@ export class RoomsService implements OnModuleInit {
     private readonly realtime: RealtimeGateway,
     private readonly intents: PlayIntentsService,
     private readonly jobs: JobsService,
+    private readonly results: ResultsService,
   ) {}
 
   async onModuleInit() {
@@ -232,6 +234,7 @@ export class RoomsService implements OnModuleInit {
       { roomId: room.id },
       { startAfter: new Date(input.startsAt.getTime() + ROOM_PLAY_MS), singletonKey: room.id },
     )
+    if (input.mode === 'RANKED') await this.results.schedule(room.id, input.startsAt)
     // Joueurs qui attendent ce jeu près du lieu (LKO-17)
     await this.intents.roomOpened(room.id)
     return room

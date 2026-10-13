@@ -123,7 +123,7 @@ export function planProfileMerge(source: Profile[], target: Profile[]) {
  */
 export const ACTION_TARGET: Record<
   AdminActionKind,
-  'report' | 'user' | 'venue' | 'event' | 'merge' | 'visit'
+  'report' | 'user' | 'venue' | 'event' | 'merge' | 'visit' | 'room'
 > = {
   REPORT_DISMISS: 'report',
   REPORT_WARN: 'report',
@@ -139,4 +139,6 @@ export const ACTION_TARGET: Record<
   EVENT_HIDE: 'event',
   GAME_MERGE: 'merge',
   VISIT_DECIDE: 'visit',
+  RESULT_DECIDE: 'room',
+  RESULT_VOID: 'room',
 }

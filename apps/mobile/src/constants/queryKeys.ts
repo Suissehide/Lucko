@@ -128,3 +128,14 @@ export const BILLING = {
 export const XP = {
   GET: 'my_xp',
 } as const
+
+/** Résultats des rooms classées (LKO-83) : saisie, vote des présents, arbitrage. */
+export const RESULTS = {
+  ROOM: 'room_result',
+  SUBMIT: 'submit_result',
+  CONFIRM: 'confirm_result',
+  DISPUTE: 'dispute_result',
+  VENUE_DISPUTES: 'venue_result_disputes',
+  ADMIN_DISPUTES: 'admin_result_disputes',
+  DECIDE: 'decide_result',
+} as const
