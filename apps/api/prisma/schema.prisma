@@ -84,6 +84,9 @@ model User {
   playIntents        PlayIntent[]
   createdEvents      Event[]             @relation("EventCreatedBy")
   createdEventSeries EventSeries[]
+  resultsSubmitted   MatchResult[]        @relation("ResultSubmittedBy")
+  resultsDecided     MatchResult[]        @relation("ResultDecidedBy")
+  resultVotes        ResultConfirmation[]
 }
 
 enum NotificationTopic {
@@ -469,6 +472,7 @@ model Room {
   ratingChanges  RatingChange[]
   conversation   Conversation?
   privateAddress RoomPrivateAddress?
+  result         MatchResult?
 
   @@index([startsAt])
 }
@@ -512,6 +516,63 @@ model RoomParticipant {
   createdAt   DateTime          @default(now())
 
   @@id([roomId, userId])
+}
+
+// ---------- Résultats des rooms classées (LKO-83) ----------
+
+enum ResultStatus {
+  /// Saisi, en attente de la majorité des présents
+  PENDING
+  /// Confirmé par la majorité ou validé à 48 h : LK appliqués
+  CONFIRMED
+  /// Contesté : le lieu partenaire tranche, sinon un admin
+  DISPUTED
+  /// Contestation tranchée en faveur d'un classement : LK appliqués
+  RESOLVED
+  /// Sans résultat (contestation tranchée ainsi ou annulation admin) : pas d'effet sur les LK
+  VOID
+}
+
+/// Résultat d'une room classée : un seul par room ; la 2e saisie est une contestation.
+model MatchResult {
+  id             String       @id @default(cuid())
+  roomId         String       @unique
+  room           Room         @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  submittedById  String
+  submittedBy    User         @relation("ResultSubmittedBy", fields: [submittedById], references: [id])
+  /// [{ userId, place }] des présents (1 = vainqueur, places égales = nul) ; schéma Zod dans @lucko/shared
+  placements     Json
+  /// Duel en plusieurs manches, ex. « 2-1 » (du point de vue du 1er)
+  score          String?
+  status         ResultStatus @default(PENDING)
+  /// Validation : majorité, délai de 48 h ou décision
+  confirmedAt    DateTime?
+  /// Contestation tranchée (staff du lieu ou admin), ou annulation admin
+  decidedById    String?
+  decidedBy      User?        @relation("ResultDecidedBy", fields: [decidedById], references: [id])
+  decidedAt      DateTime?
+  decisionReason String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  votes ResultConfirmation[]
+
+  @@index([status])
+}
+
+/// Vote d'un joueur présent : accepte, ou conteste avec un motif (et son propre classement s'il le propose).
+model ResultConfirmation {
+  resultId   String
+  result     MatchResult @relation(fields: [resultId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accepted   Boolean
+  reason     String?
+  /// Contre-proposition : même format que MatchResult.placements
+  placements Json?
+  createdAt  DateTime    @default(now())
+
+  @@id([resultId, userId])
 }
 
 // ---------- Événements des lieux ----------
@@ -833,6 +894,8 @@ enum AdminActionKind {
   EVENT_HIDE
   GAME_MERGE
   VISIT_DECIDE
+  RESULT_DECIDE
+  RESULT_VOID
 }
 
 /// Journal d'audit : chaque action d'un admin (qui, quoi, quand, cible, motif). Jamais modifié ni supprimé.

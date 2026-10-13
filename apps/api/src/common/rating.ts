@@ -1,4 +1,4 @@
-import { nextRatings, ratingReliability } from '@lucko/shared'
+import { nextRatings, RATING_FLOOR, ratingReliability } from '@lucko/shared'
 import type { Prisma } from '../generated/prisma/client'
 
 export type RatingResult = {
@@ -67,4 +67,31 @@ export async function applyRatingResult(
     }),
   )
   return ratings
+}
+
+/**
+ * Annule l'effet d'une room classée sur les LK (résultat annulé par un admin, LKO-83) : chaque joueur
+ * reprend l'écart gagné ou perdu, une partie classée de moins, et la ligne d'historique disparaît.
+ */
+// ponytail: les parties jouées depuis ne sont pas recalculées ; rejouer l'historique si l'écart compte
+export async function revertRatingResult(tx: Prisma.TransactionClient, roomId: string) {
+  const changes = await tx.ratingChange.findMany({
+    where: { roomId },
+    include: { profile: { include: { history: { select: { id: true, opponentIds: true } } } } },
+  })
+  for (const { id, profile, ratingBefore, ratingAfter } of changes) {
+    const rankedGames = Math.max(0, profile.rankedGames - 1)
+    const opponents = new Set(
+      profile.history.filter((h) => h.id !== id).flatMap((h) => h.opponentIds),
+    )
+    await tx.playerGameProfile.update({
+      where: { id: profile.id },
+      data: {
+        rating: Math.max(RATING_FLOOR, profile.rating - (ratingAfter - ratingBefore)),
+        rankedGames,
+        reliabilityPct: ratingReliability(rankedGames, opponents.size),
+        history: { delete: { id } },
+      },
+    })
+  }
 }
