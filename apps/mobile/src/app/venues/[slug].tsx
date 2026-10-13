@@ -6,6 +6,7 @@ import {
   Carousel,
   ClosureRow,
   colors,
+  DataCredit,
   FactCard,
   font,
   HoursCard,
@@ -393,7 +394,10 @@ function AddressBlock({
       {transit ? <Typography variant="small">{transit}</Typography> : null}
       {contact ? <Typography variant="small">{contact}</Typography> : null}
       {fromOsm ? (
-        <Typography variant="small">Données © contributeurs OpenStreetMap</Typography>
+        <DataCredit
+          source="© contributeurs OpenStreetMap"
+          href="https://www.openstreetmap.org/copyright"
+        />
       ) : null}
     </View>
   )
