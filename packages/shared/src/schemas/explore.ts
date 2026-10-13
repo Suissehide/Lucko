@@ -148,6 +148,8 @@ export const venueDetailSchema = venueListItemSchema
     phone: z.string().nullable(),
     website: z.string().nullable(),
     transitInfo: z.string().nullable(),
+    /** Fiche importée d'OpenStreetMap : attribution ODbL à afficher. */
+    osmId: z.string().nullable(),
     /** Fermé : prochaine ouverture (date locale, minutes depuis minuit). */
     nextOpening: z.object({ date: localDate, minute: z.number().int() }).nullable(),
     photos: z.array(z.object({ url: z.string(), caption: z.string().nullable() })),

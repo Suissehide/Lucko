@@ -1727,6 +1727,7 @@ export interface operations {
                         phone: string | null;
                         website: string | null;
                         transitInfo: string | null;
+                        osmId: string | null;
                         nextOpening: {
                             /** Format: date */
                             date: string;

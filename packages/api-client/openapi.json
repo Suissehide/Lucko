@@ -2101,6 +2101,10 @@
                       "nullable": true,
                       "type": "string"
                     },
+                    "osmId": {
+                      "nullable": true,
+                      "type": "string"
+                    },
                     "nextOpening": {
                       "nullable": true,
                       "type": "object",
@@ -2528,6 +2532,7 @@
                     "phone",
                     "website",
                     "transitInfo",
+                    "osmId",
                     "nextOpening",
                     "photos",
                     "openingHours",
