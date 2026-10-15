@@ -10602,6 +10602,7 @@
                               "USER_UNSUSPEND",
                               "AVATAR_APPROVE",
                               "AVATAR_REJECT",
+                              "VENUE_CREATE",
                               "VENUE_UPDATE",
                               "EVENT_CREATE",
                               "EVENT_UPDATE",
@@ -10936,6 +10937,7 @@
                           "USER_UNSUSPEND",
                           "AVATAR_APPROVE",
                           "AVATAR_REJECT",
+                          "VENUE_CREATE",
                           "VENUE_UPDATE",
                           "EVENT_CREATE",
                           "EVENT_UPDATE",
@@ -11164,6 +11166,387 @@
                       "createdAt"
                     ]
                   }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "post": {
+        "operationId": "AdminCatalogController_createVenue",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 120
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "GAME_BAR",
+                      "TCG_SHOP",
+                      "LUDOTHEQUE",
+                      "ASSOCIATION",
+                      "OTHER"
+                    ]
+                  },
+                  "address": {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  "city": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 80
+                  },
+                  "latitude": {
+                    "type": "number",
+                    "minimum": -90,
+                    "maximum": 90
+                  },
+                  "longitude": {
+                    "type": "number",
+                    "minimum": -180,
+                    "maximum": 180
+                  },
+                  "phone": {
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 40
+                  },
+                  "website": {
+                    "nullable": true,
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "acceptsUnaccompaniedMinors": {
+                    "type": "boolean"
+                  },
+                  "osmId": {
+                    "nullable": true,
+                    "type": "string",
+                    "pattern": "^(node|way|relation)\\/\\d+$"
+                  },
+                  "openingHours": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "weekday": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 7
+                        },
+                        "opensAtMinute": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 1439
+                        },
+                        "closesAtMinute": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 1439
+                        }
+                      },
+                      "required": [
+                        "weekday",
+                        "opensAtMinute",
+                        "closesAtMinute"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "name",
+                  "type",
+                  "address",
+                  "city",
+                  "latitude",
+                  "longitude",
+                  "phone",
+                  "website",
+                  "acceptsUnaccompaniedMinors",
+                  "osmId",
+                  "openingHours"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "slug": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "GAME_BAR",
+                        "TCG_SHOP",
+                        "LUDOTHEQUE",
+                        "ASSOCIATION",
+                        "OTHER"
+                      ]
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "PENDING",
+                        "PUBLISHED"
+                      ]
+                    },
+                    "address": {
+                      "type": "string"
+                    },
+                    "city": {
+                      "type": "string"
+                    },
+                    "phone": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "website": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "isPartner": {
+                      "type": "boolean"
+                    },
+                    "luckoPerk": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "acceptsUnaccompaniedMinors": {
+                      "type": "boolean"
+                    },
+                    "openingHours": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "weekday": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "opensAtMinute": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "closesAtMinute": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "weekday",
+                          "opensAtMinute",
+                          "closesAtMinute"
+                        ]
+                      }
+                    },
+                    "photoCount": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "slug",
+                    "name",
+                    "type",
+                    "status",
+                    "address",
+                    "city",
+                    "phone",
+                    "website",
+                    "isPartner",
+                    "luckoPerk",
+                    "acceptsUnaccompaniedMinors",
+                    "openingHours",
+                    "photoCount",
+                    "createdAt"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/venues/osm/{type}/{ref}": {
+      "get": {
+        "operationId": "AdminCatalogController_osmVenue",
+        "parameters": [
+          {
+            "name": "type",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ref",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "minLength": 2,
+                      "maxLength": 120
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "GAME_BAR",
+                        "TCG_SHOP",
+                        "LUDOTHEQUE",
+                        "ASSOCIATION",
+                        "OTHER"
+                      ]
+                    },
+                    "address": {
+                      "type": "string",
+                      "maxLength": 200
+                    },
+                    "city": {
+                      "type": "string",
+                      "minLength": 2,
+                      "maxLength": 80
+                    },
+                    "latitude": {
+                      "type": "number",
+                      "minimum": -90,
+                      "maximum": 90
+                    },
+                    "longitude": {
+                      "type": "number",
+                      "minimum": -180,
+                      "maximum": 180
+                    },
+                    "phone": {
+                      "nullable": true,
+                      "type": "string",
+                      "maxLength": 40
+                    },
+                    "website": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "uri"
+                    },
+                    "acceptsUnaccompaniedMinors": {
+                      "type": "boolean"
+                    },
+                    "osmId": {
+                      "nullable": true,
+                      "type": "string",
+                      "pattern": "^(node|way|relation)\\/\\d+$"
+                    },
+                    "openingHours": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "weekday": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 7
+                          },
+                          "opensAtMinute": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 1439
+                          },
+                          "closesAtMinute": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 1439
+                          }
+                        },
+                        "required": [
+                          "weekday",
+                          "opensAtMinute",
+                          "closesAtMinute"
+                        ]
+                      }
+                    },
+                    "duplicate": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "name"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "type",
+                    "address",
+                    "city",
+                    "latitude",
+                    "longitude",
+                    "phone",
+                    "website",
+                    "acceptsUnaccompaniedMinors",
+                    "osmId",
+                    "openingHours",
+                    "duplicate"
+                  ]
                 }
               }
             }

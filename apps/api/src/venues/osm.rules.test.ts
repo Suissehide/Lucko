@@ -89,6 +89,21 @@ describe('toVenue', () => {
     )
     expect(v?.venue.city).toBe('Grand Paris')
   })
+
+  it('ludothèque ouverte aux mineurs, site sans protocole complété', () => {
+    const v = toVenue({
+      type: 'node',
+      id: 5,
+      lat: 1,
+      lon: 2,
+      tags: { amenity: 'toy_library', name: 'Ludothèque Interlude', website: 'interlude.fr' },
+    })
+    expect(v?.venue).toMatchObject({
+      type: 'LUDOTHEQUE',
+      acceptsUnaccompaniedMinors: true,
+      website: 'https://interlude.fr',
+    })
+  })
 })
 
 describe('isSamePlace', () => {

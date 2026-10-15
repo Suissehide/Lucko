@@ -7,10 +7,14 @@ import {
   adminVenueQuerySchema,
   adminVenueSchema,
   cancelEventSchema,
+  createVenueSchema,
   mergeGamesSchema,
+  osmVenuePreviewSchema,
   updateVenueSchema,
 } from '@lucko/shared'
 import {
+  BadGatewayException,
+  ConflictException,
   Controller,
   Get,
   HttpCode,
@@ -25,8 +29,10 @@ import { z } from 'zod'
 import { CurrentUser } from '../auth/auth.decorators'
 import { ZodBody, ZodQuery, ZodResponse } from '../common/zod'
 import { VenueEventsService } from '../events/venue-events.service'
-import type { Prisma, User } from '../generated/prisma/client'
+import { Prisma, type User } from '../generated/prisma/client'
 import { PrismaService } from '../prisma/prisma.service'
+import { isSamePlace, osmElementQuery, slugify, toVenue } from '../venues/osm.rules'
+import { fetchOverpass } from '../venues/osm-import'
 import { Admin } from './admin.decorators'
 import { AdminService } from './admin.service'
 
@@ -92,6 +98,47 @@ export class AdminCatalogController {
       include: venueInclude,
     })
     return venues.map(toAdminVenue)
+  }
+
+  /** Fiche pré-remplie depuis un élément OSM trouvé par la recherche (LKO-115), à relire avant création. */
+  @Get('venues/osm/:type/:ref')
+  @Admin()
+  @ZodResponse(osmVenuePreviewSchema)
+  async osmVenue(@Param('type') type: string, @Param('ref') ref: string) {
+    const osmId = `${type}/${ref}`
+    if (!/^(node|way|relation)\/\d+$/.test(osmId))
+      throw new NotFoundException('Élément OSM inconnu')
+    const elements = await fetchOverpass(osmElementQuery(osmId)).catch(() => {
+      throw new BadGatewayException('OpenStreetMap ne répond pas, réessaie dans un instant.')
+    })
+    const found = elements[0] ? toVenue(elements[0]) : null
+    if (!found) throw new NotFoundException('Élément OSM sans nom ni position')
+    const venue = { ...found.venue, osmId, openingHours: found.openingHours }
+    return { ...venue, duplicate: await this.lookalike(venue) }
+  }
+
+  /** Lieu relu et validé par un admin (LKO-115), publié aussitôt. */
+  @Post('venues')
+  @Admin('VENUE_CREATE')
+  @ZodResponse(adminVenueSchema)
+  async createVenue(
+    @ZodBody(createVenueSchema) { openingHours, ...body }: z.output<typeof createVenueSchema>,
+  ) {
+    let slug = slugify(body.name) || 'lieu'
+    if (await this.prisma.venue.findUnique({ where: { slug }, select: { id: true } }))
+      slug = `${slug}-${Date.now().toString(36)}`
+    try {
+      return toAdminVenue(
+        await this.prisma.venue.create({
+          data: { ...body, slug, status: 'PUBLISHED', openingHours: { create: openingHours } },
+          include: venueInclude,
+        }),
+      )
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002')
+        throw new ConflictException('Ce lieu OpenStreetMap a déjà sa fiche')
+      throw error
+    }
   }
 
   /** Publication, passage en partenaire (badge, avantage Lucko), accès des mineurs. */
@@ -228,6 +275,31 @@ export class AdminCatalogController {
       include: eventInclude,
     })
     return events.map(toAdminEvent)
+  }
+
+  /** Lieu déjà en base : même élément OSM, ou même nom à moins de 100 m. */
+  private async lookalike(venue: {
+    name: string
+    latitude: number
+    longitude: number
+    osmId: string
+  }) {
+    const d = 0.002
+    const near = await this.prisma.venue.findMany({
+      where: {
+        OR: [
+          { osmId: venue.osmId },
+          {
+            latitude: { gte: venue.latitude - d, lte: venue.latitude + d },
+            longitude: { gte: venue.longitude - d, lte: venue.longitude + d },
+          },
+        ],
+      },
+      select: { id: true, name: true, latitude: true, longitude: true, osmId: true },
+    })
+    const match =
+      near.find((v) => v.osmId === venue.osmId) ?? near.find((v) => isSamePlace(v, venue))
+    return match ? { id: match.id, name: match.name } : null
   }
 
   private async venueOr404(id: string) {

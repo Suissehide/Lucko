@@ -185,6 +185,42 @@ export const updateVenueSchema = z
   .partial()
 export type UpdateVenueInput = z.infer<typeof updateVenueSchema>
 
+const minuteSchema = z.number().int().min(0).max(1439)
+
+/**
+ * POST /admin/venues (LKO-115) : lieu relu et validé par un admin, pré-rempli depuis OpenStreetMap
+ * (`osmId`) ou une adresse de la BAN. Publié dès la création.
+ */
+export const createVenueSchema = z.object({
+  name: z.string().trim().min(2, { message: 'Nom trop court' }).max(120),
+  type: z.enum(VENUE_TYPES),
+  address: z.string().trim().max(200),
+  city: z.string().trim().min(2, { message: 'Indique la ville' }).max(80),
+  latitude: z.number().min(-90).max(90),
+  longitude: z.number().min(-180).max(180),
+  phone: z.string().trim().max(40).nullable(),
+  website: z.url({ message: 'Lien invalide' }).nullable(),
+  acceptsUnaccompaniedMinors: z.boolean(),
+  osmId: z
+    .string()
+    .regex(/^(node|way|relation)\/\d+$/)
+    .nullable(),
+  openingHours: z.array(
+    z.object({
+      weekday: z.number().int().min(1).max(7),
+      opensAtMinute: minuteSchema,
+      closesAtMinute: minuteSchema,
+    }),
+  ),
+})
+export type CreateVenueInput = z.infer<typeof createVenueSchema>
+
+/** GET /admin/venues/osm/:type/:id : fiche pré-remplie depuis OSM, et le lieu déjà en base qui lui ressemble. */
+export const osmVenuePreviewSchema = createVenueSchema.extend({
+  duplicate: z.object({ id: z.string(), name: z.string() }).nullable(),
+})
+export type OsmVenuePreview = z.infer<typeof osmVenuePreviewSchema>
+
 const timeSchema = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, { message: 'Heure HH:MM' })
 
 /**

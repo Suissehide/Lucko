@@ -46,6 +46,9 @@ export async function reverseCity(lat: number, lng: number): Promise<string | nu
 export type AddressSuggestion = {
   /** « 12 Rue des Faures 33000 Bordeaux » */
   label: string
+  /** « 12 Rue des Faures » et « Bordeaux » (fiche lieu, LKO-115) */
+  street: string
+  city: string
   lat: number
   lng: number
   /** Affiché aux autres joueurs : « Paris · Paris 11e Arrondissement », « Bordeaux (33100) ». */
@@ -56,15 +59,24 @@ type AddressFeature = Feature & {
   properties: { label: string; district?: string; postcode?: string }
 }
 
-/** Adresses proposées pendant la saisie (room à domicile) ; rien n'est gardé côté IGN ni chez nous. */
-export async function searchAddresses(query: string): Promise<AddressSuggestion[]> {
+/**
+ * Adresses proposées pendant la saisie (room à domicile, nouveau lieu) ; rien n'est gardé côté IGN ni
+ * chez nous. `near` : priorité aux adresses proches de ce point.
+ */
+export async function searchAddresses(
+  query: string,
+  near?: { lat: number; lng: number },
+): Promise<AddressSuggestion[]> {
+  const around = near ? `&lat=${near.lat}&lon=${near.lng}` : ''
   const response = await fetch(
-    `${BASE}/search?q=${encodeURIComponent(query)}&index=address&autocomplete=1&limit=5`,
+    `${BASE}/search?q=${encodeURIComponent(query)}&index=address&autocomplete=1&limit=5${around}`,
   )
   if (!response.ok) throw new Error(`Géocodage : ${response.status}`)
   const { features } = (await response.json()) as { features: AddressFeature[] }
   return features.map(({ geometry, properties }) => ({
     label: properties.label,
+    street: properties.name ?? properties.label,
+    city: properties.city ?? '',
     lat: geometry.coordinates[1],
     lng: geometry.coordinates[0],
     areaLabel: properties.district

@@ -10,14 +10,18 @@ import {
   type AdminUserDetail,
   type AdminUserFilter,
   type AdminVenue,
+  type CreateVenueInput,
   formatAgo,
   formatTime,
   localDateTime,
+  type OsmVenuePreview,
   type ReportResolution,
   VENUE_TIME_ZONE,
+  type VenueType,
 } from '@lucko/shared'
 import { type Href, router } from 'expo-router'
 import { shortDay } from './explore'
+import type { AddressSuggestion } from './geocode'
 
 // Back-office admin (LKO-20) : navigation et mise en forme des données pour les écrans /admin.
 
@@ -191,6 +195,7 @@ const ACTION_GROUP: Record<AdminActionKind, Exclude<JournalFilter, 'all'>> = {
   USER_UNSUSPEND: 'moderation',
   AVATAR_APPROVE: 'photos',
   AVATAR_REJECT: 'photos',
+  VENUE_CREATE: 'catalogue',
   VENUE_UPDATE: 'catalogue',
   EVENT_CREATE: 'catalogue',
   EVENT_UPDATE: 'catalogue',
@@ -214,6 +219,7 @@ export const ACTION_COLOR: Record<AdminActionKind, string> = {
   USER_UNSUSPEND: colors.venue,
   AVATAR_APPROVE: colors.venue,
   AVATAR_REJECT: colors.room,
+  VENUE_CREATE: colors.venue,
   VENUE_UPDATE: colors.event,
   EVENT_CREATE: colors.event,
   EVENT_UPDATE: colors.event,
@@ -458,3 +464,78 @@ export function eventBody({ price: priceText, ...values }: EventFormValues): Adm
     repeatWeeks: Number(values.repeatWeeks) || 0,
   }
 }
+
+// * NOUVEAU LIEU (LKO-115)
+
+export const openNewVenue = () => router.push('/admin/venues/new')
+
+export type VenueFormValues = {
+  name: string
+  type: VenueType
+  address: string
+  city: string
+  phone: string
+  website: string
+  acceptsUnaccompaniedMinors: boolean
+  keepHours: boolean
+}
+
+/** Point de départ de la fiche : un lieu OSM (tout pré-rempli) ou une adresse BAN (nom à saisir). */
+export type VenueDraft = {
+  source: 'osm' | 'ban'
+  values: VenueFormValues
+  latitude: number
+  longitude: number
+  osmId: string | null
+  openingHours: CreateVenueInput['openingHours']
+}
+
+/** `city` : commune trouvée par la recherche, plus fiable que la ville de l'élément OSM, souvent absente. */
+export const draftFromOsm = (preview: OsmVenuePreview, city: string): VenueDraft => ({
+  source: 'osm',
+  values: {
+    name: preview.name,
+    type: preview.type,
+    address: preview.address,
+    city: city || preview.city,
+    phone: preview.phone ?? '',
+    website: preview.website ?? '',
+    acceptsUnaccompaniedMinors: preview.acceptsUnaccompaniedMinors,
+    keepHours: preview.openingHours.length > 0,
+  },
+  latitude: preview.latitude,
+  longitude: preview.longitude,
+  osmId: preview.osmId,
+  openingHours: preview.openingHours,
+})
+
+export const draftFromAddress = (address: AddressSuggestion): VenueDraft => ({
+  source: 'ban',
+  values: {
+    name: '',
+    type: 'OTHER',
+    address: address.street,
+    city: address.city,
+    phone: '',
+    website: '',
+    acceptsUnaccompaniedMinors: false,
+    keepHours: false,
+  },
+  latitude: address.lat,
+  longitude: address.lng,
+  osmId: null,
+  openingHours: [],
+})
+
+export const venueBody = (
+  { keepHours, phone, website, ...values }: VenueFormValues,
+  draft: VenueDraft,
+): CreateVenueInput => ({
+  ...values,
+  phone: phone.trim() || null,
+  website: website.trim() || null,
+  latitude: draft.latitude,
+  longitude: draft.longitude,
+  osmId: draft.osmId,
+  openingHours: keepHours ? draft.openingHours : [],
+})
