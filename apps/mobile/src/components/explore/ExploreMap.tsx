@@ -1,9 +1,9 @@
 import { colors, Typography } from '@lucko/design-system'
-import type { VenueListItem } from '@lucko/shared'
 import { useEffect, useRef } from 'react'
 import { View } from 'react-native'
 import MapView, { Marker } from 'react-native-maps'
 import type { Place } from '@/lib/useLocation'
+import type { MapBounds, MapPin } from './mapPins'
 
 /** Carte des lieux (B1) : épingle verte pour les partenaires, blanche sinon ; centrée sur le lieu choisi. */
 export function ExploreMap({
@@ -13,9 +13,11 @@ export function ExploreMap({
   onSelect,
 }: {
   center: Place
-  venues: VenueListItem[]
+  venues: MapPin[]
   selectedId: string | null
   onSelect: (id: string) => void
+  /** Web seulement pour l'instant : MapLibre natif et regroupement viennent avec la PR mobile de LKO-122 */
+  onBoundsChange?: (bounds: MapBounds) => void
 }) {
   const map = useRef<MapView>(null)
   const selected = venues.find((v) => v.id === selectedId)

@@ -7,6 +7,8 @@ import {
   type eventListItemSchema,
   type GeoQuery,
   localDateTime,
+  type MapVenue,
+  type MapVenuesQuery,
   openingStatus,
   type roomListItemSchema,
   VENUE_AGENDA_MONTHS,
@@ -103,6 +105,8 @@ function roomItem({
 // ponytail: plafond fixe ; requête par zone affichée (bbox) avec le regroupement des épingles (LKO-122)
 /** Lieux renvoyés à la carte : le centre de Bordeaux en compte ≈ 570 à 10 km, le Grand Paris des milliers. */
 const VENUES_MAX = 300
+// ponytail: au-delà, regrouper côté serveur (tuiles vectorielles de lieux) plutôt que monter le plafond
+const MAP_VENUES_MAX = 5000
 
 @Injectable()
 export class ExploreService {
@@ -158,6 +162,38 @@ export class ExploreService {
         }
       })
       .sort(compareByDistance)
+  }
+
+  /**
+   * Épingles d'une zone de la carte (index GiST), partenaires puis du centre vers les bords, au plus
+   * MAP_VENUES_MAX : la carte ne charge qu'à l'échelle d'une ville, le plafond protège d'une zone trop dense.
+   */
+  async mapVenues({ west, south, east, north, openNow }: MapVenuesQuery): Promise<MapVenue[]> {
+    const rows = await this.prisma.$queryRaw<MapVenue[]>`
+      SELECT "id", "slug", "name", "latitude", "longitude", "isPartner"
+      FROM "Venue"
+      WHERE "status" = 'PUBLISHED'
+        AND "location" && ST_MakeEnvelope(${west}::float8, ${south}::float8, ${east}::float8, ${north}::float8, 4326)::geography
+      ORDER BY "isPartner" DESC,
+        "location" <-> ST_MakePoint(${(west + east) / 2}::float8, ${(south + north) / 2}::float8)::geography
+      LIMIT ${MAP_VENUES_MAX}::int`
+    if (!openNow) return rows
+    const now = new Date()
+    const yesterday = fromLocalDate(addDays(localDateTime(now).date, -1))
+    const open = await this.prisma.venue.findMany({
+      where: { id: { in: rows.map((r) => r.id) } },
+      select: {
+        id: true,
+        openingHours: true,
+        closures: { where: { endsOn: { gte: yesterday } } },
+      },
+    })
+    const ids = new Set(
+      open
+        .filter((v) => openingStatus(v.openingHours, v.closures.map(closureRange), now).openNow)
+        .map((v) => v.id),
+    )
+    return rows.filter((r) => ids.has(r.id))
   }
 
   /**

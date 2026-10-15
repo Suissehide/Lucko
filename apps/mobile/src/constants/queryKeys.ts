@@ -23,6 +23,7 @@ export const EXPLORE = {
   VENUES: 'explore_venues',
   CITY_AGENDA: 'explore_city_agenda',
   NEARBY_COUNT: 'explore_nearby_count',
+  MAP_VENUES: 'explore_map_venues',
 } as const
 
 export const EVENT = {

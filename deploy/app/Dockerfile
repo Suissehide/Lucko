@@ -22,7 +22,8 @@ COPY --from=pruner /app/out/full/ .
 # Fichiers racine non inclus par `turbo prune`
 COPY tsconfig.base.json ./
 RUN pnpm turbo run build --filter=@lucko/mobile^...
-RUN cd apps/mobile && pnpm exec expo export --platform web --output-dir dist
+# Worker de MapLibre (build CSP) servi depuis public/, copié depuis node_modules (LKO-122)
+RUN cd apps/mobile && pnpm maplibre-worker && pnpm exec expo export --platform web --output-dir dist
 
 FROM nginx:1.29-alpine AS runner
 COPY deploy/app/nginx.conf /etc/nginx/conf.d/default.conf

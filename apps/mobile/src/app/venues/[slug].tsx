@@ -353,7 +353,7 @@ export default function VenueScreen() {
             <View style={{ height: 180, borderBottomWidth: border.base, borderColor: colors.ink }}>
               <ExploreMap
                 center={{ lat: venue.latitude, lng: venue.longitude, label: venue.name }}
-                venues={[{ ...venue, distanceMeters: 0, upcomingEventCount: 0 }]}
+                venues={[venue]}
                 selectedId={venue.id}
                 onSelect={itinerary}
               />
