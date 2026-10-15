@@ -9,7 +9,7 @@ import {
   Typography,
   VenueRow,
 } from '@lucko/design-system'
-import { PARTNER_TIE_METERS, RADIUS_KM } from '@lucko/shared'
+import { RADIUS_KM } from '@lucko/shared'
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useWindowDimensions, View } from 'react-native'
@@ -98,11 +98,7 @@ export default function VenuesScreen() {
     </ListCard>
   )
   const note = (
-    <Typography variant="small">
-      Classés par distance, à {radiusKm} km autour de toi. À distance égale (moins de{' '}
-      {PARTNER_TIE_METERS} m d’écart), les lieux partenaires, qui rémunèrent Lucko pour chaque
-      joueur venu, passent devant ; un lieu plus proche reste toujours avant.
-    </Typography>
+    <Typography variant="small">Classés par distance, à {radiusKm} km autour de toi.</Typography>
   )
 
   return (
