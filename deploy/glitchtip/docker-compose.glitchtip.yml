@@ -1,0 +1,61 @@
+# ────────────────────────────────────────────────────────────────
+# GlitchTip — suivi des erreurs et des pannes de Lucko (LKO-36), service Compose Dokploy à part
+#
+#   Compose Path : ./deploy/glitchtip/docker-compose.glitchtip.yml
+#   Environment  : GLITCHTIP_DOMAIN, GLITCHTIP_SECRET_KEY, GLITCHTIP_DB_PASSWORD, EMAIL_URL, DEFAULT_FROM_EMAIL
+#   Domains      : glitchtip.<domaine> → web, port 8000
+#
+# Compatible SDK Sentry : l'API, le site et l'app y envoient leurs erreurs (SENTRY_DSN_*).
+# Sans Valkey (petite instance, ~512 Mo) : file de tâches et cache dans Postgres, travailleur intégré.
+# Voir docs/exploitation.md pour la mise en route.
+# ────────────────────────────────────────────────────────────────
+x-environment: &environment
+  DATABASE_URL: postgres://glitchtip:${GLITCHTIP_DB_PASSWORD}@postgres:5432/glitchtip
+  VALKEY_URL: ""
+  SECRET_KEY: ${GLITCHTIP_SECRET_KEY}
+  GLITCHTIP_DOMAIN: ${GLITCHTIP_DOMAIN}
+  EMAIL_URL: ${EMAIL_URL}
+  DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL}
+  # Inscription libre fermée après le premier compte (l'administrateur) : les autres sont invités
+  ENABLE_USER_REGISTRATION: "False"
+  # Rétention des erreurs et des contrôles de disponibilité (RGPD : pas plus que nécessaire)
+  GLITCHTIP_RETENTION_DAYS: "30"
+  # Journaux : pas d'ingestion (LKO-36 les veut ailleurs, sans données sensibles)
+  GLITCHTIP_ENABLE_LOGS: "False"
+
+services:
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: glitchtip
+      POSTGRES_PASSWORD: ${GLITCHTIP_DB_PASSWORD}
+      POSTGRES_DB: glitchtip
+    volumes:
+      - pg-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U glitchtip -d glitchtip"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  web:
+    image: glitchtip/glitchtip:6
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      <<: *environment
+      SERVER_ROLE: all_in_one
+    volumes:
+      - uploads:/code/uploads
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: unless-stopped
+
+volumes:
+  pg-data:
+  uploads:

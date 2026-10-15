@@ -1,4 +1,9 @@
-import { DeleteObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
+import {
+  DeleteObjectCommand,
+  HeadBucketCommand,
+  PutObjectCommand,
+  S3Client,
+} from '@aws-sdk/client-s3'
 import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common'
 import { loadEnv } from '../config/env'
 
@@ -49,6 +54,13 @@ export class StorageService {
       }),
     )
     return `${this.config.S3_PUBLIC_URL}/${key}`
+  }
+
+  /** Bucket joignable ? `null` si aucun stockage n'est configuré (GET /health, LKO-36). */
+  async reachable() {
+    if (!this.client || !this.config) return null
+    await this.client.send(new HeadBucketCommand({ Bucket: this.config.S3_BUCKET }))
+    return true
   }
 
   /** Efface le fichier d'une URL renvoyée par `put` ; une erreur est seulement journalisée. */

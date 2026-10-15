@@ -48,6 +48,13 @@ const envSchema = z
     SIGHTENGINE_API_USER: z.string().optional(),
     SIGHTENGINE_API_SECRET: z.string().optional(),
     /**
+     * Suivi des erreurs (LKO-36) : DSN du projet GlitchTip (compatible Sentry). Sans DSN, rien n'est
+     * envoyé. Environnement par défaut : NODE_ENV ; version : SHA du commit déployé si fourni.
+     */
+    SENTRY_DSN: z.url().optional(),
+    SENTRY_ENVIRONMENT: z.string().optional(),
+    SENTRY_RELEASE: z.string().optional(),
+    /**
      * Serveurs Overpass (import des lieux OSM, LKO-74), essayés dans l'ordre, séparés par des virgules :
      * le serveur public est souvent surchargé (502, 504), les miroirs (opérateurs distincts) prennent le relais.
      */

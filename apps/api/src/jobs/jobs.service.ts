@@ -49,6 +49,15 @@ export class JobsService implements OnModuleDestroy {
     return boss.send(name, data, tx ? { ...options, db: fromPrisma(tx) } : options)
   }
 
+  /** État des files pour GET /health : tâches prêtes en attente et échecs retenus (LKO-36). */
+  async stats() {
+    const queues = await (await this.start()).getQueues()
+    return {
+      ready: queues.reduce((sum, q) => sum + q.readyCount, 0),
+      failed: queues.reduce((sum, q) => sum + q.failedCount, 0),
+    }
+  }
+
   async onModuleDestroy() {
     if (this.started) await (await this.started).stop({ graceful: true })
   }
