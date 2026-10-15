@@ -72,6 +72,7 @@ export default function HomeScreen() {
   const wanted = demand.data?.[0]?.waitingCount ? demand.data[0] : null
 
   // Compte tout juste créé : jeux, ville et pseudo avant l'accueil (sauf « Je regarde d'abord »)
+  if (me?.parentalConsentPending) return <Redirect href="/parental-consent" />
   if (me && me.pseudo === null && !onboarding.deferred) return <Redirect href="/onboarding" />
 
   const events = data?.events.filter((e) => matchesGame(game, e.games)) ?? []

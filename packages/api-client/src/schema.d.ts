@@ -196,6 +196,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/me/parental-consent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ConsentController_mine"];
+        put?: never;
+        post: operations["ConsentController_request"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/parental-consents/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ConsentController_show"];
+        put?: never;
+        post: operations["ConsentController_grant"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/venues": {
         parameters: {
             query?: never;
@@ -1378,6 +1410,7 @@ export interface operations {
                         pseudo: string | null;
                         name: string;
                         hasBirthDate: boolean;
+                        parentalConsentPending: boolean;
                         /** @enum {string} */
                         role: "PLAYER" | "VENUE_STAFF" | "ADMIN";
                         avatarUrl: string | null;
@@ -1471,6 +1504,7 @@ export interface operations {
                         pseudo: string | null;
                         name: string;
                         hasBirthDate: boolean;
+                        parentalConsentPending: boolean;
                         /** @enum {string} */
                         role: "PLAYER" | "VENUE_STAFF" | "ADMIN";
                         avatarUrl: string | null;
@@ -1540,6 +1574,7 @@ export interface operations {
                         pseudo: string | null;
                         name: string;
                         hasBirthDate: boolean;
+                        parentalConsentPending: boolean;
                         /** @enum {string} */
                         role: "PLAYER" | "VENUE_STAFF" | "ADMIN";
                         avatarUrl: string | null;
@@ -1608,6 +1643,7 @@ export interface operations {
                         pseudo: string | null;
                         name: string;
                         hasBirthDate: boolean;
+                        parentalConsentPending: boolean;
                         /** @enum {string} */
                         role: "PLAYER" | "VENUE_STAFF" | "ADMIN";
                         avatarUrl: string | null;
@@ -1769,6 +1805,107 @@ export interface operations {
                 };
             };
         };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ConsentController_mine: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        parentEmail: string | null;
+                        granted: boolean;
+                        /** Format: date-time */
+                        deadline: string;
+                    };
+                };
+            };
+        };
+    };
+    ConsentController_request: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    parentEmail: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        parentEmail: string | null;
+                        granted: boolean;
+                        /** Format: date-time */
+                        deadline: string;
+                    };
+                };
+            };
+        };
+    };
+    ConsentController_show: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        childEmail: string;
+                        childAge: number;
+                        /** @enum {string} */
+                        status: "PENDING" | "GRANTED";
+                        /** Format: date-time */
+                        deadline: string;
+                    };
+                };
+            };
+        };
+    };
+    ConsentController_grant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             204: {
                 headers: {

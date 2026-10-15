@@ -29,7 +29,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express'
 import { ApiBody, ApiConsumes, ApiNoContentResponse, ApiTags } from '@nestjs/swagger'
 import { z } from 'zod'
-import { CurrentUser } from '../auth/auth.decorators'
+import { AllowPendingConsent, CurrentUser } from '../auth/auth.decorators'
 import { ZodBody, ZodQuery, ZodResponse } from '../common/zod'
 import type { User } from '../generated/prisma/client'
 import { PrismaService } from '../prisma/prisma.service'
@@ -122,6 +122,7 @@ export class UsersController {
    */
   @Post('me/birth-date')
   @HttpCode(204)
+  @AllowPendingConsent()
   async setBirthDate(
     @CurrentUser() user: User,
     @ZodBody(setBirthDateSchema) { birthDate }: SetBirthDateInput,
@@ -142,6 +143,7 @@ export class UsersController {
   // ponytail: les comptes enfants (13-14 ans) restent sans parent, à traiter avec le consentement parental
   @Delete('me')
   @HttpCode(204)
+  @AllowPendingConsent()
   @ApiNoContentResponse()
   async deleteMe(@CurrentUser() user: User) {
     const now = new Date()

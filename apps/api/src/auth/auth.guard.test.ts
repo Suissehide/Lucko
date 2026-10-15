@@ -2,7 +2,7 @@ import { type ExecutionContext, ForbiddenException, UnauthorizedException } from
 import { Reflector } from '@nestjs/core'
 import { describe, expect, it } from 'vitest'
 import type { User } from '../generated/prisma/client'
-import { Public, Roles, VenueRoles } from './auth.decorators'
+import { AllowPendingConsent, Public, Roles, VenueRoles } from './auth.decorators'
 import { AuthGuard } from './auth.guard'
 import type { AuthRequest, AuthService } from './auth.service'
 
@@ -10,6 +10,13 @@ const player = { id: 'u1', role: 'PLAYER' } as User
 const admin = { id: 'u2', role: 'ADMIN' } as User
 const manager = { id: 'u3', role: 'PLAYER' } as User
 const staff = { id: 'u4', role: 'PLAYER' } as User
+/** 13 ans, sans accord parental (LKO-49). */
+const pendingChild = {
+  id: 'u5',
+  role: 'PLAYER',
+  birthDate: new Date(Date.UTC(new Date().getFullYear() - 13, 0, 1)),
+  parentalConsentAt: null,
+} as User
 
 /** VenueStaff de test : u3 gérant et u4 staff du lieu v1, personne dans v2. */
 const venueStaff: Record<string, string> = { 'u3/v1': 'MANAGER', 'u4/v1': 'STAFF' }
@@ -24,10 +31,12 @@ class Routes {
   billing() {}
   @VenueRoles('MANAGER', 'STAFF')
   scan() {}
+  @AllowPendingConsent()
+  askParent() {}
 }
 
-function setup(user: User | null, handler: keyof Routes, venueId = 'v1') {
-  const request = { params: { venueId } } as unknown as AuthRequest
+function setup(user: User | null, handler: keyof Routes, venueId = 'v1', method = 'POST') {
+  const request = { method, params: { venueId } } as unknown as AuthRequest
   const auth = {
     resolveUser: async () => user,
     venueRole: async (userId: string, venue: string) => venueStaff[`${userId}/${venue}`] ?? null,
@@ -68,6 +77,19 @@ describe('AuthGuard', () => {
     const { guard, context, request } = setup(player, 'any')
     await expect(guard.canActivate(context)).resolves.toBe(true)
     expect(request.user).toBe(player)
+  })
+
+  it('13-14 ans sans accord parental : lecture seule, sauf @AllowPendingConsent (LKO-49)', async () => {
+    const write = setup(pendingChild, 'any')
+    await expect(write.guard.canActivate(write.context)).rejects.toMatchObject({
+      response: { code: 'PARENTAL_CONSENT_REQUIRED' },
+    })
+    const read = setup(pendingChild, 'any', 'v1', 'GET')
+    await expect(read.guard.canActivate(read.context)).resolves.toBe(true)
+    const ask = setup(pendingChild, 'askParent')
+    await expect(ask.guard.canActivate(ask.context)).resolves.toBe(true)
+    const granted = setup({ ...pendingChild, parentalConsentAt: new Date() }, 'any')
+    await expect(granted.guard.canActivate(granted.context)).resolves.toBe(true)
   })
 
   it('applique @Roles : 403 pour un joueur, accès pour un admin', async () => {

@@ -63,7 +63,7 @@ model User {
   deletedAt         DateTime?
 
   gameProfiles       PlayerGameProfile[]
-  hostedRooms        Room[]              @relation("RoomHost")
+  hostedRooms        Room[]               @relation("RoomHost")
   participations     RoomParticipant[]
   visits             Visit[]
   xpEvents           XpEvent[]
@@ -72,21 +72,23 @@ model User {
   sessions           Session[]
   accounts           Account[]
   /// Jeux joués (LKO-46) ; le niveau par format TCG est dans PlayerGameProfile
-  playedGames        Game[]              @relation("PlayedGames")
-  blocksGiven        Block[]             @relation("BlocksGiven")
-  blocksReceived     Block[]             @relation("BlocksReceived")
-  reportsMade        Report[]            @relation("ReportsMade")
-  reportsReceived    Report[]            @relation("ReportsReceived")
+  playedGames        Game[]               @relation("PlayedGames")
+  blocksGiven        Block[]              @relation("BlocksGiven")
+  blocksReceived     Block[]              @relation("BlocksReceived")
+  reportsMade        Report[]             @relation("ReportsMade")
+  reportsReceived    Report[]             @relation("ReportsReceived")
   pushTokens         PushToken[]
   adminActions       AdminAction[]
   messages           Message[]
   conversationReads  ConversationRead[]
   playIntents        PlayIntent[]
-  createdEvents      Event[]             @relation("EventCreatedBy")
+  createdEvents      Event[]              @relation("EventCreatedBy")
   createdEventSeries EventSeries[]
   resultsSubmitted   MatchResult[]        @relation("ResultSubmittedBy")
   resultsDecided     MatchResult[]        @relation("ResultDecidedBy")
   resultVotes        ResultConfirmation[]
+  consentRequests    ParentalConsent[]    @relation("ConsentChild")
+  consentsGiven      ParentalConsent[]    @relation("ConsentParent")
 }
 
 enum NotificationTopic {
@@ -437,35 +439,35 @@ enum RoomStatus {
 }
 
 model Room {
-  id                   String      @id @default(cuid())
-  hostId               String
-  host                 User        @relation("RoomHost", fields: [hostId], references: [id])
-  gameId               String
-  game                 Game        @relation(fields: [gameId], references: [id])
-  formatId             String?
-  format               GameFormat? @relation(fields: [formatId], references: [id])
-  mode                 RoomMode    @default(CASUAL)
-  status               RoomStatus  @default(OPEN)
-  venueId              String?
-  venue                Venue?      @relation(fields: [venueId], references: [id])
+  id                String             @id @default(cuid())
+  hostId            String
+  host              User               @relation("RoomHost", fields: [hostId], references: [id])
+  gameId            String
+  game              Game               @relation(fields: [gameId], references: [id])
+  formatId          String?
+  format            GameFormat?        @relation(fields: [formatId], references: [id])
+  mode              RoomMode           @default(CASUAL)
+  status            RoomStatus         @default(OPEN)
+  venueId           String?
+  venue             Venue?             @relation(fields: [venueId], references: [id])
   /// Domicile (LKO-71) : seule la zone floue est publique ; l'adresse est dans RoomPrivateAddress
-  atHome               Boolean     @default(false)
+  atHome            Boolean            @default(false)
   /// Quartier affiché, ex. « Bordeaux · Saint-Michel »
-  homeAreaLabel        String?
+  homeAreaLabel     String?
   /// Centre de la zone floue : point réel décalé au hasard une fois pour toutes, à la création
-  fuzzyLat             Float?
-  fuzzyLng             Float?
-  startsAt             DateTime
-  capacity             Int
-  minorsAllowed        Boolean     @default(false)
-  autoAccept           Boolean     @default(false)
-  description          String?
+  fuzzyLat          Float?
+  fuzzyLng          Float?
+  startsAt          DateTime
+  capacity          Int
+  minorsAllowed     Boolean            @default(false)
+  autoAccept        Boolean            @default(false)
+  description       String?
   /// Bracket Commander visé (1 à 5), seulement pour un format qui en a (LKO-52)
-  bracket              Int?
-  boardGameCategory    BoardGameCategory?
-  vibes                RoomVibe[]         @default([])
-  createdAt            DateTime    @default(now())
-  updatedAt            DateTime    @updatedAt
+  bracket           Int?
+  boardGameCategory BoardGameCategory?
+  vibes             RoomVibe[]         @default([])
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
 
   participants   RoomParticipant[]
   xpEvents       XpEvent[]
@@ -503,17 +505,17 @@ enum PresenceSource {
 }
 
 model RoomParticipant {
-  roomId      String
-  room        Room              @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  userId      String
-  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  status      ParticipantStatus @default(PENDING)
+  roomId             String
+  room               Room              @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  userId             String
+  user               User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status             ParticipantStatus @default(PENDING)
   /// Pointage (LKO-78) : null = pas encore pointé ; checkedInAt = quand, presenceMarkedById = par qui
   present            Boolean?
   presenceSource     PresenceSource?
   presenceMarkedById String?
   checkedInAt        DateTime?
-  createdAt   DateTime          @default(now())
+  createdAt          DateTime          @default(now())
 
   @@id([roomId, userId])
 }
@@ -767,25 +769,25 @@ enum VisitStatus {
 
 /// Une venue = un joueur dans un lieu un soir. Un seul forfait par joueur, par lieu et par soirée.
 model Visit {
-  id           String      @id @default(cuid())
-  userId       String
-  user         User        @relation(fields: [userId], references: [id])
-  venueId      String
-  venue        Venue       @relation(fields: [venueId], references: [id])
-  source       VisitSource
+  id            String      @id @default(cuid())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id])
+  venueId       String
+  venue         Venue       @relation(fields: [venueId], references: [id])
+  source        VisitSource
   /// Soirée de rattachement (date locale Europe/Paris)
-  businessDate DateTime    @db.Date
-  spentCents   Int?
+  businessDate  DateTime    @db.Date
+  spentCents    Int?
   /// Facturable (LKO-79) : lieu partenaire, joueur hors staff du lieu ; prix figé à la création
-  billable     Boolean     @default(false)
-  priceCents   Int?
-  status       VisitStatus @default(VALID)
+  billable      Boolean     @default(false)
+  priceCents    Int?
+  status        VisitStatus @default(VALID)
   /// Contestation par le lieu, puis décision d'un admin (tracée dans le journal d'audit)
   disputeReason String?
-  disputedAt   DateTime?
+  disputedAt    DateTime?
   /// Nonce du QR Lucko scanné (LKO-77) : un jeton ne sert qu'une fois, même dans un autre lieu
-  qrNonce      String?     @unique
-  createdAt    DateTime    @default(now())
+  qrNonce       String?     @unique
+  createdAt     DateTime    @default(now())
 
   @@unique([userId, venueId, businessDate])
 }
@@ -913,6 +915,34 @@ model AdminAction {
 
   @@index([targetId])
   @@index([createdAt])
+}
+
+// ---------- Consentement parental (LKO-49) ----------
+
+enum ParentalConsentStatus {
+  PENDING
+  GRANTED
+}
+
+/// Demande d'accord parental d'un joueur de 13-14 ans, et preuve de l'accord une fois donné.
+model ParentalConsent {
+  id                  String                @id @default(cuid())
+  childId             String
+  child               User                  @relation("ConsentChild", fields: [childId], references: [id], onDelete: Cascade)
+  parentEmail         String
+  status              ParentalConsentStatus @default(PENDING)
+  parentId            String?
+  parent              User?                 @relation("ConsentParent", fields: [parentId], references: [id], onDelete: SetNull)
+  grantedAt           DateTime?
+  /// Preuve : version de la politique de confidentialité acceptée, IP et navigateur du parent
+  policyVersion       String?
+  ip                  String?
+  userAgent           String?
+  /// Même IP qu'une session de l'enfant : peut-être un auto-consentement, à vérifier par un admin
+  sameDeviceSuspected Boolean               @default(false)
+  createdAt           DateTime              @default(now())
+
+  @@index([childId])
 }
 
 // ---------- Liste d'attente (landing) ----------

@@ -41,6 +41,7 @@ describe('schémas de réponse', () => {
       pseudo: 'lea',
       name: 'Léa Martin',
       hasBirthDate: true,
+      parentalConsentPending: false,
       role: 'PLAYER',
       avatarUrl: null,
       avatarStatus: null,
