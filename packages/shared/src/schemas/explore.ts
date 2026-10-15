@@ -34,6 +34,27 @@ export const venueListItemSchema = z.object({
   upcomingEventCount: z.number().int(),
 })
 
+/** Zone affichée par la carte (LKO-122) ; `openNow` : seulement les lieux ouverts maintenant. */
+export const mapVenuesQuerySchema = z.object({
+  west: z.coerce.number().min(-180).max(180),
+  south: z.coerce.number().min(-90).max(90),
+  east: z.coerce.number().min(-180).max(180),
+  north: z.coerce.number().min(-90).max(90),
+  openNow: z.stringbool().optional(),
+})
+export type MapVenuesQuery = z.output<typeof mapVenuesQuerySchema>
+
+/** Épingle de la carte : le strict nécessaire, la carte en reçoit des milliers. */
+export const mapVenueSchema = venueListItemSchema.pick({
+  id: true,
+  slug: true,
+  name: true,
+  latitude: true,
+  longitude: true,
+  isPartner: true,
+})
+export type MapVenue = z.output<typeof mapVenueSchema>
+
 export const eventsQuerySchema = geoQuerySchema.extend({
   /** Fenêtre de l'agenda, en jours à partir de maintenant. */
   days: z.coerce.number().int().min(1).max(31).default(7),
@@ -148,6 +169,8 @@ export const venueDetailSchema = venueListItemSchema
     phone: z.string().nullable(),
     website: z.string().nullable(),
     transitInfo: z.string().nullable(),
+    /** Fiche importée d'OpenStreetMap : attribution ODbL à afficher. */
+    osmId: z.string().nullable(),
     /** Fermé : prochaine ouverture (date locale, minutes depuis minuit). */
     nextOpening: z.object({ date: localDate, minute: z.number().int() }).nullable(),
     photos: z.array(z.object({ url: z.string(), caption: z.string().nullable() })),

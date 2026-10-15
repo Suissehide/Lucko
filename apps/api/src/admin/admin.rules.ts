@@ -125,6 +125,7 @@ export const ACTION_TARGET: Record<
   USER_UNSUSPEND: 'user',
   AVATAR_APPROVE: 'user',
   AVATAR_REJECT: 'user',
+  VENUE_CREATE: 'venue',
   VENUE_UPDATE: 'venue',
   EVENT_CREATE: 'venue',
   EVENT_UPDATE: 'event',

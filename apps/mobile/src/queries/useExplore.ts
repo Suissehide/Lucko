@@ -1,4 +1,5 @@
 import { queryOptions, useQuery } from '@tanstack/react-query'
+import type { MapBounds } from '@/components/explore/mapPins'
 import { EXPLORE } from '@/constants/queryKeys'
 import { api } from '@/lib/api'
 import { agendaEntries } from '@/lib/cityAgenda'
@@ -58,6 +59,20 @@ export const venuesQueryOptions = (lat: number, lng: number, radiusKm: number, a
   queryOptions({
     queryKey: [EXPLORE.VENUES, lat, lng, radiusKm, at],
     queryFn: () => unwrap(api.GET('/venues', { params: { query: { lat, lng, radiusKm, at } } })),
+  })
+
+/** Épingles d'une zone de la carte (LKO-122) ; rien tant que la zone est inconnue ou trop grande. */
+export const mapVenuesQueryOptions = (area: MapBounds | null, openNow: boolean) =>
+  queryOptions({
+    queryKey: [EXPLORE.MAP_VENUES, area, openNow],
+    queryFn: () =>
+      unwrap(
+        api.GET('/map/venues', {
+          params: { query: { ...(area as MapBounds), openNow: openNow ? 'true' : undefined } },
+        }),
+      ),
+    enabled: !!area,
+    placeholderData: (previous) => previous,
   })
 
 /** Nombre de lieux et de soirées des 7 prochains jours dans un rayon (onboarding). */

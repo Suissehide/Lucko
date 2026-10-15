@@ -156,6 +156,7 @@ export default function HomeScreen() {
       height={height}
       center={place}
       venues={data?.venues ?? []}
+      openNow
       selectedId={selectedId}
       onSelect={setSelectedId}
     />

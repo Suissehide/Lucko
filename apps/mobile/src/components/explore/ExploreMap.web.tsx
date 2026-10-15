@@ -1,82 +1,117 @@
-import 'leaflet/dist/leaflet.css'
-import { border, colors } from '@lucko/design-system'
-import type { VenueListItem } from '@lucko/shared'
-import { useEffect } from 'react'
-import { CircleMarker, MapContainer, TileLayer, Tooltip, useMap } from 'react-leaflet'
+import maplibregl, {
+  type AddLayerObject,
+  type GeoJSONSource,
+  type MapLayerMouseEvent,
+} from 'maplibre-gl'
+import { useEffect, useRef } from 'react'
 import type { Place } from '@/lib/useLocation'
+import {
+  CLUSTER,
+  clusterCountLayer,
+  clusterLayer,
+  EMPTY,
+  type LngLat,
+  meLayer,
+  point,
+  venueLayer,
+  venuesGeoJSON,
+} from './mapLayers'
+import { useMapLibre } from './maplibre.web'
+import type { MapBounds, MapPin } from './mapPins'
 
 /**
- * Carte des lieux sur le web (Expo web) : Leaflet + fond OpenStreetMap, attribution obligatoire.
- * Même rendu que la version native : partenaires en vert, lieu sélectionné en rouge, et centré.
+ * Carte des lieux sur le web (LKO-122) : MapLibre au style Lucko, épingles regroupées quand on dézoome.
+ * Partenaires en vert, lieu sélectionné en rouge ; `onBoundsChange` à chaque fin de déplacement.
  */
-// ponytail: tuiles tile.openstreetmap.org (usage léger toléré) ; passer à un fournisseur de tuiles
-// (ou un serveur maison) avant la mise en production, avec le choix du fond de carte natif.
 export function ExploreMap({
   center,
   venues,
   selectedId,
   onSelect,
+  onBoundsChange,
 }: {
   center: Place
-  venues: VenueListItem[]
+  venues: MapPin[]
   selectedId: string | null
   onSelect: (id: string) => void
+  onBoundsChange?: (bounds: MapBounds) => void
 }) {
-  return (
-    <MapContainer
-      center={[center.lat, center.lng]}
-      zoom={14}
-      style={{ height: '100%', width: '100%' }}
-      scrollWheelZoom
-    >
-      <TileLayer
-        url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">contributeurs OpenStreetMap</a>'
-      />
-      <CircleMarker
-        center={[center.lat, center.lng]}
-        radius={7}
-        pathOptions={{
-          color: colors.ink,
-          weight: border.thin,
-          fillColor: colors.event,
-          fillOpacity: 1,
-        }}
-      />
-      <FollowSelected venue={venues.find((v) => v.id === selectedId)} />
-      {venues.map((venue) => {
-        const selected = venue.id === selectedId
-        return (
-          <CircleMarker
-            key={venue.id}
-            center={[venue.latitude, venue.longitude]}
-            radius={selected ? 14 : 11}
-            pathOptions={{
-              color: colors.ink,
-              weight: border.base,
-              fillColor: selected ? colors.room : venue.isPartner ? colors.venue : colors.white,
-              fillOpacity: 1,
-            }}
-            eventHandlers={{ click: () => onSelect(venue.id) }}
-          >
-            <Tooltip direction="top" offset={[0, -10]}>
-              {venue.name}
-            </Tooltip>
-          </CircleMarker>
-        )
-      })}
-    </MapContainer>
-  )
-}
+  const container = useRef<HTMLDivElement>(null)
+  const map = useMapLibre(container, center, 14)
+  // Les gestionnaires posés une fois lisent toujours les derniers rappels
+  const handlers = useRef({ onSelect, onBoundsChange })
+  handlers.current = { onSelect, onBoundsChange }
 
-/** Lieu choisi (épingle ou liste) : la carte s'y déplace, en zoomant si elle est trop éloignée. */
-function FollowSelected({ venue }: { venue?: VenueListItem }) {
-  const map = useMap()
-  const lat = venue?.latitude
-  const lng = venue?.longitude
   useEffect(() => {
-    if (lat === undefined || lng === undefined) return
-    map.flyTo([lat, lng], Math.max(map.getZoom(), 15), { duration: 0.6 })
+    if (!map) return
+    map.addSource('me', { type: 'geojson', data: EMPTY })
+    map.addSource('venues', { type: 'geojson', data: EMPTY, ...CLUSTER })
+    map.addLayer({ ...meLayer, source: 'me' } as AddLayerObject)
+    for (const layer of [clusterLayer, clusterCountLayer, venueLayer])
+      map.addLayer({ ...layer, source: 'venues' } as AddLayerObject)
+
+    const popup = new maplibregl.Popup({ closeButton: false, offset: 12, className: 'lucko-pin' })
+    const hover = (e: MapLayerMouseEvent) => {
+      const feature = e.features?.[0]
+      map.getCanvas().style.cursor = 'pointer'
+      if (feature?.geometry.type === 'Point' && feature.properties.name)
+        popup
+          .setLngLat(feature.geometry.coordinates as [number, number])
+          .setText(String(feature.properties.name))
+          .addTo(map)
+    }
+    const leave = () => {
+      map.getCanvas().style.cursor = ''
+      popup.remove()
+    }
+    map.on('mouseenter', 'venue', hover)
+    map.on('mouseenter', 'clusters', hover)
+    map.on('mouseleave', 'venue', leave)
+    map.on('mouseleave', 'clusters', leave)
+    map.on('click', 'venue', (e) => {
+      const id = e.features?.[0]?.properties.id
+      if (typeof id === 'string') handlers.current.onSelect(id)
+    })
+    map.on('click', 'clusters', async (e) => {
+      const feature = e.features?.[0]
+      if (feature?.geometry.type !== 'Point') return
+      const source = map.getSource<GeoJSONSource>('venues')
+      const zoom = await source?.getClusterExpansionZoom(Number(feature.properties.cluster_id))
+      map.easeTo({ center: feature.geometry.coordinates as [number, number], zoom })
+    })
+    const bounds = () => {
+      const b = map.getBounds()
+      handlers.current.onBoundsChange?.({
+        west: b.getWest(),
+        south: b.getSouth(),
+        east: b.getEast(),
+        north: b.getNorth(),
+      })
+    }
+    map.on('moveend', bounds)
+    bounds()
+  }, [map])
+
+  const { lat: meLat, lng: meLng } = center
+  useEffect(() => {
+    map?.getSource<GeoJSONSource>('me')?.setData(point({ lat: meLat, lng: meLng }))
+  }, [map, meLat, meLng])
+
+  useEffect(() => {
+    map?.getSource<GeoJSONSource>('venues')?.setData(venuesGeoJSON(venues, selectedId))
+  }, [map, venues, selectedId])
+
+  // Lieu choisi (épingle ou liste) : la carte s'y déplace, assez près pour défaire les regroupements
+  const selected = venues.find((v) => v.id === selectedId)
+  const target: LngLat | null = selected
+    ? { lat: selected.latitude, lng: selected.longitude }
+    : null
+  const lat = target?.lat
+  const lng = target?.lng
+  useEffect(() => {
+    if (!map || lat === undefined || lng === undefined) return
+    map.flyTo({ center: [lng, lat], zoom: Math.max(map.getZoom(), 15), duration: 600 })
   }, [map, lat, lng])
-  return null
+
+  return <div ref={container} style={{ width: '100%', height: '100%' }} />
 }

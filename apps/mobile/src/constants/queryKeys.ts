@@ -32,6 +32,7 @@ export const EXPLORE = {
   VENUES: 'explore_venues',
   CITY_AGENDA: 'explore_city_agenda',
   NEARBY_COUNT: 'explore_nearby_count',
+  MAP_VENUES: 'explore_map_venues',
 } as const
 
 export const EVENT = {
@@ -58,6 +59,7 @@ export const GEOCODE = {
   SUGGEST: 'geocode_suggest',
   REVERSE: 'geocode_reverse',
   ADDRESS: 'geocode_address',
+  PLACES: 'geocode_places',
 } as const
 
 export const GAMES = {
@@ -86,6 +88,8 @@ export const MY_GAMES = {
 } as const
 
 export const ADMIN = {
+  OSM_VENUE: 'admin_osm_venue',
+  CREATE_VENUE: 'admin_create_venue',
   DASHBOARD: 'admin_dashboard',
   ACTIONS: 'admin_actions',
   REPORTS: 'admin_reports',

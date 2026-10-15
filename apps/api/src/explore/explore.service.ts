@@ -7,6 +7,8 @@ import {
   type eventListItemSchema,
   type GeoQuery,
   localDateTime,
+  type MapVenue,
+  type MapVenuesQuery,
   openingStatus,
   type roomListItemSchema,
   VENUE_AGENDA_MONTHS,
@@ -100,22 +102,36 @@ function roomItem({
   }
 }
 
+// ponytail: plafond fixe ; requête par zone affichée (bbox) avec le regroupement des épingles (LKO-122)
+/** Lieux renvoyés à la carte : le centre de Bordeaux en compte ≈ 570 à 10 km, le Grand Paris des milliers. */
+const VENUES_MAX = 300
+// ponytail: au-delà, regrouper côté serveur (tuiles vectorielles de lieux) plutôt que monter le plafond
+const MAP_VENUES_MAX = 5000
+
 @Injectable()
 export class ExploreService {
   constructor(private readonly prisma: PrismaService) {}
 
-  /** Lieux publiés à moins de `radiusKm` du point, avec leur distance en mètres (PostGIS, index GiST). */
-  private async distances({ lat, lng, radiusKm }: GeoQuery) {
+  /**
+   * Lieux publiés à moins de `radiusKm` du point, avec leur distance en mètres (PostGIS, index GiST).
+   * `limit` : les partenaires puis les plus proches seulement (`LIMIT NULL` = tous).
+   */
+  private async distances({ lat, lng, radiusKm }: GeoQuery, limit: number | null = null) {
     const rows = await this.prisma.$queryRaw<{ id: string; distance: number }[]>`
       SELECT "id", ST_Distance("location", ST_MakePoint(${lng}::float8, ${lat}::float8)::geography) AS distance
       FROM "Venue"
-      WHERE "status" = 'PUBLISHED' AND ST_DWithin("location", ST_MakePoint(${lng}::float8, ${lat}::float8)::geography, ${radiusKm * 1000}::float8)`
+      WHERE "status" = 'PUBLISHED' AND ST_DWithin("location", ST_MakePoint(${lng}::float8, ${lat}::float8)::geography, ${radiusKm * 1000}::float8)
+      ORDER BY "isPartner" DESC, distance
+      LIMIT ${limit}::int`
     return new Map(rows.map((row) => [row.id, Math.round(Number(row.distance))]))
   }
 
-  /** Carte et liste des lieux : tri honnête (distance, partenaires en premier à distance égale). */
+  /**
+   * Carte et liste des lieux : tri honnête (distance, partenaires en premier à distance égale), au plus
+   * VENUES_MAX (une ville dense en compte des milliers dans le rayon). Agenda et rooms ne sont pas plafonnés.
+   */
   async venues(query: VenuesQuery, viewer: Viewer): Promise<VenueListItem[]> {
-    const distances = await this.distances(query)
+    const distances = await this.distances(query, VENUES_MAX)
     const now = new Date()
     const at = query.at ?? now
     const yesterday = fromLocalDate(addDays(localDateTime(now).date, -1))
@@ -146,6 +162,38 @@ export class ExploreService {
         }
       })
       .sort(compareByDistance)
+  }
+
+  /**
+   * Épingles d'une zone de la carte (index GiST), partenaires puis du centre vers les bords, au plus
+   * MAP_VENUES_MAX : la carte ne charge qu'à l'échelle d'une ville, le plafond protège d'une zone trop dense.
+   */
+  async mapVenues({ west, south, east, north, openNow }: MapVenuesQuery): Promise<MapVenue[]> {
+    const rows = await this.prisma.$queryRaw<MapVenue[]>`
+      SELECT "id", "slug", "name", "latitude", "longitude", "isPartner"
+      FROM "Venue"
+      WHERE "status" = 'PUBLISHED'
+        AND "location" && ST_MakeEnvelope(${west}::float8, ${south}::float8, ${east}::float8, ${north}::float8, 4326)::geography
+      ORDER BY "isPartner" DESC,
+        "location" <-> ST_MakePoint(${(west + east) / 2}::float8, ${(south + north) / 2}::float8)::geography
+      LIMIT ${MAP_VENUES_MAX}::int`
+    if (!openNow) return rows
+    const now = new Date()
+    const yesterday = fromLocalDate(addDays(localDateTime(now).date, -1))
+    const open = await this.prisma.venue.findMany({
+      where: { id: { in: rows.map((r) => r.id) } },
+      select: {
+        id: true,
+        openingHours: true,
+        closures: { where: { endsOn: { gte: yesterday } } },
+      },
+    })
+    const ids = new Set(
+      open
+        .filter((v) => openingStatus(v.openingHours, v.closures.map(closureRange), now).openNow)
+        .map((v) => v.id),
+    )
+    return rows.filter((r) => ids.has(r.id))
   }
 
   /**

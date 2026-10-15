@@ -22,7 +22,7 @@ export type AuditKind = AdminActionKind | ((body: Record<string, unknown>) => Ad
 
 /**
  * Écrit l'action dans le journal d'audit une fois la route réussie : admin connecté, `:id` de la route
- * comme cible, motif et corps de la requête.
+ * (ou l'`id` créé) comme cible, motif et corps de la requête.
  */
 // ponytail: écrit après l'action, hors de sa transaction ; passer l'audit dans chaque transaction si une trace manque un jour
 @Injectable()
@@ -43,7 +43,8 @@ export class AuditInterceptor implements NestInterceptor {
           data: {
             adminId: request.user.id,
             action: typeof kind === 'function' ? kind(body) : kind,
-            targetId: String(request.params.id ?? ''),
+            // Création : pas de `:id` dans la route, la cible est ce qui vient d'être créé
+            targetId: String(request.params.id ?? (result as { id?: string } | null)?.id ?? ''),
             reason: typeof body.reason === 'string' ? body.reason : '',
             data: body as Prisma.InputJsonObject,
           },
