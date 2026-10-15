@@ -8,8 +8,7 @@ import maplibregl from 'maplibre-gl/dist/maplibre-gl-csp'
 maplibregl.setWorkerUrl('/maplibre-gl-csp-worker.js')
 
 import { type RefObject, useEffect, useState } from 'react'
-
-export type LngLat = { lat: number; lng: number }
+import type { LngLat } from './mapLayers'
 
 /**
  * Carte MapLibre au style Lucko (LKO-122) dans `container`, renvoyée une fois le style chargé ; détruite
@@ -40,26 +39,3 @@ export function useMapLibre(
   }, [])
   return map
 }
-
-/** Cercle de `radiusM` mètres en polygone (MapLibre n'a pas de cercle en mètres). */
-export function circlePolygon({ lat, lng }: LngLat, radiusM: number) {
-  const dLat = radiusM / 111_320
-  const dLng = dLat / Math.cos((lat * Math.PI) / 180)
-  const ring = Array.from({ length: 65 }, (_, i) => {
-    const a = (i / 64) * 2 * Math.PI
-    return [lng + dLng * Math.cos(a), lat + dLat * Math.sin(a)]
-  })
-  return {
-    type: 'Feature' as const,
-    properties: {},
-    geometry: { type: 'Polygon' as const, coordinates: [ring] },
-  }
-}
-
-export const EMPTY = { type: 'FeatureCollection' as const, features: [] }
-
-export const point = ({ lat, lng }: LngLat, properties: Record<string, unknown> = {}) => ({
-  type: 'Feature' as const,
-  properties,
-  geometry: { type: 'Point' as const, coordinates: [lng, lat] },
-})

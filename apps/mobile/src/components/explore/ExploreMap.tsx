@@ -1,73 +1,91 @@
-import { colors, Typography } from '@lucko/design-system'
+import { mapStyle } from '@lucko/design-system'
+import {
+  Camera,
+  type CameraRef,
+  GeoJSONSource,
+  type GeoJSONSourceRef,
+  Layer,
+  type LayerProps,
+  type MapProps,
+  Map as MapView,
+} from '@maplibre/maplibre-react-native'
 import { useEffect, useRef } from 'react'
-import { View } from 'react-native'
-import MapView, { Marker } from 'react-native-maps'
 import type { Place } from '@/lib/useLocation'
+import {
+  CLUSTER,
+  clusterCountLayer,
+  clusterLayer,
+  meLayer,
+  point,
+  venueLayer,
+  venuesGeoJSON,
+} from './mapLayers'
 import type { MapBounds, MapPin } from './mapPins'
 
-/** Carte des lieux (B1) : épingle verte pour les partenaires, blanche sinon ; centrée sur le lieu choisi. */
+/**
+ * Carte des lieux sur mobile (LKO-122) : MapLibre natif au style Lucko, mêmes couches que le web.
+ * Épingles regroupées quand on dézoome ; `onBoundsChange` à chaque fin de déplacement.
+ */
 export function ExploreMap({
   center,
   venues,
   selectedId,
   onSelect,
+  onBoundsChange,
 }: {
   center: Place
   venues: MapPin[]
   selectedId: string | null
   onSelect: (id: string) => void
-  /** Web seulement pour l'instant : MapLibre natif et regroupement viennent avec la PR mobile de LKO-122 */
   onBoundsChange?: (bounds: MapBounds) => void
 }) {
-  const map = useRef<MapView>(null)
+  const camera = useRef<CameraRef>(null)
+  const source = useRef<GeoJSONSourceRef>(null)
+
+  // Lieu choisi (épingle ou liste) : la carte s'y déplace, assez près pour défaire les regroupements
   const selected = venues.find((v) => v.id === selectedId)
   const lat = selected?.latitude
   const lng = selected?.longitude
   useEffect(() => {
     if (lat === undefined || lng === undefined) return
-    map.current?.animateToRegion(
-      { latitude: lat, longitude: lng, latitudeDelta: 0.02, longitudeDelta: 0.02 },
-      600,
-    )
+    camera.current?.flyTo({ center: [lng, lat], zoom: 15, duration: 600 })
   }, [lat, lng])
+
   return (
-    <View style={{ flex: 1 }}>
-      <MapView
-        ref={map}
-        style={{ flex: 1 }}
-        initialRegion={{
-          latitude: center.lat,
-          longitude: center.lng,
-          latitudeDelta: 0.06,
-          longitudeDelta: 0.06,
-        }}
-        showsUserLocation
-      >
-        {venues.map((venue) => (
-          <Marker
-            key={venue.id}
-            coordinate={{ latitude: venue.latitude, longitude: venue.longitude }}
-            title={venue.name}
-            pinColor={
-              venue.id === selectedId ? colors.room : venue.isPartner ? colors.venue : colors.ink
-            }
-            onPress={() => onSelect(venue.id)}
-          />
-        ))}
-      </MapView>
-      {/* Lieux importés d'OSM (LKO-74) : attribution ODbL ; le web l'a déjà sur le fond Leaflet */}
-      <Typography
-        variant="small"
-        style={{
-          position: 'absolute',
-          right: 4,
-          bottom: 2,
-          fontSize: 10,
-          backgroundColor: colors.white,
+    <MapView
+      style={{ flex: 1 }}
+      mapStyle={mapStyle as MapProps['mapStyle']}
+      logo={false}
+      onRegionDidChange={(e) => {
+        const [west, south, east, north] = e.nativeEvent.bounds
+        onBoundsChange?.({ west, south, east, north })
+      }}
+    >
+      <Camera ref={camera} initialViewState={{ center: [center.lng, center.lat], zoom: 13 }} />
+      <GeoJSONSource id="me" data={point(center)}>
+        <Layer {...(meLayer as LayerProps)} />
+      </GeoJSONSource>
+      <GeoJSONSource
+        id="venues"
+        ref={source}
+        data={venuesGeoJSON(venues, selectedId)}
+        {...CLUSTER}
+        onPress={async (e) => {
+          const feature = e.nativeEvent.features[0]
+          if (feature?.geometry.type !== 'Point') return
+          const [fLng = 0, fLat = 0] = feature.geometry.coordinates
+          if (feature.properties?.cluster) {
+            const zoom = await source.current?.getClusterExpansionZoom(
+              Number(feature.properties.cluster_id),
+            )
+            camera.current?.easeTo({ center: [fLng, fLat], zoom, duration: 400 })
+          } else if (typeof feature.properties?.id === 'string') onSelect(feature.properties.id)
         }}
       >
-        © contributeurs OpenStreetMap
-      </Typography>
-    </View>
+        <Layer {...(clusterLayer as LayerProps)} />
+        <Layer {...(clusterCountLayer as LayerProps)} />
+        <Layer {...(venueLayer as LayerProps)} />
+      </GeoJSONSource>
+    </MapView>
   )
 }
