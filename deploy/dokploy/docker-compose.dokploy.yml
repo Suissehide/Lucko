@@ -36,7 +36,7 @@ services:
       - S3_PUBLIC_URL=${S3_PUBLIC_URL}
       - SIGHTENGINE_API_USER=${SIGHTENGINE_API_USER:-}
       - SIGHTENGINE_API_SECRET=${SIGHTENGINE_API_SECRET:-}
-      # Suivi des erreurs (GlitchTip, deploy/glitchtip) ; vide = rien n'est envoyé
+      # Suivi des erreurs (GlitchTip partagé, dépôt Tools) ; vide = rien n'est envoyé
       - SENTRY_DSN=${SENTRY_DSN_API:-}
       - SENTRY_ENVIRONMENT=${SENTRY_ENVIRONMENT:-production}
       - SENTRY_RELEASE=${VERSION:-}
