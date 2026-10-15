@@ -8,23 +8,17 @@ import {
   type LayerProps,
   type MapProps,
   Map as MapView,
+  UserLocation,
 } from '@maplibre/maplibre-react-native'
 import { useEffect, useRef } from 'react'
 import type { Place } from '@/lib/useLocation'
-import {
-  CLUSTER,
-  clusterCountLayer,
-  clusterLayer,
-  meLayer,
-  point,
-  venueLayer,
-  venuesGeoJSON,
-} from './mapLayers'
+import { CLUSTER, clusterCountLayer, clusterLayer, venueLayer, venuesGeoJSON } from './mapLayers'
 import type { MapBounds, MapPin } from './mapPins'
 
 /**
- * Carte des lieux sur mobile (LKO-122) : MapLibre natif au style Lucko, mêmes couches que le web.
- * Épingles regroupées quand on dézoome ; `onBoundsChange` à chaque fin de déplacement.
+ * Carte des lieux sur mobile (LKO-122) : MapLibre natif au style Lucko, mêmes couches que le web, et
+ * la position GPS du joueur. Épingles regroupées quand on dézoome ; `onBoundsChange` à chaque fin de
+ * déplacement.
  */
 export function ExploreMap({
   center,
@@ -62,9 +56,8 @@ export function ExploreMap({
       }}
     >
       <Camera ref={camera} initialViewState={{ center: [center.lng, center.lat], zoom: 13 }} />
-      <GeoJSONSource id="me" data={point(center)}>
-        <Layer {...(meLayer as LayerProps)} />
-      </GeoJSONSource>
+      {/* Point bleu GPS (comme Apple Plans), avec son cercle de précision ; rien sans permission */}
+      <UserLocation accuracy />
       <GeoJSONSource
         id="venues"
         ref={source}
