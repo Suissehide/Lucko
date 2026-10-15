@@ -45,6 +45,7 @@ import {
   ROOM_MAX_DAYS_AHEAD,
   ROOM_VIBE_LABELS,
   ROOM_VIBES,
+  suggestedVenue,
   VENUE_TYPE_LABELS,
   type VenueListItem,
 } from '@lucko/shared'
@@ -125,6 +126,13 @@ export default function CreateRoomScreen() {
   // Lieu passé par la fiche lieu : sélectionné dès que la liste arrive
   const preset = venues.data?.find((v) => v.slug === venueSlug)
   if (preset && !draft.venueId) set({ venueId: preset.id })
+  // Sinon, partenaire proche et ouvert proposé une seule fois en arrivant sur « Où » (LKO-92)
+  const [suggested, setSuggested] = useState(false)
+  const suggestion = venues.data && me ? suggestedVenue(venues.data, me.searchRadiusKm) : undefined
+  if (step === 1 && !suggested && venues.data && !venueSlug) {
+    setSuggested(true)
+    if (suggestion && !draft.venueId && !draft.atHome) set({ venueId: suggestion.id })
+  }
 
   const game = games.data?.find((g) => g.id === draft.gameId)
   const venue = draft.atHome ? undefined : venues.data?.find((v) => v.id === draft.venueId)
@@ -222,6 +230,7 @@ export default function CreateRoomScreen() {
       venues={venues.data}
       center={center}
       radiusKm={me?.searchRadiusKm ?? RADIUS_KM.default}
+      suggestedId={suggestion?.id}
       wide={wide}
     />
   ) : (
@@ -498,6 +507,7 @@ function WhereStep({
   venues,
   center,
   radiusKm,
+  suggestedId,
   wide,
 }: {
   draft: RoomDraft
@@ -506,6 +516,7 @@ function WhereStep({
   venues: VenueListItem[]
   center: { lat: number; lng: number }
   radiusKm: number
+  suggestedId?: string
   wide: boolean
 }) {
   const [month, setMonth] = useState(draft.day.slice(0, 7))
@@ -551,6 +562,7 @@ function WhereStep({
               left={<RadioDot on={on} />}
               title={v.name}
               subtitle={closed ? 'Fermé à cette heure' : venueLine(v)}
+              note={v.id === suggestedId ? 'Proposé : partenaire le plus proche' : undefined}
               right={
                 <View style={{ alignItems: 'flex-end', gap: 4 }}>
                   {v.isPartner ? <Tag label="Partenaire" variant="partner" /> : null}

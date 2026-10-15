@@ -1,5 +1,5 @@
 import { QR_TOKEN_TTL_MS } from '@lucko/shared'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { CHECKIN } from '@/constants/queryKeys'
 import { api } from '@/lib/api'
 import { unwrap } from '@/lib/queryClient'
@@ -22,6 +22,13 @@ export const useQrTokenQuery = () =>
     refetchInterval: QR_TOKEN_TTL_MS - REFRESH_MARGIN_MS,
   })
 
+/** Avantage Lucko du lieu partenaire, pour son gérant (LKO-92). */
+export const useVenuePerkQuery = (venueId: string) =>
+  useQuery({
+    queryKey: [CHECKIN.PERK, venueId],
+    queryFn: () => unwrap(api.GET('/venues/{venueId}/perk', { params: { path: { venueId } } })),
+  })
+
 // * MUTATIONS
 
 /** Scan au comptoir par le staff du lieu. */
@@ -33,3 +40,19 @@ export const useScanMutation = (venueId: string) =>
         api.POST('/venues/{venueId}/scan', { params: { path: { venueId } }, body: { token } }),
       ),
   })
+
+/** Change l'avantage Lucko ; vide = aucun avantage. */
+export function useSetVenuePerkMutation(venueId: string) {
+  const client = useQueryClient()
+  return useMutation({
+    mutationKey: [CHECKIN.SET_PERK, venueId],
+    mutationFn: (luckoPerk: string) =>
+      unwrap(
+        api.PUT('/venues/{venueId}/perk', {
+          params: { path: { venueId } },
+          body: { luckoPerk },
+        }),
+      ),
+    onSuccess: (perk) => client.setQueryData([CHECKIN.PERK, venueId], perk),
+  })
+}

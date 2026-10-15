@@ -19,5 +19,16 @@ export const scanResultSchema = z.object({
   alreadyScanned: z.boolean(),
 })
 
+/** Avantage Lucko d'un lieu partenaire, offert au scan du QR (« -10 % sur les boosters ») ; vide = aucun. */
+export const luckoPerkSchema = z
+  .string()
+  .trim()
+  .max(120, { message: '120 caractères maximum' })
+  .nullable()
+
+/** GET et PUT /venues/:venueId/perk : saisi par le gérant d'un lieu partenaire (LKO-92). */
+export const venuePerkSchema = z.object({ luckoPerk: luckoPerkSchema })
+export type VenuePerk = z.input<typeof venuePerkSchema>
+
 export type QrToken = z.input<typeof qrTokenSchema>
 export type ScanResult = z.infer<typeof scanResultSchema>

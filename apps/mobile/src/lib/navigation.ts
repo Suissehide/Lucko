@@ -59,6 +59,9 @@ export const openVenueAttendance = (venueId: string) =>
   router.push({ pathname: '/presence/[venueId]', params: { venueId } })
 
 /** Venues facturables du mois d'un lieu partenaire, pour le gérant (LKO-79). */
+export const openVenuePerk = (venueId: string) =>
+  router.push({ pathname: '/perk/[venueId]', params: { venueId } })
+
 export const openVenueBilling = (venueId: string) =>
   router.push({ pathname: '/billing/[venueId]', params: { venueId } })
 

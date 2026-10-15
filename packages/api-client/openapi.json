@@ -13394,6 +13394,104 @@
           "checkin"
         ]
       }
+    },
+    "/venues/{venueId}/perk": {
+      "get": {
+        "operationId": "CheckinController_perk",
+        "parameters": [
+          {
+            "name": "venueId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "luckoPerk": {
+                      "nullable": true,
+                      "type": "string",
+                      "maxLength": 120
+                    }
+                  },
+                  "required": [
+                    "luckoPerk"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "checkin"
+        ]
+      },
+      "put": {
+        "operationId": "CheckinController_setPerk",
+        "parameters": [
+          {
+            "name": "venueId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "luckoPerk": {
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 120
+                  }
+                },
+                "required": [
+                  "luckoPerk"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "luckoPerk": {
+                      "nullable": true,
+                      "type": "string",
+                      "maxLength": 120
+                    }
+                  },
+                  "required": [
+                    "luckoPerk"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "checkin"
+        ]
+      }
     }
   },
   "info": {
