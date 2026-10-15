@@ -32,6 +32,14 @@ export function useMapLibre(
     })
     created.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right')
     created.on('load', () => setMap(created))
+    // MapLibre déplie l'attribution compacte une fois les sources chargées et ne la replie qu'au premier drag
+    const collapseAttribution = () => {
+      const shown = created.getContainer().querySelector('.maplibregl-compact-show')
+      if (!shown) return
+      shown.classList.remove('maplibregl-compact-show')
+      created.off('sourcedata', collapseAttribution)
+    }
+    created.on('sourcedata', collapseAttribution)
     return () => {
       setMap(null)
       created.remove()
