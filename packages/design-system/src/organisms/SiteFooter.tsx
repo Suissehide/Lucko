@@ -3,6 +3,7 @@ import { linkProps } from '../atoms/InlineLink'
 import { useHover } from '../atoms/useHover'
 import { Brand } from '../molecules/Brand'
 import { border, colors, font, radius, sizes, space, transition, type } from '../tokens'
+import { DiscordGlyph, InstagramGlyph } from './BrandGlyphs'
 
 export type FooterLink = { label: string; href: string; short?: string }
 
@@ -250,67 +251,6 @@ function SocialLink({ label, href }: { label: string; href: string }) {
     >
       {label === 'Instagram' ? <InstagramGlyph color={color} /> : <DiscordGlyph color={color} />}
     </Pressable>
-  )
-}
-
-// ponytail: pictogrammes dessinés en View, pas de dépendance SVG pour deux icônes
-function InstagramGlyph({ color }: { color: string }) {
-  return (
-    <View
-      style={{
-        width: 20,
-        height: 20,
-        borderWidth: border.thin,
-        borderColor: color,
-        borderRadius: 6,
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-    >
-      <View
-        style={{
-          width: 9,
-          height: 9,
-          borderWidth: border.thin,
-          borderColor: color,
-          borderRadius: 9,
-        }}
-      />
-      <View
-        style={{
-          position: 'absolute',
-          top: 2,
-          right: 2,
-          width: 3,
-          height: 3,
-          borderRadius: 3,
-          backgroundColor: color,
-        }}
-      />
-    </View>
-  )
-}
-
-function DiscordGlyph({ color }: { color: string }) {
-  const eye = { width: 4, height: 5, borderRadius: 3, backgroundColor: colors.ink }
-  return (
-    <View
-      style={{
-        width: 22,
-        height: 16,
-        borderRadius: 7,
-        borderBottomLeftRadius: 9,
-        borderBottomRightRadius: 9,
-        backgroundColor: color,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 5,
-      }}
-    >
-      <View style={eye} />
-      <View style={eye} />
-    </View>
   )
 }
 
