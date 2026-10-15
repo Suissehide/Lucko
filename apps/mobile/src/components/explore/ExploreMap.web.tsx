@@ -11,6 +11,7 @@ import {
   clusterLayer,
   EMPTY,
   type LngLat,
+  meHaloLayer,
   meLayer,
   point,
   venueLayer,
@@ -46,6 +47,7 @@ export function ExploreMap({
     if (!map) return
     map.addSource('me', { type: 'geojson', data: EMPTY })
     map.addSource('venues', { type: 'geojson', data: EMPTY, ...CLUSTER })
+    map.addLayer({ ...meHaloLayer, source: 'me' } as AddLayerObject)
     map.addLayer({ ...meLayer, source: 'me' } as AddLayerObject)
     for (const layer of [clusterLayer, clusterCountLayer, venueLayer])
       map.addLayer({ ...layer, source: 'venues' } as AddLayerObject)

@@ -77,6 +77,7 @@ import {
   withFormat,
   withGame,
 } from '@/forms/room.form'
+import { useScrollToRow } from '@/hooks/useScrollToRow'
 import { gameLabel } from '@/lib/explore'
 import { goBack } from '@/lib/navigation'
 import { gameColor } from '@/lib/profile'
@@ -526,6 +527,7 @@ function WhereStep({
   const otherTime = !PRESET_MINUTES.includes(draft.minute)
   const lastDay = addDays(today, ROOM_MAX_DAYS_AHEAD)
   const selected = venues.find((v) => v.id === draft.venueId)
+  const { scrollRef, rowProps } = useScrollToRow(draft.venueId || null)
   const pick = (v: VenueListItem) =>
     v.openNow === false ? undefined : () => set({ venueId: v.id })
 
@@ -548,12 +550,12 @@ function WhereStep({
     </View>
   )
   const list = (
-    <ListCard>
+    <ListCard maxHeight={wide ? 320 : 360} scrollRef={scrollRef}>
       {venues.map((v, i) => {
         const closed = v.openNow === false
         const on = v.id === draft.venueId
         return (
-          <View key={v.id} style={{ opacity: closed ? 0.5 : 1 }}>
+          <View key={v.id} {...rowProps(v.id)} style={{ opacity: closed ? 0.5 : 1 }}>
             <ListRow
               inset={wide ? 16 : 12}
               last={i === venues.length - 1}

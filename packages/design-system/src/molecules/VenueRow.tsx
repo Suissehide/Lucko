@@ -11,6 +11,7 @@ export function VenueRow({
   perk,
   inset,
   last,
+  selected,
   onPress,
 }: {
   name: string
@@ -20,12 +21,15 @@ export function VenueRow({
   perk?: string | null
   inset?: number
   last?: boolean
+  /** Lieu choisi sur la carte : ligne mise en évidence */
+  selected?: boolean
   onPress?: () => void
 }) {
   return (
     <ListRow
       inset={inset}
       last={last}
+      selected={selected}
       onPress={onPress}
       left={
         <View

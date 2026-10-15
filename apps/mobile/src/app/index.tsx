@@ -29,6 +29,7 @@ import { useWindowDimensions, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { MapFrame } from '@/components/explore/MapFrame'
 import { PlayerNav } from '@/components/PlayerNav'
+import { useScrollToRow } from '@/hooks/useScrollToRow'
 import { track } from '@/lib/analytics'
 import { KIND_COLORS } from '@/lib/cityAgenda'
 import {
@@ -67,6 +68,7 @@ export default function HomeScreen() {
   const { place, data, failed, retry } = useTonightQuery()
   const [game, setGame] = useState<string | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const { scrollRef, rowProps } = useScrollToRow(selectedId)
   // Jeu le plus attendu près de toi (LKO-17) : raccourci pour ouvrir une room
   const demand = useQuery(gameDemandQueryOptions(place, me?.searchRadiusKm ?? 10))
   const wanted = demand.data?.[0]?.waitingCount ? demand.data[0] : null
@@ -167,18 +169,20 @@ export default function HomeScreen() {
   ) : data.venues.length === 0 ? (
     <Typography variant="small">Aucun lieu ouvert en ce moment autour de toi.</Typography>
   ) : (
-    <ListCard>
+    <ListCard maxHeight={400} scrollRef={scrollRef}>
       {data.venues.map((v, i) => {
         const props = venueRowProps(v)
         return (
-          <VenueRow
-            key={v.id}
-            {...props}
-            perk={wide ? props.perk : null}
-            inset={wide ? 16 : 14}
-            last={i === data.venues.length - 1}
-            onPress={() => openVenue(v.slug)}
-          />
+          <View key={v.id} {...rowProps(v.id)}>
+            <VenueRow
+              {...props}
+              perk={wide ? props.perk : null}
+              inset={wide ? 16 : 14}
+              last={i === data.venues.length - 1}
+              selected={v.id === selectedId}
+              onPress={() => openVenue(v.slug)}
+            />
+          </View>
         )
       })}
     </ListCard>

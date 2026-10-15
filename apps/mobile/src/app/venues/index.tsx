@@ -15,6 +15,7 @@ import { useState } from 'react'
 import { useWindowDimensions, View } from 'react-native'
 import { MapFrame } from '@/components/explore/MapFrame'
 import { PlayerScreen } from '@/components/PlayerScreen'
+import { useScrollToRow } from '@/hooks/useScrollToRow'
 import { venueRowProps } from '@/lib/explore'
 import { goBack, openVenue } from '@/lib/navigation'
 import { useLocation } from '@/lib/useLocation'
@@ -36,6 +37,7 @@ export default function VenuesScreen() {
   const [openOnly, setOpenOnly] = useState(false)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const shown = (venues.data ?? []).filter((v) => !openOnly || v.openNow)
+  const { scrollRef, rowProps } = useScrollToRow(selectedId)
 
   const filters = (
     <View style={{ flexDirection: 'row', gap: 8 }}>
@@ -77,18 +79,20 @@ export default function VenuesScreen() {
     />
   ) : (
     // Jusqu'à 300 lieux : la liste défile dans son cadre, à hauteur de la carte sur grand écran
-    <ListCard maxHeight={wide ? 430 : 400}>
+    <ListCard maxHeight={wide ? 430 : 400} scrollRef={scrollRef}>
       {shown.map((v, i) => {
         const props = venueRowProps(v)
         return (
-          <VenueRow
-            key={v.id}
-            {...props}
-            perk={wide ? props.perk : null}
-            inset={wide ? 16 : 14}
-            last={i === shown.length - 1}
-            onPress={() => openVenue(v.slug)}
-          />
+          <View key={v.id} {...rowProps(v.id)}>
+            <VenueRow
+              {...props}
+              perk={wide ? props.perk : null}
+              inset={wide ? 16 : 14}
+              last={i === shown.length - 1}
+              selected={v.id === selectedId}
+              onPress={() => openVenue(v.slug)}
+            />
+          </View>
         )
       })}
     </ListCard>

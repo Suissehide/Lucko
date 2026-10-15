@@ -183,8 +183,10 @@ export const mapStyle = {
   ],
 }
 
-/** Ludothèques et associations sur la carte (pas de couleur de contenu dédiée dans le design system). */
-const play = '#8C5AD8'
+// Couleurs propres aux épingles (pas de couleur de contenu dédiée dans le design system). Le bleu
+// `colors.event` reste réservé à la position du joueur, comme sur toutes les cartes.
+const gameBar = '#8C5AD8'
+const play = '#1F9AAA'
 
 /**
  * Remplissage des épingles de lieu par type (carte et `MapLegend`). Le partenaire se distingue par un
@@ -192,7 +194,7 @@ const play = '#8C5AD8'
  */
 export const venuePin = {
   type: {
-    GAME_BAR: colors.event,
+    GAME_BAR: gameBar,
     TCG_SHOP: colors.rating,
     CAFE: colors.white,
     LUDOTHEQUE: play,
