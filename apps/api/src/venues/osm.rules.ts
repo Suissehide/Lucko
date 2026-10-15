@@ -114,7 +114,11 @@ export function toVenue(element: OsmElement, fallbackCity = '') {
         ? 'TCG_SHOP'
         : GAME_WORDS.test(name)
           ? 'GAME_BAR'
-          : 'OTHER'
+          : tags.amenity === 'cafe'
+            ? 'CAFE'
+            : drinks
+              ? 'BAR'
+              : 'OTHER'
   const website = tags.website ?? tags['contact:website']
   const street = [tags['addr:housenumber'], tags['addr:street']].filter(Boolean).join(' ')
   return {

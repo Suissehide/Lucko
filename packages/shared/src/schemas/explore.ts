@@ -49,6 +49,7 @@ export const mapVenueSchema = venueListItemSchema.pick({
   id: true,
   slug: true,
   name: true,
+  type: true,
   latitude: true,
   longitude: true,
   isPartner: true,

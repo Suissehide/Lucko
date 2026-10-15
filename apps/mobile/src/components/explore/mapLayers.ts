@@ -1,4 +1,5 @@
-import { border, colors, fuzzyZone } from '@lucko/design-system'
+import { border, colors, fuzzyZone, venuePin } from '@lucko/design-system'
+import { VENUE_TYPE_LABELS } from '@lucko/shared'
 import type { MapPin } from './mapPins'
 
 // Couches des cartes Lucko (LKO-122), communes au web (maplibre-gl) et au natif (maplibre-react-native)
@@ -33,7 +34,13 @@ export const venuesGeoJSON = (venues: MapPin[], selectedId: string | null) => ({
   features: venues.map((v) =>
     point(
       { lat: v.latitude, lng: v.longitude },
-      { id: v.id, name: v.name, isPartner: v.isPartner, selected: v.id === selectedId },
+      {
+        id: v.id,
+        name: v.name,
+        type: v.type,
+        isPartner: v.isPartner,
+        selected: v.id === selectedId,
+      },
     ),
   ),
 })
@@ -55,15 +62,16 @@ export const meLayer = {
   },
 }
 
+/** Groupes en noir (le jaune est celui des boutiques TCG). */
 export const clusterLayer = {
   id: 'clusters',
   type: 'circle' as const,
   filter: IS_CLUSTER,
   paint: {
-    'circle-color': colors.rating,
+    'circle-color': colors.ink,
     'circle-radius': ['step', ['get', 'point_count'], 14, 20, 18, 100, 24],
-    'circle-stroke-color': colors.ink,
-    'circle-stroke-width': border.base,
+    'circle-stroke-color': colors.white,
+    'circle-stroke-width': border.thin,
   },
 }
 
@@ -76,10 +84,10 @@ export const clusterCountLayer = {
     'text-font': ['Noto Sans Bold'],
     'text-size': 12,
   },
-  paint: { 'text-color': colors.ink },
+  paint: { 'text-color': colors.white },
 }
 
-/** Lieu seul : rouge s'il est choisi, vert si partenaire, blanc sinon. */
+/** Lieu seul : couleur de son type, anneau vert épais si partenaire, rouge s'il est choisi. */
 export const venueLayer = {
   id: 'venue',
   type: 'circle' as const,
@@ -88,16 +96,23 @@ export const venueLayer = {
     'circle-color': [
       'case',
       ['get', 'selected'],
-      colors.room,
-      ['get', 'isPartner'],
-      colors.venue,
-      colors.white,
+      venuePin.selected,
+      ['match', ['get', 'type'], ...Object.entries(venuePin.type).flat(), colors.white],
     ],
     'circle-radius': ['case', ['get', 'selected'], 12, 9],
-    'circle-stroke-color': colors.ink,
-    'circle-stroke-width': border.base,
+    'circle-stroke-color': ['case', ['get', 'isPartner'], venuePin.partnerRing, colors.ink],
+    'circle-stroke-width': ['case', ['get', 'isPartner'], 4, border.base],
   },
 }
+
+/** Légende des épingles (MapLegend), sous les cartes d'exploration. */
+export const MAP_LEGEND = [
+  { label: VENUE_TYPE_LABELS.GAME_BAR, color: venuePin.type.GAME_BAR },
+  { label: VENUE_TYPE_LABELS.TCG_SHOP, color: venuePin.type.TCG_SHOP },
+  { label: VENUE_TYPE_LABELS.CAFE, color: venuePin.type.CAFE },
+  { label: 'Ludothèque · association', color: venuePin.type.LUDOTHEQUE },
+  { label: 'Partenaire', color: venuePin.partnerRing, ring: true },
+]
 
 export const zoneFillLayer = {
   id: 'zone-fill',

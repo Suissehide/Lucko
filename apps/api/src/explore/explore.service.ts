@@ -6,6 +6,7 @@ import {
   type EventsQuery,
   type eventListItemSchema,
   type GeoQuery,
+  HIDDEN_ON_MAP_VENUE_TYPES,
   localDateTime,
   type MapVenue,
   type MapVenuesQuery,
@@ -114,13 +115,18 @@ export class ExploreService {
 
   /**
    * Lieux publiés à moins de `radiusKm` du point, avec leur distance en mètres (PostGIS, index GiST).
-   * `limit` : les partenaires puis les plus proches seulement (`LIMIT NULL` = tous).
+   * `limit` : les partenaires puis les plus proches seulement (`LIMIT NULL` = tous) ; `hide` : types
+   * écartés, sauf partenaires (carte et liste des lieux).
    */
-  private async distances({ lat, lng, radiusKm }: GeoQuery, limit: number | null = null) {
+  private async distances(
+    { lat, lng, radiusKm }: GeoQuery,
+    { limit = null, hide = [] }: { limit?: number | null; hide?: readonly string[] } = {},
+  ) {
     const rows = await this.prisma.$queryRaw<{ id: string; distance: number }[]>`
       SELECT "id", ST_Distance("location", ST_MakePoint(${lng}::float8, ${lat}::float8)::geography) AS distance
       FROM "Venue"
       WHERE "status" = 'PUBLISHED' AND ST_DWithin("location", ST_MakePoint(${lng}::float8, ${lat}::float8)::geography, ${radiusKm * 1000}::float8)
+        AND ("isPartner" OR NOT "type"::text = ANY(${hide}::text[]))
       ORDER BY "isPartner" DESC, distance
       LIMIT ${limit}::int`
     return new Map(rows.map((row) => [row.id, Math.round(Number(row.distance))]))
@@ -128,10 +134,14 @@ export class ExploreService {
 
   /**
    * Carte et liste des lieux : tri honnête (distance, partenaires en premier à distance égale), au plus
-   * VENUES_MAX (une ville dense en compte des milliers dans le rayon). Agenda et rooms ne sont pas plafonnés.
+   * VENUES_MAX (une ville dense en compte des milliers dans le rayon), sans les bars sans jeux. Agenda et
+   * rooms ne sont ni plafonnés ni filtrés.
    */
   async venues(query: VenuesQuery, viewer: Viewer): Promise<VenueListItem[]> {
-    const distances = await this.distances(query, VENUES_MAX)
+    const distances = await this.distances(query, {
+      limit: VENUES_MAX,
+      hide: HIDDEN_ON_MAP_VENUE_TYPES,
+    })
     const now = new Date()
     const at = query.at ?? now
     const yesterday = fromLocalDate(addDays(localDateTime(now).date, -1))
@@ -170,9 +180,10 @@ export class ExploreService {
    */
   async mapVenues({ west, south, east, north, openNow }: MapVenuesQuery): Promise<MapVenue[]> {
     const rows = await this.prisma.$queryRaw<MapVenue[]>`
-      SELECT "id", "slug", "name", "latitude", "longitude", "isPartner"
+      SELECT "id", "slug", "name", "type", "latitude", "longitude", "isPartner"
       FROM "Venue"
       WHERE "status" = 'PUBLISHED'
+        AND ("isPartner" OR NOT "type"::text = ANY(${HIDDEN_ON_MAP_VENUE_TYPES}::text[]))
         AND "location" && ST_MakeEnvelope(${west}::float8, ${south}::float8, ${east}::float8, ${north}::float8, 4326)::geography
       ORDER BY "isPartner" DESC,
         "location" <-> ST_MakePoint(${(west + east) / 2}::float8, ${(south + north) / 2}::float8)::geography

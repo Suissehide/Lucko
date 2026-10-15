@@ -2395,8 +2395,10 @@
                         "enum": [
                           "GAME_BAR",
                           "TCG_SHOP",
+                          "CAFE",
                           "LUDOTHEQUE",
                           "ASSOCIATION",
+                          "BAR",
                           "OTHER"
                         ]
                       },
@@ -2535,6 +2537,18 @@
                       "name": {
                         "type": "string"
                       },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "GAME_BAR",
+                          "TCG_SHOP",
+                          "CAFE",
+                          "LUDOTHEQUE",
+                          "ASSOCIATION",
+                          "BAR",
+                          "OTHER"
+                        ]
+                      },
                       "latitude": {
                         "type": "number"
                       },
@@ -2549,6 +2563,7 @@
                       "id",
                       "slug",
                       "name",
+                      "type",
                       "latitude",
                       "longitude",
                       "isPartner"
@@ -2599,8 +2614,10 @@
                       "enum": [
                         "GAME_BAR",
                         "TCG_SHOP",
+                        "CAFE",
                         "LUDOTHEQUE",
                         "ASSOCIATION",
+                        "BAR",
                         "OTHER"
                       ]
                     },
@@ -11229,8 +11246,10 @@
                         "enum": [
                           "GAME_BAR",
                           "TCG_SHOP",
+                          "CAFE",
                           "LUDOTHEQUE",
                           "ASSOCIATION",
+                          "BAR",
                           "OTHER"
                         ]
                       },
@@ -11351,8 +11370,10 @@
                     "enum": [
                       "GAME_BAR",
                       "TCG_SHOP",
+                      "CAFE",
                       "LUDOTHEQUE",
                       "ASSOCIATION",
+                      "BAR",
                       "OTHER"
                     ]
                   },
@@ -11461,8 +11482,10 @@
                       "enum": [
                         "GAME_BAR",
                         "TCG_SHOP",
+                        "CAFE",
                         "LUDOTHEQUE",
                         "ASSOCIATION",
+                        "BAR",
                         "OTHER"
                       ]
                     },
@@ -11602,8 +11625,10 @@
                       "enum": [
                         "GAME_BAR",
                         "TCG_SHOP",
+                        "CAFE",
                         "LUDOTHEQUE",
                         "ASSOCIATION",
+                        "BAR",
                         "OTHER"
                       ]
                     },
@@ -11778,8 +11803,10 @@
                       "enum": [
                         "GAME_BAR",
                         "TCG_SHOP",
+                        "CAFE",
                         "LUDOTHEQUE",
                         "ASSOCIATION",
+                        "BAR",
                         "OTHER"
                       ]
                     },

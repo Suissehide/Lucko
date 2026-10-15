@@ -292,8 +292,12 @@ model RatingChange {
 enum VenueType {
   GAME_BAR
   TCG_SHOP
+  /// Café (OSM amenity=cafe), affiché sur la carte
+  CAFE
   LUDOTHEQUE
   ASSOCIATION
+  /// Bar ou pub sans jeux (OSM) : masqué sur la carte et la liste des lieux, sauf partenaire
+  BAR
   OTHER
 }
 
