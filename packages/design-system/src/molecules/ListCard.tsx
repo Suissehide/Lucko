@@ -1,12 +1,15 @@
 import type { ReactNode } from 'react'
-import { type StyleProp, View, type ViewStyle } from 'react-native'
+import { ScrollView, type StyleProp, View, type ViewStyle } from 'react-native'
 import { border, colors, radius } from '../tokens'
 
+/** Liste encadrée ; avec `maxHeight`, les lignes défilent dans le cadre, qui reste entier. */
 export function ListCard({
   children,
+  maxHeight,
   style,
 }: {
   children: ReactNode
+  maxHeight?: number
   style?: StyleProp<ViewStyle>
 }) {
   return (
@@ -22,7 +25,13 @@ export function ListCard({
         style,
       ]}
     >
-      {children}
+      {maxHeight ? (
+        <ScrollView style={{ maxHeight }} nestedScrollEnabled>
+          {children}
+        </ScrollView>
+      ) : (
+        children
+      )}
     </View>
   )
 }

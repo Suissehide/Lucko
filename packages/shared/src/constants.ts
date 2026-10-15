@@ -98,7 +98,15 @@ export const PLAY_INTENT_MIN_COUNT = 3
 /** Au plus une notification par joueur et par jeu sur cette durée. */
 export const PLAY_INTENT_COOLDOWN_HOURS = 12
 
-export const VENUE_TYPES = ['GAME_BAR', 'TCG_SHOP', 'LUDOTHEQUE', 'ASSOCIATION', 'OTHER'] as const
+export const VENUE_TYPES = [
+  'GAME_BAR',
+  'TCG_SHOP',
+  'CAFE',
+  'LUDOTHEQUE',
+  'ASSOCIATION',
+  'BAR',
+  'OTHER',
+] as const
 export type VenueType = (typeof VENUE_TYPES)[number]
 
 export const VENUE_TYPE_LABELS: Record<VenueType, string> = {
@@ -106,8 +114,13 @@ export const VENUE_TYPE_LABELS: Record<VenueType, string> = {
   TCG_SHOP: 'Boutique TCG',
   LUDOTHEQUE: 'Ludothèque',
   ASSOCIATION: 'Association',
+  CAFE: 'Café',
+  BAR: 'Bar',
   OTHER: 'Lieu',
 }
+
+/** Bars sans jeux (importés d'OSM) : absents de la carte et de la liste des lieux, sauf partenaires. */
+export const HIDDEN_ON_MAP_VENUE_TYPES: readonly VenueType[] = ['BAR']
 
 export const EVENT_TYPES = [
   'GAME_NIGHT',

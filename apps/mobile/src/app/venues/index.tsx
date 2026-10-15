@@ -1,7 +1,6 @@
 import {
   Banner,
   Chip,
-  colors,
   EmptyState,
   ListCard,
   PageTitle,
@@ -45,20 +44,14 @@ export default function VenuesScreen() {
     </View>
   )
   const map = (
-    <View style={{ gap: 8 }}>
-      <MapFrame
-        height={wide ? 520 : 240}
-        center={place}
-        venues={shown}
-        openNow={openOnly}
-        selectedId={selectedId}
-        onSelect={setSelectedId}
-      />
-      <View style={{ flexDirection: 'row', gap: 16 }}>
-        <Legend color={colors.venue} label="Lieu partenaire" />
-        <Legend color={colors.white} label="Autre lieu" />
-      </View>
-    </View>
+    <MapFrame
+      height={wide ? 520 : 240}
+      center={place}
+      venues={shown}
+      openNow={openOnly}
+      selectedId={selectedId}
+      onSelect={setSelectedId}
+    />
   )
   const list = !venues.data ? (
     venues.isError ? (
@@ -83,7 +76,8 @@ export default function VenuesScreen() {
       }
     />
   ) : (
-    <ListCard>
+    // Jusqu'à 300 lieux : la liste défile dans son cadre, à hauteur de la carte sur grand écran
+    <ListCard maxHeight={wide ? 430 : 400}>
       {shown.map((v, i) => {
         const props = venueRowProps(v)
         return (
@@ -135,23 +129,5 @@ export default function VenuesScreen() {
         </>
       )}
     </PlayerScreen>
-  )
-}
-
-function Legend({ color, label }: { color: string; label: string }) {
-  return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-      <View
-        style={{
-          width: 12,
-          height: 12,
-          borderRadius: 6,
-          borderWidth: 1.5,
-          borderColor: colors.ink,
-          backgroundColor: color,
-        }}
-      />
-      <Typography variant="small">{label}</Typography>
-    </View>
   )
 }

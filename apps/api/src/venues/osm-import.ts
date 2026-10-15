@@ -62,6 +62,7 @@ export async function importOsmVenues(
       osmId: true,
       status: true,
       isPartner: true,
+      type: true,
       _count: { select: { staff: true } },
     },
   })
@@ -99,10 +100,14 @@ export async function importOsmVenues(
       continue
     }
     if (claimed(current)) continue
-    // Type et accueil des mineurs restent ceux qu'un admin a pu corriger
-    const { type: _type, acceptsUnaccompaniedMinors: _minors, ...fields } = venue
+    // Accueil des mineurs et type restent ceux qu'un admin a pu corriger ; un type OTHER vient d'un
+    // import antérieur aux types Café / Bar : il est reclassé
+    const { type, acceptsUnaccompaniedMinors: _minors, ...fields } = venue
     await prisma.$transaction([
-      prisma.venue.update({ where: { id: current.id }, data: fields }),
+      prisma.venue.update({
+        where: { id: current.id },
+        data: current.type === 'OTHER' ? { ...fields, type } : fields,
+      }),
       prisma.venueOpeningHours.deleteMany({ where: { venueId: current.id } }),
       prisma.venueOpeningHours.createMany({
         data: openingHours.map((r) => ({ ...r, venueId: current.id })),

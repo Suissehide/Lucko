@@ -2106,7 +2106,7 @@ export interface operations {
                         slug: string;
                         name: string;
                         /** @enum {string} */
-                        type: "GAME_BAR" | "TCG_SHOP" | "LUDOTHEQUE" | "ASSOCIATION" | "OTHER";
+                        type: "GAME_BAR" | "TCG_SHOP" | "CAFE" | "LUDOTHEQUE" | "ASSOCIATION" | "BAR" | "OTHER";
                         address: string;
                         latitude: number;
                         longitude: number;
@@ -2145,6 +2145,8 @@ export interface operations {
                         id: string;
                         slug: string;
                         name: string;
+                        /** @enum {string} */
+                        type: "GAME_BAR" | "TCG_SHOP" | "CAFE" | "LUDOTHEQUE" | "ASSOCIATION" | "BAR" | "OTHER";
                         latitude: number;
                         longitude: number;
                         isPartner: boolean;
@@ -2174,7 +2176,7 @@ export interface operations {
                         slug: string;
                         name: string;
                         /** @enum {string} */
-                        type: "GAME_BAR" | "TCG_SHOP" | "LUDOTHEQUE" | "ASSOCIATION" | "OTHER";
+                        type: "GAME_BAR" | "TCG_SHOP" | "CAFE" | "LUDOTHEQUE" | "ASSOCIATION" | "BAR" | "OTHER";
                         address: string;
                         latitude: number;
                         longitude: number;
@@ -4764,7 +4766,7 @@ export interface operations {
                         slug: string;
                         name: string;
                         /** @enum {string} */
-                        type: "GAME_BAR" | "TCG_SHOP" | "LUDOTHEQUE" | "ASSOCIATION" | "OTHER";
+                        type: "GAME_BAR" | "TCG_SHOP" | "CAFE" | "LUDOTHEQUE" | "ASSOCIATION" | "BAR" | "OTHER";
                         /** @enum {string} */
                         status: "PENDING" | "PUBLISHED";
                         address: string;
@@ -4799,7 +4801,7 @@ export interface operations {
                 "application/json": {
                     name: string;
                     /** @enum {string} */
-                    type: "GAME_BAR" | "TCG_SHOP" | "LUDOTHEQUE" | "ASSOCIATION" | "OTHER";
+                    type: "GAME_BAR" | "TCG_SHOP" | "CAFE" | "LUDOTHEQUE" | "ASSOCIATION" | "BAR" | "OTHER";
                     address: string;
                     city: string;
                     latitude: number;
@@ -4828,7 +4830,7 @@ export interface operations {
                         slug: string;
                         name: string;
                         /** @enum {string} */
-                        type: "GAME_BAR" | "TCG_SHOP" | "LUDOTHEQUE" | "ASSOCIATION" | "OTHER";
+                        type: "GAME_BAR" | "TCG_SHOP" | "CAFE" | "LUDOTHEQUE" | "ASSOCIATION" | "BAR" | "OTHER";
                         /** @enum {string} */
                         status: "PENDING" | "PUBLISHED";
                         address: string;
@@ -4871,7 +4873,7 @@ export interface operations {
                     "application/json": {
                         name: string;
                         /** @enum {string} */
-                        type: "GAME_BAR" | "TCG_SHOP" | "LUDOTHEQUE" | "ASSOCIATION" | "OTHER";
+                        type: "GAME_BAR" | "TCG_SHOP" | "CAFE" | "LUDOTHEQUE" | "ASSOCIATION" | "BAR" | "OTHER";
                         address: string;
                         city: string;
                         latitude: number;
@@ -4926,7 +4928,7 @@ export interface operations {
                         slug: string;
                         name: string;
                         /** @enum {string} */
-                        type: "GAME_BAR" | "TCG_SHOP" | "LUDOTHEQUE" | "ASSOCIATION" | "OTHER";
+                        type: "GAME_BAR" | "TCG_SHOP" | "CAFE" | "LUDOTHEQUE" | "ASSOCIATION" | "BAR" | "OTHER";
                         /** @enum {string} */
                         status: "PENDING" | "PUBLISHED";
                         address: string;

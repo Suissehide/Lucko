@@ -75,6 +75,7 @@ import {
   LinkCard,
   ListCard,
   ListRow,
+  MapLegend,
   OptionCard,
   PageTitle,
   Pagination,
@@ -150,6 +151,7 @@ import {
   VenueTabBar,
 } from '../organisms'
 import { colors, dark, space } from '../tokens'
+import { venuePin } from '../tokens/mapStyle'
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -1054,6 +1056,14 @@ export function Catalogue() {
             href="https://www.openstreetmap.org/copyright"
           />
         </Row>
+        <MapLegend
+          items={[
+            { label: 'Bar à jeux', color: venuePin.type.GAME_BAR },
+            { label: 'Boutique TCG', color: venuePin.type.TCG_SHOP },
+            { label: 'Café', color: venuePin.type.CAFE },
+            { label: 'Partenaire', color: venuePin.partnerRing, ring: true },
+          ]}
+        />
         <CodeInput value={code} onChange={setCode} />
         <RatingScale label="Ponctualité" size="sm" value={punctual} onChange={setPunctual} />
         <RatingScale

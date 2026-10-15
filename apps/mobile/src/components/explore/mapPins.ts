@@ -1,7 +1,7 @@
 import type { MapVenue } from '@lucko/shared'
 
 /** Épingle de carte : un lieu de la liste ou du chargement par zone (LKO-122). */
-export type MapPin = Pick<MapVenue, 'id' | 'name' | 'latitude' | 'longitude' | 'isPartner'>
+export type MapPin = Pick<MapVenue, 'id' | 'name' | 'type' | 'latitude' | 'longitude' | 'isPartner'>
 
 export type MapBounds = { west: number; south: number; east: number; north: number }
 

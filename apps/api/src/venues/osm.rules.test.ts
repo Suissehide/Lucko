@@ -33,7 +33,7 @@ describe('parseOpeningHours', () => {
 })
 
 describe('toVenue', () => {
-  it('bar quelconque : type OTHER, mineurs seuls refusés, adresse et contacts', () => {
+  it('bar quelconque : type BAR, mineurs seuls refusés, adresse et contacts', () => {
     const v = toVenue({
       type: 'node',
       id: 1,
@@ -49,7 +49,7 @@ describe('toVenue', () => {
       },
     })
     expect(v?.venue).toMatchObject({
-      type: 'OTHER',
+      type: 'BAR',
       address: '3 Rue Sainte-Catherine',
       city: 'Bordeaux',
       phone: '+33 5 56 00 00 00',
@@ -88,6 +88,19 @@ describe('toVenue', () => {
       'Grand Paris',
     )
     expect(v?.venue.city).toBe('Grand Paris')
+  })
+
+  it('café, pub et bar à jeux', () => {
+    const at = { type: 'node' as const, lat: 1, lon: 2 }
+    expect(toVenue({ ...at, id: 7, tags: { amenity: 'cafe', name: 'Le Café' } })?.venue.type).toBe(
+      'CAFE',
+    )
+    expect(toVenue({ ...at, id: 8, tags: { amenity: 'pub', name: 'The Pub' } })?.venue.type).toBe(
+      'BAR',
+    )
+    expect(
+      toVenue({ ...at, id: 9, tags: { amenity: 'cafe', name: 'Café Jeux' } })?.venue.type,
+    ).toBe('GAME_BAR')
   })
 
   it('ludothèque ouverte aux mineurs, site sans protocole complété', () => {

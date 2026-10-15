@@ -182,3 +182,24 @@ export const mapStyle = {
     },
   ],
 }
+
+/** Ludothèques et associations sur la carte (pas de couleur de contenu dédiée dans le design system). */
+const play = '#8C5AD8'
+
+/**
+ * Remplissage des épingles de lieu par type (carte et `MapLegend`). Le partenaire se distingue par un
+ * anneau `colors.venue`, le lieu choisi par `selected`.
+ */
+export const venuePin = {
+  type: {
+    GAME_BAR: colors.event,
+    TCG_SHOP: colors.rating,
+    CAFE: colors.white,
+    LUDOTHEQUE: play,
+    ASSOCIATION: play,
+    BAR: colors.inactive,
+    OTHER: colors.inactive,
+  },
+  partnerRing: colors.venue,
+  selected: colors.room,
+} as const

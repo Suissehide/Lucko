@@ -1,15 +1,17 @@
-import { border, colors, radius } from '@lucko/design-system'
+import { border, colors, MapLegend, radius } from '@lucko/design-system'
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { View } from 'react-native'
 import type { Place } from '@/lib/useLocation'
 import { mapVenuesQueryOptions } from '@/queries/useExplore'
 import { ExploreMap } from './ExploreMap'
+import { MAP_LEGEND } from './mapLayers'
 import { type MapBounds, type MapPin, mergePins, pinsArea } from './mapPins'
 
 /**
  * Carte des lieux dans son cadre (accueil, liste des lieux) : les lieux de la liste, plus tous ceux de
- * la zone affichée (LKO-122), regroupés quand on dézoome. `openNow` : seulement les lieux ouverts.
+ * la zone affichée (LKO-122), regroupés quand on dézoome, avec la légende des épingles. `openNow` :
+ * seulement les lieux ouverts.
  */
 export function MapFrame({
   height,
@@ -27,17 +29,24 @@ export function MapFrame({
   const [bounds, setBounds] = useState<MapBounds | null>(null)
   const area = useQuery(mapVenuesQueryOptions(pinsArea(bounds), openNow))
   return (
-    <View
-      style={{
-        height,
-        borderWidth: border.base,
-        borderColor: colors.ink,
-        borderRadius: radius.card,
-        overflow: 'hidden',
-        backgroundColor: colors.creamDark,
-      }}
-    >
-      <ExploreMap {...map} venues={mergePins(venues, area.data ?? [])} onBoundsChange={setBounds} />
+    <View style={{ gap: 8 }}>
+      <View
+        style={{
+          height,
+          borderWidth: border.base,
+          borderColor: colors.ink,
+          borderRadius: radius.card,
+          overflow: 'hidden',
+          backgroundColor: colors.creamDark,
+        }}
+      >
+        <ExploreMap
+          {...map}
+          venues={mergePins(venues, area.data ?? [])}
+          onBoundsChange={setBounds}
+        />
+      </View>
+      <MapLegend items={MAP_LEGEND} />
     </View>
   )
 }
