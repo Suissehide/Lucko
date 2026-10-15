@@ -1,3 +1,4 @@
+import { loadEnv } from '../config/env'
 import type { PrismaClient } from '../generated/prisma/client'
 import {
   isSamePlace,
@@ -10,20 +11,32 @@ import {
   toVenue,
 } from './osm.rules'
 
-const OVERPASS_URL = 'https://overpass-api.de/api/interpreter'
-
-/** Overpass répond parfois 200 avec une page d'erreur HTML : tout ce qui n'est pas du JSON propre échoue. */
-export async function fetchOverpass(query: string): Promise<OsmElement[]> {
-  const res = await fetch(OVERPASS_URL, {
-    method: 'POST',
-    headers: { 'User-Agent': 'Lucko/1.0 (+https://github.com/Suissehide/Lucko)' },
-    body: new URLSearchParams({ data: query }),
-  })
-  if (!res.ok || !res.headers.get('content-type')?.includes('json'))
-    throw new Error(`Overpass indisponible (${res.status})`)
-  const body = (await res.json()) as { elements: OsmElement[]; remark?: string }
-  if (body.remark) throw new Error(`Overpass : ${body.remark}`)
-  return body.elements
+/**
+ * Requête Overpass sur chaque serveur d'`urls` jusqu'au premier qui répond. Overpass répond parfois 200
+ * avec une page d'erreur HTML : tout ce qui n'est pas du JSON propre compte comme un échec.
+ */
+export async function fetchOverpass(
+  query: string,
+  urls = loadEnv().OVERPASS_URLS,
+): Promise<OsmElement[]> {
+  const failures: string[] = []
+  for (const url of urls) {
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'User-Agent': 'Lucko/1.0 (+https://github.com/Suissehide/Lucko)' },
+        body: new URLSearchParams({ data: query }),
+      })
+      if (!res.ok || !res.headers.get('content-type')?.includes('json'))
+        throw new Error(`HTTP ${res.status}`)
+      const body = (await res.json()) as { elements: OsmElement[]; remark?: string }
+      if (body.remark) throw new Error(body.remark)
+      return body.elements
+    } catch (error) {
+      failures.push(`${new URL(url).host} : ${error instanceof Error ? error.message : error}`)
+    }
+  }
+  throw new Error(`Overpass indisponible (${failures.join(' ; ')})`)
 }
 
 /**
