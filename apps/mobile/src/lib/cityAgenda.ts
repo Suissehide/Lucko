@@ -15,6 +15,9 @@ import {
 import { eventPlaces, GAMES, gameLabel, localDay, matchesGame, shortDay } from './explore'
 import { type AgendaAction, agendaAction } from './venue'
 
+/** Rendez-vous des lieux partenaires mis en avant en tête de l'agenda. */
+const PARTNER_HIGHLIGHTS = 3
+
 export const RANGE_LABELS: Record<AgendaRange, string> = {
   tonight: 'Ce soir',
   tomorrow: 'Demain',
@@ -287,7 +290,9 @@ export function agendaView(
       noAdult: false,
     })
 
-  return { results, groups: dayGroups(results, days), menus, toggles, chips, clearAll }
+  // Mise en avant des lieux partenaires (LKO-92) : leurs prochains rendez-vous, en plus de la liste par jour
+  const partners = results.filter((e) => e.venue.isPartner).slice(0, PARTNER_HIGHLIGHTS)
+  return { results, partners, groups: dayGroups(results, days), menus, toggles, chips, clearAll }
 }
 
 // * AFFICHAGE
@@ -318,16 +323,20 @@ function dayGroups(entries: AgendaEntry[], days: string[]) {
     .filter((g) => g.items.length)
 }
 
-/** Props d'`AgendaRow` (sans l'action) ; sur téléphone, prix dans la ligne et places abrégées. */
-export function agendaRowProps(e: AgendaEntry, wide: boolean) {
+/**
+ * Props d'`AgendaRow` (sans l'action) ; sur téléphone, prix dans la ligne et places abrégées.
+ * `withDay` : hors des groupes par jour (mise en avant des partenaires), le jour en tête de ligne.
+ */
+export function agendaRowProps(e: AgendaEntry, wide: boolean, withDay = false) {
   const games = e.games.length ? e.games.map(gameLabel).join(', ') : 'Tous jeux'
   const distance = formatDistance(e.venue.distanceMeters)
+  const day = withDay && localDay(e.startsAt) !== localDay(new Date()) ? shortDay(e.startsAt) : null
   return {
     ...KIND_COLORS[e.kind],
     time: formatTime(e.startsAt),
     type: KIND_LABELS[e.kind],
     title: e.title,
-    meta: [e.venue.name, distance, wide ? games : e.price].join(' · '),
+    meta: [day, e.venue.name, distance, wide ? games : e.price].filter(Boolean).join(' · '),
     adult: e.adult,
     partner: e.venue.isPartner,
     places: e.places ? (wide ? e.places.text : e.places.short) : null,

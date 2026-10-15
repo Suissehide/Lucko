@@ -29,6 +29,7 @@ import {
   openVenueAttendance,
   openVenueBilling,
   openVenueDisputes,
+  openVenuePerk,
   openXp,
 } from '@/lib/navigation'
 import { placeLine, rankProps, vibeLabels, visibleAvatar } from '@/lib/profile'
@@ -144,9 +145,15 @@ export default function ProfileScreen() {
           },
         ]
       : []),
-    // Venues facturables du mois (LKO-79) : gérant d'un lieu partenaire
+    // Avantage Lucko (LKO-92) et venues facturables du mois (LKO-79) : gérant d'un lieu partenaire
     ...(venue.isPartner && venue.role === 'MANAGER'
       ? [
+          {
+            key: `${venue.id}-perk`,
+            title: venue.name,
+            subtitle: 'Avantage Lucko offert aux joueurs',
+            onPress: () => openVenuePerk(venue.id),
+          },
           {
             key: `${venue.id}-billing`,
             title: venue.name,

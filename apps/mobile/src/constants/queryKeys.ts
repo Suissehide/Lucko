@@ -118,6 +118,8 @@ export const CHAT = {
 export const CHECKIN = {
   QR_TOKEN: 'qr_token',
   SCAN: 'scan_qr',
+  PERK: 'venue_perk',
+  SET_PERK: 'set_venue_perk',
 } as const
 
 /** Pointage des présents (LKO-78) : par l'hôte d'une room ou le staff du lieu. */

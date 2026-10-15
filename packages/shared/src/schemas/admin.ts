@@ -12,6 +12,7 @@ import {
   VENUE_STATUSES,
   VENUE_TYPES,
 } from '../constants'
+import { luckoPerkSchema } from './checkin'
 import { isoDateTime } from './common'
 import { EVENT_STATUSES } from './event'
 
@@ -179,7 +180,7 @@ export const updateVenueSchema = z
   .object({
     status: z.enum(VENUE_STATUSES),
     isPartner: z.boolean(),
-    luckoPerk: z.string().trim().max(120, { message: '120 caractères maximum' }).nullable(),
+    luckoPerk: luckoPerkSchema,
     acceptsUnaccompaniedMinors: z.boolean(),
   })
   .partial()
