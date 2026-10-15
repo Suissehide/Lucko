@@ -297,7 +297,8 @@ enum VenueType {
   OTHER
 }
 
-/// Lieu proposé ou importé : visible des joueurs seulement une fois publié par un admin (LKO-20)
+/// Lieu proposé : visible des joueurs seulement une fois publié par un admin (LKO-20).
+/// Les lieux importés d'OpenStreetMap (LKO-74) arrivent publiés.
 enum VenueStatus {
   PENDING
   PUBLISHED
@@ -341,6 +342,8 @@ model Venue {
   boardGames                 String[]                               @default([])
   boardGameCount             Int?
   boardGameNote              String?
+  /// Élément OpenStreetMap d'origine (« node/123 »), null pour un lieu saisi à la main (LKO-74)
+  osmId                      String?                                @unique
   createdAt                  DateTime                               @default(now())
   updatedAt                  DateTime                               @updatedAt
 

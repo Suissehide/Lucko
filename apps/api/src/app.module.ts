@@ -19,6 +19,7 @@ import { RealtimeModule } from './realtime/realtime.module'
 import { RoomsModule } from './rooms/rooms.module'
 import { StorageModule } from './storage/storage.module'
 import { UsersModule } from './users/users.module'
+import { VenuesModule } from './venues/venues.module'
 import { WaitlistModule } from './waitlist/waitlist.module'
 
 @Module({
@@ -36,6 +37,7 @@ import { WaitlistModule } from './waitlist/waitlist.module'
     UsersModule,
     ConsentModule,
     ExploreModule,
+    VenuesModule,
     EventsModule,
     WaitlistModule,
     ModerationModule,

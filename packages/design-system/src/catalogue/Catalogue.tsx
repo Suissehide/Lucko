@@ -61,6 +61,7 @@ import {
   ColorLegend,
   ContentCard,
   Countdown,
+  DataCredit,
   DayEventRow,
   DecisionCard,
   DemandCard,
@@ -1047,6 +1048,10 @@ export function Catalogue() {
           <SourceTag source="google" />
           <SourceTag source="lucko" />
           <SourceTag source="missing" />
+          <DataCredit
+            source="© contributeurs OpenStreetMap"
+            href="https://www.openstreetmap.org/copyright"
+          />
         </Row>
         <CodeInput value={code} onChange={setCode} />
         <RatingScale label="Ponctualité" size="sm" value={punctual} onChange={setPunctual} />
