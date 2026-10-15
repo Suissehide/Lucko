@@ -276,6 +276,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/map/venues": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ExploreController_mapVenues"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/venues/{slug}": {
         parameters: {
             query?: never;
@@ -2073,6 +2089,38 @@ export interface operations {
                         openNow: boolean | null;
                         closesAtMinute: number | null;
                         upcomingEventCount: number;
+                    }[];
+                };
+            };
+        };
+    };
+    ExploreController_mapVenues: {
+        parameters: {
+            query: {
+                west: number;
+                south: number;
+                east: number;
+                north: number;
+                openNow?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        id: string;
+                        slug: string;
+                        name: string;
+                        latitude: number;
+                        longitude: number;
+                        isPartner: boolean;
                     }[];
                 };
             };

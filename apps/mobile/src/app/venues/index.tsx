@@ -50,6 +50,7 @@ export default function VenuesScreen() {
         height={wide ? 520 : 240}
         center={place}
         venues={shown}
+        openNow={openOnly}
         selectedId={selectedId}
         onSelect={setSelectedId}
       />

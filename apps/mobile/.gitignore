@@ -4,3 +4,6 @@
 
 expo-env.d.ts
 # @end expo-cli
+
+# Copié de maplibre-gl à l'installation (LKO-122)
+public/maplibre-gl-csp-worker.js
