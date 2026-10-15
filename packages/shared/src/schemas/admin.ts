@@ -72,6 +72,8 @@ export const adminDashboardSchema = z.object({
   pendingAvatars: z.number().int(),
   pendingVenues: z.number().int(),
   suspendedPlayers: z.number().int(),
+  /** Résultats de rooms classées contestés (LKO-83). */
+  disputedResults: z.number().int(),
   oldestReportAt: isoDateTime.nullable(),
   oldestAvatarAt: isoDateTime.nullable(),
   /** Les 3 premiers lieux en attente. */

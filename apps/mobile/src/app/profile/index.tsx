@@ -28,6 +28,7 @@ import {
   openSettings,
   openVenueAttendance,
   openVenueBilling,
+  openVenueDisputes,
   openXp,
 } from '@/lib/navigation'
 import { placeLine, rankProps, vibeLabels, visibleAvatar } from '@/lib/profile'
@@ -151,6 +152,17 @@ export default function ProfileScreen() {
             title: venue.name,
             subtitle: 'Venues facturables du mois',
             onPress: () => openVenueBilling(venue.id),
+          },
+        ]
+      : []),
+    // Résultats contestés des rooms classées (LKO-83) : le lieu partenaire tranche
+    ...(venue.isPartner
+      ? [
+          {
+            key: `${venue.id}-disputes`,
+            title: venue.name,
+            subtitle: 'Résultats contestés à trancher',
+            onPress: () => openVenueDisputes(venue.id),
           },
         ]
       : []),

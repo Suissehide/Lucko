@@ -201,6 +201,15 @@ export default function SettingsScreen() {
               value: blocked === undefined ? undefined : blocked ? String(blocked) : 'Aucun',
               onPress: () => router.push('/blocked'),
             },
+            ...(me.childCount
+              ? [
+                  {
+                    label: 'Mes enfants',
+                    value: String(me.childCount),
+                    onPress: () => router.push('/children'),
+                  },
+                ]
+              : []),
             ...(me.role === 'ADMIN'
               ? [{ label: 'Back-office', onPress: () => router.push('/admin') }]
               : []),
@@ -295,6 +304,15 @@ export default function SettingsScreen() {
               }
               onPress={() => router.push('/blocked')}
             />
+            {me.childCount ? (
+              <SettingsRow
+                wide
+                label="Mes enfants"
+                description="Leur activité sur Lucko, et le retrait de ton accord."
+                value={`${me.childCount} enfant${me.childCount > 1 ? 's' : ''}`}
+                onPress={() => router.push('/children')}
+              />
+            ) : null}
             {me.role === 'ADMIN' ? (
               <SettingsRow
                 wide

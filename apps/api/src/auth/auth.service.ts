@@ -36,6 +36,15 @@ export class AuthService {
     return user && !isSuspended(user) ? user : null
   }
 
+  /** IP et navigateur de la session en cours, tels que Better Auth les note (IP normalisée). */
+  async sessionDevice(headers: IncomingHttpHeaders) {
+    const session = await this.auth.api.getSession({ headers: fromNodeHeaders(headers) })
+    return {
+      ip: session?.session.ipAddress || null,
+      userAgent: session?.session.userAgent || null,
+    }
+  }
+
   /** Rôle du joueur dans un lieu, ou null s'il n'en fait pas partie. */
   async venueRole(userId: string, venueId: string): Promise<VenueStaffRole | null> {
     const staff = await this.prisma.venueStaff.findUnique({

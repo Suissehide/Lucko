@@ -25,13 +25,21 @@ import type { AddressSuggestion } from './geocode'
 
 // Back-office admin (LKO-20) : navigation et mise en forme des données pour les écrans /admin.
 
-export type AdminSection = 'dashboard' | 'reports' | 'users' | 'avatars' | 'venues' | 'games'
+export type AdminSection =
+  | 'dashboard'
+  | 'reports'
+  | 'users'
+  | 'avatars'
+  | 'results'
+  | 'venues'
+  | 'games'
 
 const ROUTES: Record<AdminSection, Href> = {
   dashboard: '/admin',
   reports: '/admin/reports',
   users: '/admin/users',
   avatars: '/admin/avatars',
+  results: '/admin/results',
   venues: '/admin/venues',
   games: '/admin/games',
 }
@@ -58,6 +66,7 @@ export const adminSidebarItems = (dashboard?: AdminDashboard): SidebarItem[] => 
   },
   { key: 'avatars', label: 'Photos de profil', badge: badge(dashboard?.pendingAvatars) },
   { key: 'users', label: 'Joueurs', badge: badge(dashboard?.suspendedPlayers) },
+  { key: 'results', label: 'Résultats contestés', badge: badge(dashboard?.disputedResults) },
   {
     key: 'venues',
     label: 'Lieux et événements',
@@ -72,6 +81,7 @@ export const ADMIN_TITLES: Record<AdminSection, string> = {
   reports: 'Signalements',
   users: 'Joueurs',
   avatars: 'Photos de profil',
+  results: 'Résultats contestés',
   venues: 'Lieux et événements',
   games: 'Jeux',
 }
@@ -81,6 +91,7 @@ export const ADMIN_KICKERS: Record<AdminSection, string> = {
   reports: 'Modération',
   avatars: 'Modération',
   users: 'Modération',
+  results: 'Modération',
   venues: 'Catalogue',
   games: 'Catalogue',
 }
@@ -154,6 +165,13 @@ export function queueCards(d: AdminDashboard) {
       color: colors.ink,
       note: d.suspendedPlayers ? 'Suspensions en cours' : 'Aucune suspension en cours',
     },
+    {
+      key: 'results',
+      value: d.disputedResults,
+      label: 'Résultats contestés',
+      color: colors.rating,
+      note: d.disputedResults ? 'Rooms classées à trancher' : 'File vide',
+    },
   ] as const
 }
 
@@ -185,6 +203,8 @@ const ACTION_GROUP: Record<AdminActionKind, Exclude<JournalFilter, 'all'>> = {
   EVENT_HIDE: 'moderation',
   GAME_MERGE: 'catalogue',
   VISIT_DECIDE: 'moderation',
+  RESULT_DECIDE: 'moderation',
+  RESULT_VOID: 'moderation',
 }
 
 export const inJournal = (filter: JournalFilter) => (a: AdminActionItem) =>
@@ -207,6 +227,8 @@ export const ACTION_COLOR: Record<AdminActionKind, string> = {
   EVENT_HIDE: colors.room,
   GAME_MERGE: colors.muted,
   VISIT_DECIDE: colors.rating,
+  RESULT_DECIDE: colors.rating,
+  RESULT_VOID: colors.room,
 }
 
 export function openTarget(target: NonNullable<AdminActionItem['target']>) {

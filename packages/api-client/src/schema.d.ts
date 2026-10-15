@@ -196,6 +196,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/me/parental-consent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ConsentController_mine"];
+        put?: never;
+        post: operations["ConsentController_request"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/parental-consents/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ConsentController_show"];
+        put?: never;
+        post: operations["ConsentController_grant"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/children": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ConsentController_children"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/children/{childId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["ConsentController_withdraw"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/venues": {
         parameters: {
             query?: never;
@@ -526,6 +590,134 @@ export interface paths {
         get: operations["AttendanceController_venue"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/rooms/{id}/result": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ResultsController_view"];
+        put?: never;
+        post: operations["ResultsController_submit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/rooms/{id}/result/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ResultsController_confirm"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/rooms/{id}/result/dispute": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ResultsController_dispute"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/venues/{venueId}/results/disputes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ResultsController_venueDisputes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/venues/{venueId}/results/{roomId}/decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ResultsController_venueDecide"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/results/disputes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ResultsController_adminDisputes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/results/{id}/decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ResultsController_adminDecide"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/results/{id}/void": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ResultsController_adminVoid"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1266,6 +1458,8 @@ export interface operations {
                         pseudo: string | null;
                         name: string;
                         hasBirthDate: boolean;
+                        parentalConsentPending: boolean;
+                        childCount: number;
                         /** @enum {string} */
                         role: "PLAYER" | "VENUE_STAFF" | "ADMIN";
                         avatarUrl: string | null;
@@ -1359,6 +1553,8 @@ export interface operations {
                         pseudo: string | null;
                         name: string;
                         hasBirthDate: boolean;
+                        parentalConsentPending: boolean;
+                        childCount: number;
                         /** @enum {string} */
                         role: "PLAYER" | "VENUE_STAFF" | "ADMIN";
                         avatarUrl: string | null;
@@ -1428,6 +1624,8 @@ export interface operations {
                         pseudo: string | null;
                         name: string;
                         hasBirthDate: boolean;
+                        parentalConsentPending: boolean;
+                        childCount: number;
                         /** @enum {string} */
                         role: "PLAYER" | "VENUE_STAFF" | "ADMIN";
                         avatarUrl: string | null;
@@ -1496,6 +1694,8 @@ export interface operations {
                         pseudo: string | null;
                         name: string;
                         hasBirthDate: boolean;
+                        parentalConsentPending: boolean;
+                        childCount: number;
                         /** @enum {string} */
                         role: "PLAYER" | "VENUE_STAFF" | "ADMIN";
                         avatarUrl: string | null;
@@ -1657,6 +1857,179 @@ export interface operations {
                 };
             };
         };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ConsentController_mine: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        parentEmail: string | null;
+                        granted: boolean;
+                        /** Format: date-time */
+                        deadline: string;
+                    };
+                };
+            };
+        };
+    };
+    ConsentController_request: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    parentEmail: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        parentEmail: string | null;
+                        granted: boolean;
+                        /** Format: date-time */
+                        deadline: string;
+                    };
+                };
+            };
+        };
+    };
+    ConsentController_show: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        childEmail: string;
+                        childAge: number;
+                        /** @enum {string} */
+                        status: "PENDING" | "GRANTED" | "WITHDRAWN";
+                        /** Format: date-time */
+                        deadline: string;
+                    };
+                };
+            };
+        };
+    };
+    ConsentController_grant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ConsentController_children: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        id: string;
+                        pseudo: string | null;
+                        email: string;
+                        age: number;
+                        /** Format: date-time */
+                        consentAt: string;
+                        autonomous: boolean;
+                        rooms: {
+                            id: string;
+                            game: string;
+                            place: string;
+                            /** Format: date-time */
+                            startsAt: string;
+                            /** @enum {string} */
+                            status: "PENDING" | "ACCEPTED" | "WAITLISTED" | "DECLINED" | "LEFT";
+                        }[];
+                        events: {
+                            id: string;
+                            title: string;
+                            venue: string;
+                            /** Format: date-time */
+                            startsAt: string;
+                        }[];
+                        reports: {
+                            id: string;
+                            /** @enum {string} */
+                            direction: "MADE" | "RECEIVED";
+                            /** @enum {string} */
+                            reason: "HARASSMENT" | "INAPPROPRIATE_CONTENT" | "CHEATING" | "NO_SHOW" | "MINOR_SAFETY" | "SAFETY" | "OTHER";
+                            /** Format: date-time */
+                            createdAt: string;
+                            handled: boolean;
+                        }[];
+                    }[];
+                };
+            };
+        };
+    };
+    ConsentController_withdraw: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                childId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             204: {
                 headers: {
@@ -3298,6 +3671,492 @@ export interface operations {
             };
         };
     };
+    ResultsController_view: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        roomId: string;
+                        title: string;
+                        /** Format: date-time */
+                        startsAt: string;
+                        venueName: string | null;
+                        /** Format: date-time */
+                        deadline: string;
+                        players: {
+                            userId: string;
+                            pseudo: string | null;
+                            avatarUrl: string | null;
+                            rating: number;
+                        }[];
+                        submitRefused: string | null;
+                        result: {
+                            id: string;
+                            /** @enum {string} */
+                            status: "PENDING" | "CONFIRMED" | "DISPUTED" | "RESOLVED" | "VOID";
+                            placements: {
+                                userId: string;
+                                place: number;
+                            }[];
+                            score: string | null;
+                            submittedBy: string | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                            accepted: number;
+                            needed: number;
+                            /** @enum {string|null} */
+                            myVote: "ACCEPTED" | "DISPUTED" | null;
+                            disputes: {
+                                pseudo: string | null;
+                                reason: string | null;
+                                placements: {
+                                    userId: string;
+                                    place: number;
+                                }[] | null;
+                            }[];
+                            decisionReason: string | null;
+                            /** Format: date-time */
+                            decidedAt: string | null;
+                        } | null;
+                    };
+                };
+            };
+        };
+    };
+    ResultsController_submit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    placements: {
+                        userId: string;
+                        place: number;
+                    }[];
+                    score?: string | null;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        roomId: string;
+                        title: string;
+                        /** Format: date-time */
+                        startsAt: string;
+                        venueName: string | null;
+                        /** Format: date-time */
+                        deadline: string;
+                        players: {
+                            userId: string;
+                            pseudo: string | null;
+                            avatarUrl: string | null;
+                            rating: number;
+                        }[];
+                        submitRefused: string | null;
+                        result: {
+                            id: string;
+                            /** @enum {string} */
+                            status: "PENDING" | "CONFIRMED" | "DISPUTED" | "RESOLVED" | "VOID";
+                            placements: {
+                                userId: string;
+                                place: number;
+                            }[];
+                            score: string | null;
+                            submittedBy: string | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                            accepted: number;
+                            needed: number;
+                            /** @enum {string|null} */
+                            myVote: "ACCEPTED" | "DISPUTED" | null;
+                            disputes: {
+                                pseudo: string | null;
+                                reason: string | null;
+                                placements: {
+                                    userId: string;
+                                    place: number;
+                                }[] | null;
+                            }[];
+                            decisionReason: string | null;
+                            /** Format: date-time */
+                            decidedAt: string | null;
+                        } | null;
+                    };
+                };
+            };
+        };
+    };
+    ResultsController_confirm: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        roomId: string;
+                        title: string;
+                        /** Format: date-time */
+                        startsAt: string;
+                        venueName: string | null;
+                        /** Format: date-time */
+                        deadline: string;
+                        players: {
+                            userId: string;
+                            pseudo: string | null;
+                            avatarUrl: string | null;
+                            rating: number;
+                        }[];
+                        submitRefused: string | null;
+                        result: {
+                            id: string;
+                            /** @enum {string} */
+                            status: "PENDING" | "CONFIRMED" | "DISPUTED" | "RESOLVED" | "VOID";
+                            placements: {
+                                userId: string;
+                                place: number;
+                            }[];
+                            score: string | null;
+                            submittedBy: string | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                            accepted: number;
+                            needed: number;
+                            /** @enum {string|null} */
+                            myVote: "ACCEPTED" | "DISPUTED" | null;
+                            disputes: {
+                                pseudo: string | null;
+                                reason: string | null;
+                                placements: {
+                                    userId: string;
+                                    place: number;
+                                }[] | null;
+                            }[];
+                            decisionReason: string | null;
+                            /** Format: date-time */
+                            decidedAt: string | null;
+                        } | null;
+                    };
+                };
+            };
+        };
+    };
+    ResultsController_dispute: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    reason: string;
+                    placements?: {
+                        userId: string;
+                        place: number;
+                    }[];
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        roomId: string;
+                        title: string;
+                        /** Format: date-time */
+                        startsAt: string;
+                        venueName: string | null;
+                        /** Format: date-time */
+                        deadline: string;
+                        players: {
+                            userId: string;
+                            pseudo: string | null;
+                            avatarUrl: string | null;
+                            rating: number;
+                        }[];
+                        submitRefused: string | null;
+                        result: {
+                            id: string;
+                            /** @enum {string} */
+                            status: "PENDING" | "CONFIRMED" | "DISPUTED" | "RESOLVED" | "VOID";
+                            placements: {
+                                userId: string;
+                                place: number;
+                            }[];
+                            score: string | null;
+                            submittedBy: string | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                            accepted: number;
+                            needed: number;
+                            /** @enum {string|null} */
+                            myVote: "ACCEPTED" | "DISPUTED" | null;
+                            disputes: {
+                                pseudo: string | null;
+                                reason: string | null;
+                                placements: {
+                                    userId: string;
+                                    place: number;
+                                }[] | null;
+                            }[];
+                            decisionReason: string | null;
+                            /** Format: date-time */
+                            decidedAt: string | null;
+                        } | null;
+                    };
+                };
+            };
+        };
+    };
+    ResultsController_venueDisputes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        roomId: string;
+                        title: string;
+                        /** Format: date-time */
+                        startsAt: string;
+                        venueName: string | null;
+                        /** Format: date-time */
+                        deadline: string;
+                        players: {
+                            userId: string;
+                            pseudo: string | null;
+                            avatarUrl: string | null;
+                            rating: number;
+                        }[];
+                        submitRefused: string | null;
+                        result: {
+                            id: string;
+                            /** @enum {string} */
+                            status: "PENDING" | "CONFIRMED" | "DISPUTED" | "RESOLVED" | "VOID";
+                            placements: {
+                                userId: string;
+                                place: number;
+                            }[];
+                            score: string | null;
+                            submittedBy: string | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                            accepted: number;
+                            needed: number;
+                            /** @enum {string|null} */
+                            myVote: "ACCEPTED" | "DISPUTED" | null;
+                            disputes: {
+                                pseudo: string | null;
+                                reason: string | null;
+                                placements: {
+                                    userId: string;
+                                    place: number;
+                                }[] | null;
+                            }[];
+                            decisionReason: string | null;
+                            /** Format: date-time */
+                            decidedAt: string | null;
+                        } | null;
+                    }[];
+                };
+            };
+        };
+    };
+    ResultsController_venueDecide: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venueId: string;
+                roomId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    placements: {
+                        userId: string;
+                        place: number;
+                    }[] | null;
+                    reason: string;
+                };
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ResultsController_adminDisputes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        roomId: string;
+                        title: string;
+                        /** Format: date-time */
+                        startsAt: string;
+                        venueName: string | null;
+                        /** Format: date-time */
+                        deadline: string;
+                        players: {
+                            userId: string;
+                            pseudo: string | null;
+                            avatarUrl: string | null;
+                            rating: number;
+                        }[];
+                        submitRefused: string | null;
+                        result: {
+                            id: string;
+                            /** @enum {string} */
+                            status: "PENDING" | "CONFIRMED" | "DISPUTED" | "RESOLVED" | "VOID";
+                            placements: {
+                                userId: string;
+                                place: number;
+                            }[];
+                            score: string | null;
+                            submittedBy: string | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                            accepted: number;
+                            needed: number;
+                            /** @enum {string|null} */
+                            myVote: "ACCEPTED" | "DISPUTED" | null;
+                            disputes: {
+                                pseudo: string | null;
+                                reason: string | null;
+                                placements: {
+                                    userId: string;
+                                    place: number;
+                                }[] | null;
+                            }[];
+                            decisionReason: string | null;
+                            /** Format: date-time */
+                            decidedAt: string | null;
+                        } | null;
+                    }[];
+                };
+            };
+        };
+    };
+    ResultsController_adminDecide: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    placements: {
+                        userId: string;
+                        place: number;
+                    }[] | null;
+                    reason: string;
+                };
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ResultsController_adminVoid: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    reason: string;
+                };
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     BillingController_visits: {
         parameters: {
             query?: {
@@ -3446,6 +4305,7 @@ export interface operations {
                         pendingAvatars: number;
                         pendingVenues: number;
                         suspendedPlayers: number;
+                        disputedResults: number;
                         /** Format: date-time */
                         oldestReportAt: string | null;
                         /** Format: date-time */
@@ -3629,7 +4489,7 @@ export interface operations {
                         actions: {
                             id: string;
                             /** @enum {string} */
-                            action: "REPORT_DISMISS" | "REPORT_WARN" | "REPORT_SUSPEND" | "USER_SUSPEND" | "USER_UNSUSPEND" | "AVATAR_APPROVE" | "AVATAR_REJECT" | "VENUE_CREATE" | "VENUE_UPDATE" | "EVENT_CREATE" | "EVENT_UPDATE" | "EVENT_CANCEL" | "EVENT_HIDE" | "GAME_MERGE" | "VISIT_DECIDE";
+                            action: "REPORT_DISMISS" | "REPORT_WARN" | "REPORT_SUSPEND" | "USER_SUSPEND" | "USER_UNSUSPEND" | "AVATAR_APPROVE" | "AVATAR_REJECT" | "VENUE_CREATE" | "VENUE_UPDATE" | "EVENT_CREATE" | "EVENT_UPDATE" | "EVENT_CANCEL" | "EVENT_HIDE" | "GAME_MERGE" | "VISIT_DECIDE" | "RESULT_DECIDE" | "RESULT_VOID";
                             targetId: string;
                             target: {
                                 /** @enum {string} */
@@ -3787,7 +4647,7 @@ export interface operations {
                     "application/json": {
                         id: string;
                         /** @enum {string} */
-                        action: "REPORT_DISMISS" | "REPORT_WARN" | "REPORT_SUSPEND" | "USER_SUSPEND" | "USER_UNSUSPEND" | "AVATAR_APPROVE" | "AVATAR_REJECT" | "VENUE_CREATE" | "VENUE_UPDATE" | "EVENT_CREATE" | "EVENT_UPDATE" | "EVENT_CANCEL" | "EVENT_HIDE" | "GAME_MERGE" | "VISIT_DECIDE";
+                        action: "REPORT_DISMISS" | "REPORT_WARN" | "REPORT_SUSPEND" | "USER_SUSPEND" | "USER_UNSUSPEND" | "AVATAR_APPROVE" | "AVATAR_REJECT" | "VENUE_CREATE" | "VENUE_UPDATE" | "EVENT_CREATE" | "EVENT_UPDATE" | "EVENT_CANCEL" | "EVENT_HIDE" | "GAME_MERGE" | "VISIT_DECIDE" | "RESULT_DECIDE" | "RESULT_VOID";
                         targetId: string;
                         target: {
                             /** @enum {string} */

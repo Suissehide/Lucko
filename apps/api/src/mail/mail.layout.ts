@@ -60,6 +60,8 @@ export type MailLayout = {
   action?: { label: string; href: string }
   /** Ligne sous le bouton, texte brut. */
   closing?: string
+  /** Pourquoi le destinataire reçoit l'e-mail, s'il n'a pas forcément de compte. */
+  footer?: string
 }
 
 const p = (text: string) =>
@@ -121,7 +123,7 @@ export function mailHtml(mail: MailLayout) {
       </td></tr>
       <tr><td style="padding:24px 4px 0;font-family:${BODY};font-size:13px;line-height:19px;color:${C.muted}">
         <p style="margin:0 0 6px;font-weight:800;color:${C.ink}">L’équipe Lucko</p>
-        Tu reçois cet e-mail car tu as un compte Lucko. Il concerne la sécurité de ton compte : il n’est pas possible de s’en désabonner.
+        ${escapeHtml(mail.footer ?? 'Tu reçois cet e-mail car tu as un compte Lucko. Il concerne la sécurité de ton compte : il n’est pas possible de s’en désabonner.')}
       </td></tr>
     </table>
   </td></tr>

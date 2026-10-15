@@ -9,6 +9,15 @@ export const ME = {
   ACCEPT_HOME_SAFETY: 'accept_home_safety',
 } as const
 
+export const PARENTAL_CONSENT = {
+  MINE: 'my_parental_consent',
+  REQUEST: 'request_parental_consent',
+  GET: 'parental_consent',
+  GRANT: 'grant_parental_consent',
+  CHILDREN: 'my_children',
+  WITHDRAW: 'withdraw_parental_consent',
+} as const
+
 export const BLOCKS = {
   GET: 'blocks',
   UNBLOCK: 'unblock_player',
@@ -130,4 +139,15 @@ export const BILLING = {
 /** XP de participation et niveaux (LKO-89). */
 export const XP = {
   GET: 'my_xp',
+} as const
+
+/** Résultats des rooms classées (LKO-83) : saisie, vote des présents, arbitrage. */
+export const RESULTS = {
+  ROOM: 'room_result',
+  SUBMIT: 'submit_result',
+  CONFIRM: 'confirm_result',
+  DISPUTE: 'dispute_result',
+  VENUE_DISPUTES: 'venue_result_disputes',
+  ADMIN_DISPUTES: 'admin_result_disputes',
+  DECIDE: 'decide_result',
 } as const
