@@ -48,6 +48,21 @@ const envSchema = z
     SIGHTENGINE_API_USER: z.string().optional(),
     SIGHTENGINE_API_SECRET: z.string().optional(),
     /**
+     * Serveurs Overpass (import des lieux OSM, LKO-74), essayés dans l'ordre, séparés par des virgules :
+     * le serveur public est souvent surchargé (502, 504), les miroirs (opérateurs distincts) prennent le relais.
+     */
+    OVERPASS_URLS: z
+      .string()
+      .default(
+        [
+          'https://overpass-api.de/api/interpreter',
+          'https://overpass.private.coffee/api/interpreter',
+          'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
+        ].join(','),
+      )
+      .transform((value) => value.split(',').map((url) => url.trim()))
+      .pipe(z.array(z.url()).min(1)),
+    /**
      * Clés AES-256 des adresses de rooms à domicile, « 1:<base64> » (`openssl rand -base64 32`),
      * la clé active en tête (rotation : voir `addressKeys`). Obligatoire en production ; ailleurs,
      * une clé de développement fixe.
