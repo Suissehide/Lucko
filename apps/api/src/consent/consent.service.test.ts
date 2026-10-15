@@ -28,18 +28,25 @@ function setup(consent: object | null, childSessionsFromIp = 0) {
     parentalConsent: {
       findUnique: vi.fn(async () => consent),
       update: vi.fn((args: object) => args),
+      updateMany: vi.fn(async () => ({ count: 1 })),
     },
     user: {
       update: vi.fn((args: object) => args),
       findMany: vi.fn(async () => [] as object[]),
+      findFirst: vi.fn(async () => consent),
       delete: vi.fn(async () => ({})),
     },
+    roomParticipant: { findMany: vi.fn(async () => [] as object[]) },
+    eventRegistration: { findMany: vi.fn(async () => [] as object[]) },
+    report: { findMany: vi.fn(async () => [] as object[]) },
     session: { count: vi.fn(async () => childSessionsFromIp) },
     $transaction: vi.fn(async (ops: unknown) => ops),
   }
   const jobs = { handle: vi.fn(), send: vi.fn() }
-  const service = new ConsentService(prisma as never, { send: vi.fn() } as never, jobs as never)
-  return { service, prisma }
+  const mail = { send: vi.fn() }
+  const users = { deleteAccount: vi.fn(async () => {}) }
+  const service = new ConsentService(prisma as never, mail as never, jobs as never, users as never)
+  return { service, prisma, mail, users }
 }
 
 const pending = { id: 'c1', childId: 'kid', child, status: 'PENDING', parentId: null }
@@ -106,5 +113,47 @@ describe('ConsentService.request (LKO-49)', () => {
     const { service } = setup(null)
     await expect(service.request(child, 'kid@x.fr')).rejects.toThrow('pas le tien')
     await expect(service.request(teen, 'mum@x.fr')).rejects.toBeInstanceOf(ConflictException)
+  })
+})
+
+describe('ConsentService.withdraw (LKO-49)', () => {
+  it('supprime le compte de l’enfant, garde la trace du retrait et prévient les deux', async () => {
+    const { service, prisma, mail, users } = setup({ ...child, parentId: 'mum' })
+    await service.withdraw({ ...parent, email: 'mum@x.fr' } as User, 'kid')
+    expect(users.deleteAccount).toHaveBeenCalledWith(expect.objectContaining({ id: 'kid' }))
+    expect(prisma.parentalConsent.updateMany).toHaveBeenCalledWith({
+      where: { childId: 'kid', status: 'GRANTED' },
+      data: { status: 'WITHDRAWN', withdrawnAt: expect.any(Date) },
+    })
+    expect(mail.send.mock.calls.map(([m]) => m.to)).toEqual(['kid@x.fr', 'mum@x.fr'])
+  })
+
+  it('404 pour un enfant qui n’est pas le sien, 409 à partir de 15 ans', async () => {
+    await expect(setup(null).service.withdraw(parent, 'kid')).rejects.toBeInstanceOf(
+      NotFoundException,
+    )
+    const { service, users } = setup(teen)
+    await expect(service.withdraw(parent, 'teen')).rejects.toBeInstanceOf(ConflictException)
+    expect(users.deleteAccount).not.toHaveBeenCalled()
+  })
+})
+
+describe('ConsentService.children (LKO-49)', () => {
+  it('montre l’activité avant 15 ans, plus rien après', async () => {
+    const { service, prisma } = setup(null)
+    prisma.user.findMany.mockResolvedValueOnce([
+      { ...child, parentalConsentAt: new Date() },
+      { ...teen, email: 'teen@x.fr', createdAt },
+    ])
+    prisma.roomParticipant.findMany.mockResolvedValueOnce([
+      {
+        status: 'ACCEPTED',
+        room: { id: 'r1', startsAt: createdAt, game: { name: 'Lorcana' }, venue: null },
+      },
+    ])
+    const [kid, older] = await service.children(parent)
+    expect(kid).toMatchObject({ autonomous: false, rooms: [{ place: 'À domicile' }] })
+    expect(older).toMatchObject({ autonomous: true, rooms: [], reports: [] })
+    expect(prisma.report.findMany).toHaveBeenCalledTimes(1)
   })
 })

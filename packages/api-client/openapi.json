@@ -450,6 +450,11 @@
                     "parentalConsentPending": {
                       "type": "boolean"
                     },
+                    "childCount": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
                     "role": {
                       "type": "string",
                       "enum": [
@@ -643,6 +648,7 @@
                     "name",
                     "hasBirthDate",
                     "parentalConsentPending",
+                    "childCount",
                     "role",
                     "avatarUrl",
                     "avatarStatus",
@@ -777,6 +783,11 @@
                     "parentalConsentPending": {
                       "type": "boolean"
                     },
+                    "childCount": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
                     "role": {
                       "type": "string",
                       "enum": [
@@ -970,6 +981,7 @@
                     "name",
                     "hasBirthDate",
                     "parentalConsentPending",
+                    "childCount",
                     "role",
                     "avatarUrl",
                     "avatarStatus",
@@ -1055,6 +1067,11 @@
                     "parentalConsentPending": {
                       "type": "boolean"
                     },
+                    "childCount": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
                     "role": {
                       "type": "string",
                       "enum": [
@@ -1248,6 +1265,7 @@
                     "name",
                     "hasBirthDate",
                     "parentalConsentPending",
+                    "childCount",
                     "role",
                     "avatarUrl",
                     "avatarStatus",
@@ -1325,6 +1343,11 @@
                     "parentalConsentPending": {
                       "type": "boolean"
                     },
+                    "childCount": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
                     "role": {
                       "type": "string",
                       "enum": [
@@ -1518,6 +1541,7 @@
                     "name",
                     "hasBirthDate",
                     "parentalConsentPending",
+                    "childCount",
                     "role",
                     "avatarUrl",
                     "avatarStatus",
@@ -2003,7 +2027,8 @@
                       "type": "string",
                       "enum": [
                         "PENDING",
-                        "GRANTED"
+                        "GRANTED",
+                        "WITHDRAWN"
                       ]
                     },
                     "deadline": {
@@ -2032,6 +2057,201 @@
         "parameters": [
           {
             "name": "token",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "consent"
+        ]
+      }
+    },
+    "/me/children": {
+      "get": {
+        "operationId": "ConsentController_children",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "pseudo": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "email": {
+                        "type": "string"
+                      },
+                      "age": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      "consentAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                      },
+                      "autonomous": {
+                        "type": "boolean"
+                      },
+                      "rooms": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "game": {
+                              "type": "string"
+                            },
+                            "place": {
+                              "type": "string"
+                            },
+                            "startsAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            "status": {
+                              "type": "string",
+                              "enum": [
+                                "PENDING",
+                                "ACCEPTED",
+                                "WAITLISTED",
+                                "DECLINED",
+                                "LEFT"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "game",
+                            "place",
+                            "startsAt",
+                            "status"
+                          ]
+                        }
+                      },
+                      "events": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "title": {
+                              "type": "string"
+                            },
+                            "venue": {
+                              "type": "string"
+                            },
+                            "startsAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "title",
+                            "venue",
+                            "startsAt"
+                          ]
+                        }
+                      },
+                      "reports": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "direction": {
+                              "type": "string",
+                              "enum": [
+                                "MADE",
+                                "RECEIVED"
+                              ]
+                            },
+                            "reason": {
+                              "type": "string",
+                              "enum": [
+                                "HARASSMENT",
+                                "INAPPROPRIATE_CONTENT",
+                                "CHEATING",
+                                "NO_SHOW",
+                                "MINOR_SAFETY",
+                                "SAFETY",
+                                "OTHER"
+                              ]
+                            },
+                            "createdAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            "handled": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "direction",
+                            "reason",
+                            "createdAt",
+                            "handled"
+                          ]
+                        }
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "pseudo",
+                      "email",
+                      "age",
+                      "consentAt",
+                      "autonomous",
+                      "rooms",
+                      "events",
+                      "reports"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "consent"
+        ]
+      }
+    },
+    "/me/children/{childId}": {
+      "delete": {
+        "operationId": "ConsentController_withdraw",
+        "parameters": [
+          {
+            "name": "childId",
             "required": true,
             "in": "path",
             "schema": {

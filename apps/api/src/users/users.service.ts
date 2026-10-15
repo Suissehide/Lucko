@@ -41,7 +41,7 @@ export class UsersService {
   ) {}
 
   async profile(user: User): Promise<z.output<typeof meSchema>> {
-    const [profiles, staffOf] = await Promise.all([
+    const [profiles, staffOf, childCount] = await Promise.all([
       this.prisma.playerGameProfile.findMany({
         where: { userId: user.id },
         orderBy: [{ rankedGames: 'desc' }, { rating: 'desc' }],
@@ -55,12 +55,14 @@ export class UsersService {
           venue: { select: { id: true, slug: true, name: true, isPartner: true } },
         },
       }),
+      this.prisma.user.count({ where: { parentId: user.id, deletedAt: null } }),
     ])
     const main = profiles[0]
     return {
       ...user,
       hasBirthDate: user.birthDate !== null,
       parentalConsentPending: needsParentalConsent(user),
+      childCount,
       homeSafetyAccepted: (user.homeSafetyVersion ?? 0) >= HOME_SAFETY_VERSION,
       mainRating: main
         ? { game: main.format.game.name, format: main.format.name, rating: main.rating }
@@ -277,5 +279,57 @@ export class UsersService {
       }
     })
     return this.myGames(userId)
+  }
+
+  /**
+   * Suppression du compte (exigence Apple, RGPD, retrait de l'accord parental) : le joueur est
+   * anonymisé et ne peut plus se connecter (`deletedAt`). La ligne reste pour les venues facturées aux
+   * lieux et l'historique des parties, mais plus rien ne l'identifie ; ses places à venir sont libérées.
+   */
+  async deleteAccount(user: User) {
+    const now = new Date()
+    const upcoming = { startsAt: { gte: now } }
+    await this.prisma.$transaction([
+      this.prisma.playerGameProfile.deleteMany({ where: { userId: user.id } }),
+      this.prisma.venueStaff.deleteMany({ where: { userId: user.id } }),
+      // Appareils oubliés : plus aucune notification
+      this.prisma.pushToken.deleteMany({ where: { userId: user.id } }),
+      this.prisma.playIntent.deleteMany({ where: { userId: user.id } }),
+      // Blocages levés ; les signalements restent pour la modération
+      this.prisma.block.deleteMany({
+        where: { OR: [{ blockerId: user.id }, { blockedId: user.id }] },
+      }),
+      // Sessions et moyens de connexion Better Auth : plus aucune connexion possible
+      this.prisma.session.deleteMany({ where: { userId: user.id } }),
+      this.prisma.account.deleteMany({ where: { userId: user.id } }),
+      this.prisma.eventRegistration.deleteMany({ where: { userId: user.id, event: upcoming } }),
+      this.prisma.roomParticipant.deleteMany({ where: { userId: user.id, room: upcoming } }),
+      this.prisma.room.updateMany({
+        where: { hostId: user.id, ...upcoming, status: { in: ['OPEN', 'FULL', 'CONFIRMED'] } },
+        data: { status: 'CANCELLED' },
+      }),
+      this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          email: `${user.id}@supprime.invalid`,
+          name: '',
+          image: null,
+          pseudo: null,
+          birthDate: null,
+          avatarUrl: null,
+          avatarStatus: null,
+          city: null,
+          latitude: null,
+          longitude: null,
+          availability: [],
+          vibes: [],
+          parentId: null,
+          parentalConsentAt: null,
+          playedGames: { set: [] },
+          deletedAt: now,
+        },
+      }),
+    ])
+    await this.storage.remove(user.avatarUrl)
   }
 }

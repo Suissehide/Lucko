@@ -922,6 +922,8 @@ model AdminAction {
 enum ParentalConsentStatus {
   PENDING
   GRANTED
+  /// Retiré par le parent : le compte de l'enfant est supprimé
+  WITHDRAWN
 }
 
 /// Demande d'accord parental d'un joueur de 13-14 ans, et preuve de l'accord une fois donné.
@@ -940,6 +942,7 @@ model ParentalConsent {
   userAgent           String?
   /// Même IP qu'une session de l'enfant : peut-être un auto-consentement, à vérifier par un admin
   sameDeviceSuspected Boolean               @default(false)
+  withdrawnAt         DateTime?
   createdAt           DateTime              @default(now())
 
   @@index([childId])

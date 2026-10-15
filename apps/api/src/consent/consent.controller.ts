@@ -1,10 +1,11 @@
 import {
+  childActivitySchema,
   myParentalConsentSchema,
   parentalConsentRequestSchema,
   type RequestParentalConsentInput,
   requestParentalConsentSchema,
 } from '@lucko/shared'
-import { Controller, Get, HttpCode, Param, Post, Req } from '@nestjs/common'
+import { Controller, Delete, Get, HttpCode, Param, Post, Req } from '@nestjs/common'
 import { ApiNoContentResponse, ApiTags } from '@nestjs/swagger'
 import { AllowPendingConsent, CurrentUser, Public } from '../auth/auth.decorators'
 import { type AuthRequest, AuthService } from '../auth/auth.service'
@@ -58,5 +59,20 @@ export class ConsentController {
     @Req() request: AuthRequest,
   ) {
     await this.consent.grant(token, parent, await this.auth.sessionDevice(request.headers))
+  }
+
+  /** Mes enfants liés et leur activité (vue parent). */
+  @Get('me/children')
+  @ZodResponse(childActivitySchema.array())
+  children(@CurrentUser() parent: User) {
+    return this.consent.children(parent)
+  }
+
+  /** Retrait de l'accord : le compte de l'enfant est supprimé. 409 à partir de 15 ans. */
+  @Delete('me/children/:childId')
+  @HttpCode(204)
+  @ApiNoContentResponse()
+  async withdraw(@CurrentUser() parent: User, @Param('childId') childId: string) {
+    await this.consent.withdraw(parent, childId)
   }
 }

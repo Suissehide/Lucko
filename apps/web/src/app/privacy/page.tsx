@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <TextPage title="Politique de confidentialité" updated="9 octobre 2026">
+    <TextPage title="Politique de confidentialité" updated="15 octobre 2026">
       <p>
         Cette page explique quelles données Lucko collecte, pourquoi, combien de temps elles sont
         gardées ainsi que tes droits. Version courte : on collecte le strict nécessaire pour te
@@ -38,8 +38,9 @@ export default function PrivacyPage() {
           du contrat.
         </li>
         <li>
-          Pour les 13-14 ans : le lien avec le compte du parent et la date de son accord. Base
-          légale : obligation légale.
+          Pour les 13-14 ans : l’e-mail du parent à qui la demande est envoyée, le lien avec son
+          compte et la preuve de son accord (date, version de cette politique, adresse IP et
+          navigateur utilisés pour le donner). Base légale : obligation légale.
         </li>
       </ul>
 
@@ -130,6 +131,13 @@ export default function PrivacyPage() {
           et facturation des lieux).
         </li>
         <li>Sessions de connexion : jusqu’à leur expiration ou ta déconnexion.</li>
+        <li>
+          Compte d’un 13-14 ans sans accord d’un parent : supprimé 14 jours après sa création.
+        </li>
+        <li>
+          Preuve de l’accord parental : conservée après la suppression du compte, ou le retrait de
+          l’accord, comme preuve, <ToFill>Durée maximale</ToFill>.
+        </li>
         <li>Jeux que tu attends : 7 jours, sauf si tu les renouvelles.</li>
         <li>
           Adresse d’une room à domicile : supprimée à l’annulation, sinon au plus tard 6 h après la
@@ -208,7 +216,15 @@ export default function PrivacyPage() {
       <h2>Mineurs</h2>
       <p>
         Lucko est interdit aux moins de 13 ans. Entre 13 et 14 ans, l’inscription nécessite l’accord
-        d’un parent, qui peut exercer les droits ci-dessus pour le compte de son enfant.
+        d’un parent, qui peut exercer les droits ci-dessus pour le compte de son enfant. Il reçoit
+        un e-mail et donne son accord depuis son propre compte Lucko, lié à celui de l’enfant.
+        Jusque-là, le compte de l’enfant ne permet que de consulter.
+      </p>
+      <p>
+        Depuis Réglages, Mes enfants, le parent voit les parties, les soirées et les signalements de
+        son enfant, jamais ses messages. Il peut retirer son accord à tout moment : le compte de
+        l’enfant est alors supprimé. À 15 ans, le compte devient autonome : le parent en est prévenu
+        et ne voit plus son activité.
       </p>
       <p>
         Pour protéger les 13-17 ans : pas de messages privés, seulement les chats des rooms et

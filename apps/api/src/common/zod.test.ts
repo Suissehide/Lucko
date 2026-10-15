@@ -42,6 +42,7 @@ describe('schémas de réponse', () => {
       name: 'Léa Martin',
       hasBirthDate: true,
       parentalConsentPending: false,
+      childCount: 0,
       role: 'PLAYER',
       avatarUrl: null,
       avatarStatus: null,
