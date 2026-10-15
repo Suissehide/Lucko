@@ -16,6 +16,7 @@ import { Platform } from 'react-native'
 import { trackPage } from '@/lib/analytics'
 import { usePush } from '@/lib/push'
 import { persistOptions, queryClient } from '@/lib/queryClient'
+import { Sentry } from '@/lib/sentry'
 import { useMeQuery } from '@/queries/useMe'
 
 function PushSetup() {
@@ -29,7 +30,7 @@ function PageViews() {
   return null
 }
 
-export default function RootLayout() {
+function RootLayout() {
   // Noms identiques à ceux du design system (tokens `font()`)
   const [fontsLoaded] = useFonts({
     Archivo_400Regular,
@@ -62,3 +63,6 @@ export default function RootLayout() {
     </PersistQueryClientProvider>
   )
 }
+
+// Erreurs de rendu et plantages remontés à GlitchTip (LKO-36)
+export default Sentry.wrap(RootLayout)

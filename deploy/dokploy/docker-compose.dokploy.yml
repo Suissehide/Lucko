@@ -36,6 +36,11 @@ services:
       - S3_PUBLIC_URL=${S3_PUBLIC_URL}
       - SIGHTENGINE_API_USER=${SIGHTENGINE_API_USER:-}
       - SIGHTENGINE_API_SECRET=${SIGHTENGINE_API_SECRET:-}
+      # Suivi des erreurs (GlitchTip partagé, dépôt Tools) ; vide = rien n'est envoyé
+      - SENTRY_DSN=${SENTRY_DSN_API:-}
+      - SENTRY_ENVIRONMENT=${SENTRY_ENVIRONMENT:-production}
+      - SENTRY_RELEASE=${VERSION:-}
+      - OVERPASS_URLS=${OVERPASS_URLS:-}
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"]
       interval: 30s
@@ -60,6 +65,8 @@ services:
         # Figée au build (variable publique Next.js)
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
         NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
+        NEXT_PUBLIC_SENTRY_DSN: ${SENTRY_DSN_WEB:-}
+        NEXT_PUBLIC_SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-production}
     image: ${APP_IMAGE_NAME:-lucko}-web:${VERSION:-latest}
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"]
@@ -84,6 +91,8 @@ services:
         EXPO_PUBLIC_API_URL: ${EXPO_PUBLIC_API_URL}
         EXPO_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
         EXPO_PUBLIC_UMAMI_WEBSITE_ID: ${EXPO_PUBLIC_UMAMI_WEBSITE_ID:-}
+        EXPO_PUBLIC_SENTRY_DSN: ${SENTRY_DSN_APP:-}
+        EXPO_PUBLIC_SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-production}
     image: ${APP_IMAGE_NAME:-lucko}-app:${VERSION:-latest}
     logging:
       driver: "json-file"

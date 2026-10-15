@@ -1426,9 +1426,20 @@ export interface operations {
                 content: {
                     "application/json": {
                         /** @enum {string} */
-                        status: "ok";
+                        status: "ok" | "degraded";
                         /** @enum {string} */
                         database: "up";
+                        jobs: {
+                            /** @enum {string} */
+                            status: "up";
+                            ready: number;
+                            failed: number;
+                        } | {
+                            /** @enum {string} */
+                            status: "down";
+                        };
+                        /** @enum {string} */
+                        storage: "up" | "down" | "disabled";
                     };
                 };
             };

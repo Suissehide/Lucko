@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common'
+import { APP_FILTER } from '@nestjs/core'
+import { SentryGlobalFilter, SentryModule } from '@sentry/nestjs/setup'
 import { AdminModule } from './admin/admin.module'
 import { AuthModule } from './auth/auth.module'
 import { BillingModule } from './billing/billing.module'
@@ -24,6 +26,7 @@ import { WaitlistModule } from './waitlist/waitlist.module'
 
 @Module({
   imports: [
+    SentryModule.forRoot(),
     PrismaModule,
     JobsModule,
     MailModule,
@@ -47,5 +50,7 @@ import { WaitlistModule } from './waitlist/waitlist.module'
     CheckinModule,
     BillingModule,
   ],
+  // Erreurs inattendues (pas les HttpException voulues : 400, 404…) envoyées à GlitchTip (LKO-36)
+  providers: [{ provide: APP_FILTER, useClass: SentryGlobalFilter }],
 })
 export class AppModule {}

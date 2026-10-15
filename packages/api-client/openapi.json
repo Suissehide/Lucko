@@ -290,7 +290,8 @@
                     "status": {
                       "type": "string",
                       "enum": [
-                        "ok"
+                        "ok",
+                        "degraded"
                       ]
                     },
                     "database": {
@@ -298,11 +299,65 @@
                       "enum": [
                         "up"
                       ]
+                    },
+                    "jobs": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "status": {
+                              "type": "string",
+                              "enum": [
+                                "up"
+                              ]
+                            },
+                            "ready": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "failed": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "required": [
+                            "status",
+                            "ready",
+                            "failed"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "status": {
+                              "type": "string",
+                              "enum": [
+                                "down"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "status"
+                          ]
+                        }
+                      ]
+                    },
+                    "storage": {
+                      "type": "string",
+                      "enum": [
+                        "up",
+                        "down",
+                        "disabled"
+                      ]
                     }
                   },
                   "required": [
                     "status",
-                    "database"
+                    "database",
+                    "jobs",
+                    "storage"
                   ]
                 }
               }

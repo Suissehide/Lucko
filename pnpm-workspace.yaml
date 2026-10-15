@@ -8,9 +8,29 @@ nodeLinker: hoisted
 allowBuilds:
   '@prisma/engines': true
   '@scarf/scarf': false
+  # Binaire d'envoi des source maps Sentry : inutile tant qu'on ne les envoie pas à GlitchTip (LKO-36)
+  '@sentry/cli': false
   esbuild: true
   lefthook: true
   prisma: true
   '@biomejs/biome': true
   '@nestjs/core': true
   sharp: true
+
+minimumReleaseAgeExclude:
+  - '@sentry/bundler-plugins@11.8.0'
+  - '@sentry/core@11.8.0'
+  - '@sentry/nestjs@11.8.0'
+  - '@sentry/node@11.8.0'
+  - '@sentry/opentelemetry@11.8.0'
+  - '@sentry/server-runtime-injection@11.8.0'
+  - '@sentry/server-utils@11.8.0'
+  - '@sentry/browser-utils@11.8.0'
+  - '@sentry/browser@11.8.0'
+  - '@sentry/cloudflare@11.8.0'
+  - '@sentry/feedback@11.8.0'
+  - '@sentry/nextjs@11.8.0'
+  - '@sentry/react@11.8.0'
+  - '@sentry/replay-canvas@11.8.0'
+  - '@sentry/replay@11.8.0'
+  - '@sentry/vercel-edge@11.8.0'

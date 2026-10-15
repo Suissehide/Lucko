@@ -1,4 +1,5 @@
 import { Injectable, Logger, type OnModuleDestroy } from '@nestjs/common'
+import * as Sentry from '@sentry/nestjs'
 import { fromPrisma, PgBoss, type SendOptions, type UpdateQueueOptions } from 'pg-boss'
 import { loadEnv } from '../config/env'
 import type { Prisma } from '../generated/prisma/client'
@@ -28,7 +29,10 @@ export class JobsService implements OnModuleDestroy {
 
   private start() {
     this.started ??= (async () => {
-      this.boss.on('error', (error) => this.logger.error(error))
+      this.boss.on('error', (error) => {
+        this.logger.error(error)
+        Sentry.captureException(error, { tags: { job: 'pg-boss' } })
+      })
       await this.boss.start()
       await this.boss.createQueue(DEAD_LETTER_QUEUE)
       return this.boss
@@ -59,6 +63,8 @@ export class JobsService implements OnModuleDestroy {
             `${name} ${job.id} en échec`,
             error instanceof Error ? error.stack : error,
           )
+          // GlitchTip (LKO-36) : regroupé par tâche ; jamais `job.data` (données des joueurs)
+          Sentry.captureException(error, { tags: { job: name }, extra: { jobId: job.id } })
           throw error
         }
         this.logger.debug(`${name} ${job.id} traitée en ${Date.now() - startedAt} ms`)
@@ -74,6 +80,15 @@ export class JobsService implements OnModuleDestroy {
   async send(name: string, data: object, options: SendOptions = {}, tx?: Prisma.TransactionClient) {
     const boss = await this.start()
     return boss.send(name, data, tx ? { ...options, db: fromPrisma(tx) } : options)
+  }
+
+  /** État des files pour GET /health : tâches prêtes en attente et échecs retenus (LKO-36). */
+  async stats() {
+    const queues = await (await this.start()).getQueues()
+    return {
+      ready: queues.reduce((sum, q) => sum + q.readyCount, 0),
+      failed: queues.reduce((sum, q) => sum + q.failedCount, 0),
+    }
   }
 
   async onModuleDestroy() {

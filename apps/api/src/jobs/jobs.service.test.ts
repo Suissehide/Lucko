@@ -10,7 +10,10 @@ const boss = vi.hoisted(() => ({
   schedule: vi.fn(async () => {}),
 }))
 
+const sentry = vi.hoisted(() => ({ captureException: vi.fn() }))
+
 vi.mock('../config/env', () => ({ loadEnv: () => ({}) }))
+vi.mock('@sentry/nestjs', () => sentry)
 vi.mock('pg-boss', () => ({
   PgBoss: class {
     constructor() {
@@ -33,7 +36,14 @@ describe('JobsService.handle (LKO-97)', () => {
       throw new Error('SMTP indisponible')
     })
     const worker = boss.work.mock.lastCall?.[1]
-    await expect(worker?.([{ id: '1', data: {} }])).rejects.toThrow('SMTP indisponible')
+    await expect(worker?.([{ id: '1', data: { email: 'joueur@exemple.fr' } }])).rejects.toThrow(
+      'SMTP indisponible',
+    )
+    // Remonté à GlitchTip avec le nom de la tâche, sans ses données
+    expect(sentry.captureException).toHaveBeenCalledWith(expect.any(Error), {
+      tags: { job: 'mail' },
+      extra: { jobId: '1' },
+    })
   })
 
   it('planifie les crons à l’heure de Paris', async () => {
