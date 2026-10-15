@@ -54,12 +54,19 @@ const IS_CLUSTER = ['has', 'point_count']
 export const meLayer = {
   id: 'me',
   type: 'circle' as const,
+  // Point bleu à bord blanc et halo, comme la position sur les cartes usuelles : aucune épingle n'est bleue
   paint: {
     'circle-color': colors.event,
     'circle-radius': 7,
-    'circle-stroke-color': colors.ink,
-    'circle-stroke-width': border.thin,
+    'circle-stroke-color': colors.white,
+    'circle-stroke-width': 3,
   },
+}
+
+export const meHaloLayer = {
+  id: 'me-halo',
+  type: 'circle' as const,
+  paint: { 'circle-color': colors.event, 'circle-opacity': 0.18, 'circle-radius': 18 },
 }
 
 /** Groupes en noir (le jaune est celui des boutiques TCG). */
