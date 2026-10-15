@@ -228,6 +228,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/me/children": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ConsentController_children"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/children/{childId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["ConsentController_withdraw"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/venues": {
         parameters: {
             query?: never;
@@ -1411,6 +1443,7 @@ export interface operations {
                         name: string;
                         hasBirthDate: boolean;
                         parentalConsentPending: boolean;
+                        childCount: number;
                         /** @enum {string} */
                         role: "PLAYER" | "VENUE_STAFF" | "ADMIN";
                         avatarUrl: string | null;
@@ -1505,6 +1538,7 @@ export interface operations {
                         name: string;
                         hasBirthDate: boolean;
                         parentalConsentPending: boolean;
+                        childCount: number;
                         /** @enum {string} */
                         role: "PLAYER" | "VENUE_STAFF" | "ADMIN";
                         avatarUrl: string | null;
@@ -1575,6 +1609,7 @@ export interface operations {
                         name: string;
                         hasBirthDate: boolean;
                         parentalConsentPending: boolean;
+                        childCount: number;
                         /** @enum {string} */
                         role: "PLAYER" | "VENUE_STAFF" | "ADMIN";
                         avatarUrl: string | null;
@@ -1644,6 +1679,7 @@ export interface operations {
                         name: string;
                         hasBirthDate: boolean;
                         parentalConsentPending: boolean;
+                        childCount: number;
                         /** @enum {string} */
                         role: "PLAYER" | "VENUE_STAFF" | "ADMIN";
                         avatarUrl: string | null;
@@ -1888,7 +1924,7 @@ export interface operations {
                         childEmail: string;
                         childAge: number;
                         /** @enum {string} */
-                        status: "PENDING" | "GRANTED";
+                        status: "PENDING" | "GRANTED" | "WITHDRAWN";
                         /** Format: date-time */
                         deadline: string;
                     };
@@ -1902,6 +1938,78 @@ export interface operations {
             header?: never;
             path: {
                 token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ConsentController_children: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        id: string;
+                        pseudo: string | null;
+                        email: string;
+                        age: number;
+                        /** Format: date-time */
+                        consentAt: string;
+                        autonomous: boolean;
+                        rooms: {
+                            id: string;
+                            game: string;
+                            place: string;
+                            /** Format: date-time */
+                            startsAt: string;
+                            /** @enum {string} */
+                            status: "PENDING" | "ACCEPTED" | "WAITLISTED" | "DECLINED" | "LEFT";
+                        }[];
+                        events: {
+                            id: string;
+                            title: string;
+                            venue: string;
+                            /** Format: date-time */
+                            startsAt: string;
+                        }[];
+                        reports: {
+                            id: string;
+                            /** @enum {string} */
+                            direction: "MADE" | "RECEIVED";
+                            /** @enum {string} */
+                            reason: "HARASSMENT" | "INAPPROPRIATE_CONTENT" | "CHEATING" | "NO_SHOW" | "MINOR_SAFETY" | "SAFETY" | "OTHER";
+                            /** Format: date-time */
+                            createdAt: string;
+                            handled: boolean;
+                        }[];
+                    }[];
+                };
+            };
+        };
+    };
+    ConsentController_withdraw: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                childId: string;
             };
             cookie?: never;
         };

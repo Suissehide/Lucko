@@ -104,8 +104,9 @@ export default function ConsentScreen() {
         <List title="Ses protections" items={PROTECTIONS} />
         <Typography variant="small">
           Détail et durées de conservation dans la{' '}
-          <InlineLink href={`${SITE_URL}/privacy`}>politique de confidentialité</InlineLink>. Pour
-          retirer votre accord à tout moment : {CONTACT_EMAIL}.
+          <InlineLink href={`${SITE_URL}/privacy`}>politique de confidentialité</InlineLink>. Vous
+          suivrez son activité et pourrez retirer votre accord à tout moment depuis Réglages, Mes
+          enfants. Questions : {CONTACT_EMAIL}.
         </Typography>
         <Note>
           {me

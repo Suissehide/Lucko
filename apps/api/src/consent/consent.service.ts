@@ -19,17 +19,25 @@ import type { User } from '../generated/prisma/client'
 import { JobsService } from '../jobs/jobs.service'
 import { MailService } from '../mail/mail.service'
 import { PrismaService } from '../prisma/prisma.service'
+import { UsersService } from '../users/users.service'
 import {
   consentDeadline,
   consentKey,
   consentMail,
+  fifteenthBirthdays,
   reminderTimes,
   signConsentToken,
+  turnedFifteenMail,
   verifyConsentToken,
+  withdrawnChildMail,
+  withdrawnParentMail,
 } from './consent.rules'
 
 const REMINDER_JOB = 'consent.reminder'
 const EXPIRE_JOB = 'consent.expire-accounts'
+const TURNED_15_JOB = 'consent.turned-15'
+/** Dernières rooms, soirées et signalements montrés au parent, par type. */
+const ACTIVITY_LIMIT = 30
 const ADULT_AGE = 18
 const DAY_MS = 24 * 60 * 60 * 1000
 const INVALID_LINK =
@@ -46,6 +54,7 @@ export class ConsentService implements OnModuleInit {
     private readonly prisma: PrismaService,
     private readonly mail: MailService,
     private readonly jobs: JobsService,
+    private readonly users: UsersService,
   ) {}
 
   async onModuleInit() {
@@ -53,6 +62,109 @@ export class ConsentService implements OnModuleInit {
       this.remind(consentId),
     )
     await this.jobs.handle(EXPIRE_JOB, () => this.expireAccounts(), { cron: '0 5 * * *' })
+    await this.jobs.handle(TURNED_15_JOB, () => this.notifyTurnedFifteen(), { cron: '0 9 * * *' })
+  }
+
+  /** Enfants liés au parent et leur activité (rooms, soirées, signalements), jamais leurs messages. */
+  async children(parent: User) {
+    const now = new Date()
+    const kids = await this.prisma.user.findMany({
+      where: { parentId: parent.id, deletedAt: null },
+      orderBy: { createdAt: 'asc' },
+    })
+    return Promise.all(kids.map((kid) => this.activity(kid, now)))
+  }
+
+  private async activity(kid: User, now: Date) {
+    const age = kid.birthDate ? ageOn(kid.birthDate, now) : 0
+    const autonomous = age >= DIGITAL_MAJORITY_AGE
+    const base = {
+      id: kid.id,
+      pseudo: kid.pseudo,
+      email: kid.email,
+      age,
+      consentAt: kid.parentalConsentAt ?? kid.createdAt,
+      autonomous,
+    }
+    if (autonomous) return { ...base, rooms: [], events: [], reports: [] }
+    const [rooms, events, reports] = await Promise.all([
+      this.prisma.roomParticipant.findMany({
+        where: { userId: kid.id },
+        orderBy: { room: { startsAt: 'desc' } },
+        take: ACTIVITY_LIMIT,
+        select: {
+          status: true,
+          room: {
+            select: {
+              id: true,
+              startsAt: true,
+              game: { select: { name: true } },
+              venue: { select: { name: true } },
+            },
+          },
+        },
+      }),
+      this.prisma.eventRegistration.findMany({
+        where: { userId: kid.id },
+        orderBy: { event: { startsAt: 'desc' } },
+        take: ACTIVITY_LIMIT,
+        select: {
+          event: {
+            select: { id: true, title: true, startsAt: true, venue: { select: { name: true } } },
+          },
+        },
+      }),
+      this.prisma.report.findMany({
+        where: { OR: [{ reporterId: kid.id }, { targetId: kid.id }] },
+        orderBy: { createdAt: 'desc' },
+        take: ACTIVITY_LIMIT,
+        select: { id: true, reporterId: true, reason: true, createdAt: true, resolvedAt: true },
+      }),
+    ])
+    return {
+      ...base,
+      rooms: rooms.map(({ status, room }) => ({
+        id: room.id,
+        game: room.game.name,
+        place: room.venue?.name ?? 'À domicile',
+        startsAt: room.startsAt,
+        status,
+      })),
+      events: events.map(({ event }) => ({
+        id: event.id,
+        title: event.title,
+        venue: event.venue.name,
+        startsAt: event.startsAt,
+      })),
+      reports: reports.map((report) => ({
+        id: report.id,
+        direction: report.reporterId === kid.id ? ('MADE' as const) : ('RECEIVED' as const),
+        reason: report.reason,
+        createdAt: report.createdAt,
+        handled: report.resolvedAt !== null,
+      })),
+    }
+  }
+
+  /**
+   * Retrait de l'accord par le parent : le compte de l'enfant est supprimé (anonymisé) tout de suite,
+   * la demande garde la trace du retrait. Plus possible à 15 ans : le compte ne dépend plus du parent.
+   */
+  async withdraw(parent: User, childId: string) {
+    const child = await this.prisma.user.findFirst({
+      where: { id: childId, parentId: parent.id, deletedAt: null },
+    })
+    if (!child) throw new NotFoundException('Enfant introuvable')
+    const name = child.pseudo ?? child.email
+    if (!child.birthDate || ageOn(child.birthDate) >= DIGITAL_MAJORITY_AGE)
+      throw new ConflictException(`${name} a 15 ans : son compte ne dépend plus de votre accord`)
+    await this.users.deleteAccount(child)
+    await this.prisma.parentalConsent.updateMany({
+      where: { childId, status: 'GRANTED' },
+      data: { status: 'WITHDRAWN', withdrawnAt: new Date() },
+    })
+    await this.mail.send({ to: child.email, ...withdrawnChildMail() })
+    await this.mail.send({ to: parent.email, ...withdrawnParentMail(name) })
   }
 
   async mine(child: User) {
@@ -171,6 +283,24 @@ export class ConsentService implements OnModuleInit {
       to: consent.parentEmail,
       ...consentMail(consent.child.email, this.link(consent.id, deadline), deadline, true),
     })
+  }
+
+  /** Enfants liés qui ont 15 ans aujourd'hui : leur parent est prévenu que le compte devient autonome. */
+  private async notifyTurnedFifteen() {
+    const kids = await this.prisma.user.findMany({
+      where: {
+        parentId: { not: null },
+        deletedAt: null,
+        birthDate: { in: fifteenthBirthdays() },
+      },
+      select: { pseudo: true, email: true, parent: { select: { email: true, deletedAt: true } } },
+    })
+    for (const kid of kids)
+      if (kid.parent && !kid.parent.deletedAt)
+        await this.mail.send({
+          to: kid.parent.email,
+          ...turnedFifteenMail(kid.pseudo ?? kid.email),
+        })
   }
 
   /** Comptes 13-14 ans sans accord après le délai : supprimés (ils n'ont rien pu faire entre-temps). */

@@ -3,6 +3,7 @@ import {
   consentDeadline,
   consentKey,
   consentMail,
+  fifteenthBirthdays,
   reminderTimes,
   signConsentToken,
   verifyConsentToken,
@@ -56,5 +57,20 @@ describe('consentMail', () => {
     expect(mail.html).toContain('http://app/consent/t')
     expect(mail.html).toContain('27 octobre')
     expect(consentMail('a@x.fr', 'l', later, true).subject).toMatch(/^Rappel/)
+  })
+})
+
+describe('fifteenthBirthdays (LKO-49)', () => {
+  it('donne la date de naissance des 15 ans du jour, à Paris', () => {
+    expect(fifteenthBirthdays(new Date('2026-10-14T23:30:00Z'))).toEqual([
+      new Date('2011-10-15T00:00:00Z'),
+    ])
+  })
+
+  it('fête le 1er mars un enfant né un 29 février, les années non bissextiles', () => {
+    expect(fifteenthBirthdays(new Date('2027-03-01T10:00:00Z'))).toEqual([
+      new Date('2012-03-01T00:00:00Z'),
+      new Date('2012-02-29T00:00:00Z'),
+    ])
   })
 })

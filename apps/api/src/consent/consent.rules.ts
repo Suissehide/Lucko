@@ -1,5 +1,10 @@
 import { createHmac, timingSafeEqual } from 'node:crypto'
-import { formatLongDay, PARENTAL_CONSENT_DAYS } from '@lucko/shared'
+import {
+  DIGITAL_MAJORITY_AGE,
+  formatLongDay,
+  localDateTime,
+  PARENTAL_CONSENT_DAYS,
+} from '@lucko/shared'
 import { mailHtml } from '../mail/mail.layout'
 
 const DAY_MS = 24 * 60 * 60 * 1000
@@ -71,6 +76,83 @@ export function consentMail(childEmail: string, link: string, deadline: Date, re
       closing: 'Vous ne connaissez pas ce compte ? Ignorez cet e-mail : il sera supprimé.',
       footer:
         'Vous recevez cet e-mail car votre adresse a été indiquée comme celle d’un parent à la création d’un compte Lucko.',
+    }),
+  }
+}
+
+const isLeap = (year: number) => (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0
+
+/**
+ * Dates de naissance (UTC, comme en base) des enfants qui ont 15 ans aujourd'hui à Paris. Né un
+ * 29 février : son anniversaire tombe le 1er mars les années non bissextiles.
+ */
+export function fifteenthBirthdays(now = new Date()) {
+  const [year, month, day] = localDateTime(now).date.split('-').map(Number) as [
+    number,
+    number,
+    number,
+  ]
+  const born = year - DIGITAL_MAJORITY_AGE
+  const dates = [new Date(Date.UTC(born, month - 1, day))]
+  if (month === 3 && day === 1 && !isLeap(year) && isLeap(born))
+    dates.push(new Date(Date.UTC(born, 1, 29)))
+  return dates
+}
+
+const PARENT_FOOTER =
+  'Vous recevez cet e-mail car votre compte Lucko est lié à celui de votre enfant.'
+
+/** Au parent : l'enfant a 15 ans, son compte devient autonome. */
+export function turnedFifteenMail(child: string) {
+  return {
+    subject: `${child} a 15 ans : son compte Lucko devient autonome`,
+    html: mailHtml({
+      preheader: 'Les protections des mineurs restent actives jusqu’à ses 18 ans.',
+      tone: 'warning',
+      verdict: 'Compte autonome',
+      headline: `${child} a 15 ans`,
+      greeting: 'Bonjour,',
+      paragraphs: [
+        'À 15 ans, la loi ne demande plus l’accord d’un parent : son compte Lucko devient autonome et vous ne voyez plus son activité.',
+        'Les protections des mineurs restent actives jusqu’à ses 18 ans : pas de messages privés avec des adultes inconnus, pas de parties à domicile sans vous, pas de notifications la nuit.',
+      ],
+      footer: PARENT_FOOTER,
+    }),
+  }
+}
+
+/** Au parent : accord retiré, le compte de l'enfant est supprimé. */
+export function withdrawnParentMail(child: string) {
+  return {
+    subject: `Accord retiré : le compte de ${child} est supprimé`,
+    html: mailHtml({
+      preheader: 'Plus rien ne permet de l’identifier sur Lucko.',
+      tone: 'danger',
+      verdict: 'Accord retiré',
+      headline: 'Son compte est supprimé',
+      greeting: 'Bonjour,',
+      paragraphs: [
+        `Vous avez retiré votre accord pour le compte de ${child}. Il a été supprimé : plus rien ne permet de l’identifier sur Lucko.`,
+      ],
+      footer: PARENT_FOOTER,
+    }),
+  }
+}
+
+/** À l'enfant : son parent a retiré son accord, son compte est supprimé. */
+export function withdrawnChildMail() {
+  return {
+    subject: 'Ton compte Lucko est supprimé',
+    html: mailHtml({
+      preheader: 'Ton parent a retiré son accord.',
+      tone: 'danger',
+      verdict: 'Compte supprimé',
+      headline: 'Ton parent a retiré son accord',
+      greeting: 'Bonjour,',
+      paragraphs: [
+        'Avant 15 ans, ton compte Lucko a besoin de l’accord d’un parent. Il l’a retiré : ton compte et tes données ont été supprimés.',
+        'Parles-en avec lui ou elle : tu pourras recréer un compte avec son accord.',
+      ],
     }),
   }
 }

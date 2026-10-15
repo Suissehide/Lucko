@@ -25,6 +25,13 @@ export const useParentalConsentRequestQuery = (token: string) =>
     retry: false,
   })
 
+/** Mes enfants liés et leur activité (vue parent). */
+export const useChildrenQuery = () =>
+  useQuery({
+    queryKey: [PARENTAL_CONSENT.CHILDREN],
+    queryFn: () => unwrap(api.GET('/me/children')),
+  })
+
 // * MUTATIONS
 
 /** Envoie ou renvoie l'e-mail au parent. ApiError 400 : c'est l'e-mail de l'enfant. */
@@ -47,6 +54,20 @@ export function useGrantParentalConsentMutation(token: string) {
       unwrap(api.POST('/parental-consents/{token}', { params: { path: { token } } })),
     onSuccess: () => {
       void client.invalidateQueries({ queryKey: [PARENTAL_CONSENT.GET, token] })
+      void client.invalidateQueries({ queryKey: meQueryOptions.queryKey })
+    },
+  })
+}
+
+/** Retrait de l'accord : le compte de l'enfant est supprimé. ApiError 409 : il ou elle a 15 ans. */
+export function useWithdrawConsentMutation() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationKey: [PARENTAL_CONSENT.WITHDRAW],
+    mutationFn: (childId: string) =>
+      unwrap(api.DELETE('/me/children/{childId}', { params: { path: { childId } } })),
+    onSuccess: () => {
+      void client.invalidateQueries({ queryKey: [PARENTAL_CONSENT.CHILDREN] })
       void client.invalidateQueries({ queryKey: meQueryOptions.queryKey })
     },
   })

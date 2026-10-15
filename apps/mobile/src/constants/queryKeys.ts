@@ -14,6 +14,8 @@ export const PARENTAL_CONSENT = {
   REQUEST: 'request_parental_consent',
   GET: 'parental_consent',
   GRANT: 'grant_parental_consent',
+  CHILDREN: 'my_children',
+  WITHDRAW: 'withdraw_parental_consent',
 } as const
 
 export const BLOCKS = {
