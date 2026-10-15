@@ -277,6 +277,7 @@ export const ADMIN_ACTION_KINDS = [
   'USER_UNSUSPEND',
   'AVATAR_APPROVE',
   'AVATAR_REJECT',
+  'VENUE_CREATE',
   'VENUE_UPDATE',
   'EVENT_CREATE',
   'EVENT_UPDATE',
@@ -284,6 +285,8 @@ export const ADMIN_ACTION_KINDS = [
   'EVENT_HIDE',
   'GAME_MERGE',
   'VISIT_DECIDE',
+  'RESULT_DECIDE',
+  'RESULT_VOID',
 ] as const
 export type AdminActionKind = (typeof ADMIN_ACTION_KINDS)[number]
 
@@ -295,6 +298,7 @@ export const ADMIN_ACTION_LABELS: Record<AdminActionKind, string> = {
   USER_UNSUSPEND: 'Suspension levée',
   AVATAR_APPROVE: 'Photo approuvée',
   AVATAR_REJECT: 'Photo refusée',
+  VENUE_CREATE: 'Lieu créé',
   VENUE_UPDATE: 'Lieu modifié',
   EVENT_CREATE: 'Événement créé',
   EVENT_UPDATE: 'Événement modifié',
@@ -302,6 +306,8 @@ export const ADMIN_ACTION_LABELS: Record<AdminActionKind, string> = {
   EVENT_HIDE: 'Événement masqué',
   GAME_MERGE: 'Jeux fusionnés',
   VISIT_DECIDE: 'Venue contestée tranchée',
+  RESULT_DECIDE: 'Résultat contesté tranché',
+  RESULT_VOID: 'Résultat annulé',
 }
 
 /** Suspension : 1 jour à 1 an, ou définitive. */

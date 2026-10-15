@@ -31,7 +31,7 @@ import { HomeSafetyDialog } from '@/components/HomeSafetyDialog'
 import { HomeZoneCard } from '@/components/rooms/HomeZoneCard'
 import { addToCalendar } from '@/lib/calendar'
 import { eventWhen, gameLabel } from '@/lib/explore'
-import { openAttendance, openChat, openVenue } from '@/lib/navigation'
+import { openAttendance, openChat, openResult, openVenue } from '@/lib/navigation'
 import { useChatUnread } from '@/queries/useChat'
 import { useMeQuery } from '@/queries/useMe'
 import { useParticipationMutations, useRoomQuery } from '@/queries/useRoom'
@@ -191,6 +191,9 @@ export default function RoomScreen() {
             label={`Chat de la room${unread ? ` · ${unread} non lu${unread > 1 ? 's' : ''}` : ''}`}
             onPress={() => openChat('room', id)}
           />
+          {room.mode === 'RANKED' && room.status === 'FINISHED' ? (
+            <Button small kind="soft" label="Résultat" onPress={() => openResult(id)} />
+          ) : null}
           {over ? null : (
             <Button
               small

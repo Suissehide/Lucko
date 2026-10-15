@@ -1046,6 +1046,7 @@ export function Catalogue() {
         <Row>
           <PresenceToggle label="Hugo" value={presence} onChange={setPresence} />
           <SourceTag source="google" />
+          <SourceTag source="osm" />
           <SourceTag source="lucko" />
           <SourceTag source="missing" />
           <DataCredit

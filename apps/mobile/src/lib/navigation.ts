@@ -62,6 +62,14 @@ export const openVenueAttendance = (venueId: string) =>
 export const openVenueBilling = (venueId: string) =>
   router.push({ pathname: '/billing/[venueId]', params: { venueId } })
 
+/** Résultat d'une room classée : saisir, confirmer ou contester (LKO-83). */
+export const openResult = (roomId: string) =>
+  router.push({ pathname: '/results/[roomId]', params: { roomId } })
+
+/** Résultats contestés des rooms d'un lieu partenaire, que le staff tranche (LKO-83). */
+export const openVenueDisputes = (venueId: string) =>
+  router.push({ pathname: '/disputes/[venueId]', params: { venueId } })
+
 /** Mon XP : niveau, derniers gains et paliers nommés (LKO-89). */
 export const openXp = () => router.push('/xp')
 

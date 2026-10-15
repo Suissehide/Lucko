@@ -1,4 +1,4 @@
-import type { AdminActionKind } from '@lucko/shared'
+import { type AdminActionKind, formatLongDay } from '@lucko/shared'
 import { mailHtml } from '../mail/mail.layout'
 
 const DAY_MS = 24 * 60 * 60 * 1000
@@ -29,17 +29,10 @@ const SUPPORT_EMAIL = 'contact@lucko.fr'
 
 const greeting = (pseudo: string | null) => (pseudo ? `Bonjour ${pseudo},` : 'Bonjour,')
 
-const longDay = (date: Date) =>
-  new Intl.DateTimeFormat('fr-FR', {
-    timeZone: 'Europe/Paris',
-    day: 'numeric',
-    month: 'long',
-  }).format(date)
-
 /** E-mail au joueur suspendu : durée, motif, contact pour contester. */
 export function suspensionMail(user: Suspendable & { pseudo: string | null }, reason: string) {
   const until = user.suspendedUntil
-    ? `Jusqu’au ${longDay(user.suspendedUntil)}`
+    ? `Jusqu’au ${formatLongDay(user.suspendedUntil)}`
     : 'Suspension définitive'
   return {
     subject: 'Ton compte Lucko est suspendu',
@@ -123,7 +116,7 @@ export function planProfileMerge(source: Profile[], target: Profile[]) {
  */
 export const ACTION_TARGET: Record<
   AdminActionKind,
-  'report' | 'user' | 'venue' | 'event' | 'merge' | 'visit'
+  'report' | 'user' | 'venue' | 'event' | 'merge' | 'visit' | 'room'
 > = {
   REPORT_DISMISS: 'report',
   REPORT_WARN: 'report',
@@ -132,6 +125,7 @@ export const ACTION_TARGET: Record<
   USER_UNSUSPEND: 'user',
   AVATAR_APPROVE: 'user',
   AVATAR_REJECT: 'user',
+  VENUE_CREATE: 'venue',
   VENUE_UPDATE: 'venue',
   EVENT_CREATE: 'venue',
   EVENT_UPDATE: 'event',
@@ -139,4 +133,6 @@ export const ACTION_TARGET: Record<
   EVENT_HIDE: 'event',
   GAME_MERGE: 'merge',
   VISIT_DECIDE: 'visit',
+  RESULT_DECIDE: 'room',
+  RESULT_VOID: 'room',
 }

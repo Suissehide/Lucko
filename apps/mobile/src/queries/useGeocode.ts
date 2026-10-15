@@ -1,6 +1,7 @@
 import { queryOptions } from '@tanstack/react-query'
 import { GEOCODE } from '@/constants/queryKeys'
 import { reverseCity, searchAddresses, searchCity, suggestCities } from '@/lib/geocode'
+import { searchPlaces } from '@/lib/places'
 import { queryClient } from '@/lib/queryClient'
 
 // Communes et positions changent rarement : une recherche faite reste valable toute la session
@@ -22,11 +23,20 @@ export const citySuggestionsQueryOptions = (query: string) =>
     ...STATIC,
   })
 
-/** Adresses proposées à partir de 3 caractères (room à domicile). */
-export const addressSearchQueryOptions = (query: string) =>
+/** Adresses proposées à partir de 3 caractères (room à domicile, nouveau lieu près de `near`). */
+export const addressSearchQueryOptions = (query: string, near?: { lat: number; lng: number }) =>
   queryOptions({
-    queryKey: [GEOCODE.ADDRESS, query.trim().toLowerCase()],
-    queryFn: () => searchAddresses(query.trim()),
+    queryKey: [GEOCODE.ADDRESS, query.trim().toLowerCase(), near],
+    queryFn: () => searchAddresses(query.trim(), near),
+    enabled: query.trim().length >= 3,
+    ...STATIC,
+  })
+
+/** Lieux OpenStreetMap proposés à partir de 3 caractères (création d'un lieu au back-office). */
+export const placeSearchQueryOptions = (query: string) =>
+  queryOptions({
+    queryKey: [GEOCODE.PLACES, query.trim().toLowerCase()],
+    queryFn: () => searchPlaces(query.trim()),
     enabled: query.trim().length >= 3,
     ...STATIC,
   })

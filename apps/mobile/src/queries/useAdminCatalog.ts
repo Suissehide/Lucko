@@ -1,6 +1,7 @@
 import type {
   AdminEventInput,
   CancelEventInput,
+  CreateVenueInput,
   UpdateVenueInput,
   VenueStatus,
 } from '@lucko/shared'
@@ -27,6 +28,18 @@ export const useAdminEventsQuery = (venueId: string) =>
       unwrap(api.GET('/admin/venues/{id}/events', { params: { path: { id: venueId } } })),
   })
 
+/** Fiche pré-remplie depuis un lieu OSM choisi dans la recherche ; null tant qu'aucun n'est choisi. */
+export const useOsmVenueQuery = (osmId: string | null) => {
+  const [type = '', ref = ''] = osmId?.split('/') ?? []
+  return useQuery({
+    queryKey: [ADMIN.OSM_VENUE, osmId],
+    queryFn: () =>
+      unwrap(api.GET('/admin/venues/osm/{type}/{ref}', { params: { path: { type, ref } } })),
+    enabled: !!osmId,
+    staleTime: Number.POSITIVE_INFINITY,
+  })
+}
+
 export const useAdminGamesQuery = () =>
   useQuery({ queryKey: [ADMIN.GAMES], queryFn: () => unwrap(api.GET('/admin/games')) })
 
@@ -36,6 +49,12 @@ export const useAdminGamesQuery = () =>
 export function useAdminCatalogMutations() {
   const client = useQueryClient()
   const onSuccess = () => client.invalidateQueries()
+
+  const createVenue = useMutation({
+    mutationKey: [ADMIN.CREATE_VENUE],
+    mutationFn: (body: CreateVenueInput) => unwrap(api.POST('/admin/venues', { body })),
+    onSuccess,
+  })
 
   const updateVenue = useMutation({
     mutationKey: [ADMIN.UPDATE_VENUE],
@@ -75,7 +94,7 @@ export function useAdminCatalogMutations() {
     onSuccess,
   })
 
-  return { updateVenue, saveEvent, cancelEvent, mergeGames }
+  return { createVenue, updateVenue, saveEvent, cancelEvent, mergeGames }
 }
 
 type SaveEvent = { venueId: string; eventId?: string; body: AdminEventInput }

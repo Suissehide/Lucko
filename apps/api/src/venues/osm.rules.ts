@@ -19,6 +19,12 @@ area["ref:FR:SIREN"="${siren}"]->.m;
 );
 out center tags;`
 
+/** Un seul élément (« node/123 »), pour pré-remplir une fiche. */
+export const osmElementQuery = (osmId: string) => {
+  const [type, id] = osmId.split('/')
+  return `[out:json][timeout:25];${type}(${id});out center tags;`
+}
+
 export type OsmElement = {
   type: 'node' | 'way' | 'relation'
   id: number
@@ -30,6 +36,7 @@ export type OsmElement = {
 
 export type OpeningRange = { weekday: number; opensAtMinute: number; closesAtMinute: number }
 
+const DRINK_PLACES = new Set(['bar', 'cafe', 'pub'])
 const GAME_WORDS = /\bjeux?\b|game|ludi|board/i
 const DAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
 
@@ -92,15 +99,23 @@ export const slugify = (text: string) =>
 
 export const osmIdOf = (element: Pick<OsmElement, 'type' | 'id'>) => `${element.type}/${element.id}`
 
-/** Champs de la fiche lieu tirés d'OSM ; null si l'élément n'a pas de position. */
+/** Champs de la fiche lieu tirés d'OSM (import LKO-74, pré-remplissage LKO-115) ; null sans position ni nom. */
 export function toVenue(element: OsmElement, fallbackCity = '') {
   const { tags } = element
   const latitude = element.lat ?? element.center?.lat
   const longitude = element.lon ?? element.center?.lon
   const name = tags.name?.trim()
   if (latitude === undefined || longitude === undefined || !name) return null
-  const isShop = !tags.amenity
-  const type: VenueType = isShop ? 'TCG_SHOP' : GAME_WORDS.test(name) ? 'GAME_BAR' : 'OTHER'
+  const drinks = DRINK_PLACES.has(tags.amenity ?? '')
+  const type: VenueType =
+    tags.amenity === 'toy_library'
+      ? 'LUDOTHEQUE'
+      : tags.shop && !tags.amenity
+        ? 'TCG_SHOP'
+        : GAME_WORDS.test(name)
+          ? 'GAME_BAR'
+          : 'OTHER'
+  const website = tags.website ?? tags['contact:website']
   const street = [tags['addr:housenumber'], tags['addr:street']].filter(Boolean).join(' ')
   return {
     venue: {
@@ -111,9 +126,9 @@ export function toVenue(element: OsmElement, fallbackCity = '') {
       latitude,
       longitude,
       phone: tags.phone ?? tags['contact:phone'] ?? null,
-      website: tags.website ?? tags['contact:website'] ?? null,
+      website: website ? (/^https?:\/\//.test(website) ? website : `https://${website}`) : null,
       // Bars et cafés servent de l'alcool : pas de moins de 16 ans seuls tant qu'un admin n'a pas vérifié
-      acceptsUnaccompaniedMinors: isShop,
+      acceptsUnaccompaniedMinors: !drinks,
     },
     openingHours: parseOpeningHours(tags.opening_hours),
   }
