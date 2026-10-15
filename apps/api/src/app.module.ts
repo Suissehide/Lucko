@@ -4,6 +4,7 @@ import { AuthModule } from './auth/auth.module'
 import { BillingModule } from './billing/billing.module'
 import { ChatModule } from './chat/chat.module'
 import { CheckinModule } from './checkin/checkin.module'
+import { ConsentModule } from './consent/consent.module'
 import { EventsModule } from './events/events.module'
 import { ExploreModule } from './explore/explore.module'
 import { GamesModule } from './games/games.module'
@@ -18,6 +19,7 @@ import { RealtimeModule } from './realtime/realtime.module'
 import { RoomsModule } from './rooms/rooms.module'
 import { StorageModule } from './storage/storage.module'
 import { UsersModule } from './users/users.module'
+import { VenuesModule } from './venues/venues.module'
 import { WaitlistModule } from './waitlist/waitlist.module'
 
 @Module({
@@ -33,7 +35,9 @@ import { WaitlistModule } from './waitlist/waitlist.module'
     HealthModule,
     GamesModule,
     UsersModule,
+    ConsentModule,
     ExploreModule,
+    VenuesModule,
     EventsModule,
     WaitlistModule,
     ModerationModule,

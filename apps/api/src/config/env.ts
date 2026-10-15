@@ -34,6 +34,8 @@ const envSchema = z
     /** Serveur d'envoi des e-mails (Resend en SMTP en production) ; hors production, Mailpit par défaut. */
     SMTP_URL: z.string().url().optional(),
     MAIL_FROM: z.string().default('Lucko <noreply@lucko.fr>'),
+    /** Adresse de l'app web (Expo), pour les liens des e-mails. */
+    APP_URL: z.string().url().default('http://localhost:8081'),
     /** Stockage objet S3 (RustFS en local, voir deploy/compose.yaml) ; sans bucket, l'envoi de photo répond 503. */
     S3_ENDPOINT: z.string().url().optional(),
     S3_REGION: z.string().default('fr-par'),
@@ -45,6 +47,21 @@ const envSchema = z
     /** Analyse automatique des photos (sightengine.com) ; sans clé, chaque photo attend un admin. */
     SIGHTENGINE_API_USER: z.string().optional(),
     SIGHTENGINE_API_SECRET: z.string().optional(),
+    /**
+     * Serveurs Overpass (import des lieux OSM, LKO-74), essayés dans l'ordre, séparés par des virgules :
+     * le serveur public est souvent surchargé (502, 504), les miroirs (opérateurs distincts) prennent le relais.
+     */
+    OVERPASS_URLS: z
+      .string()
+      .default(
+        [
+          'https://overpass-api.de/api/interpreter',
+          'https://overpass.private.coffee/api/interpreter',
+          'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
+        ].join(','),
+      )
+      .transform((value) => value.split(',').map((url) => url.trim()))
+      .pipe(z.array(z.url()).min(1)),
     /**
      * Clés AES-256 des adresses de rooms à domicile, « 1:<base64> » (`openssl rand -base64 32`),
      * la clé active en tête (rotation : voir `addressKeys`). Obligatoire en production ; ailleurs,

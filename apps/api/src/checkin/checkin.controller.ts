@@ -1,5 +1,5 @@
-import { qrTokenSchema, scanBodySchema, scanResultSchema } from '@lucko/shared'
-import { Controller, HttpCode, Param, Post } from '@nestjs/common'
+import { qrTokenSchema, scanBodySchema, scanResultSchema, venuePerkSchema } from '@lucko/shared'
+import { Controller, Get, HttpCode, Param, Post, Put } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
 import type { z } from 'zod'
 import { CurrentUser, VenueRoles } from '../auth/auth.decorators'
@@ -31,5 +31,24 @@ export class CheckinController {
     @ZodBody(scanBodySchema) body: z.output<typeof scanBodySchema>,
   ) {
     return this.checkin.scan(venueId, body.token)
+  }
+
+  /** Avantage Lucko du lieu partenaire, pour son gérant (LKO-92). 403 : lieu non partenaire. */
+  @Get('venues/:venueId/perk')
+  @VenueRoles('MANAGER')
+  @ZodResponse(venuePerkSchema)
+  perk(@Param('venueId') venueId: string) {
+    return this.checkin.perk(venueId)
+  }
+
+  /** Change l'avantage montré sur la fiche et au scan ; vide = aucun avantage. */
+  @Put('venues/:venueId/perk')
+  @VenueRoles('MANAGER')
+  @ZodResponse(venuePerkSchema)
+  setPerk(
+    @Param('venueId') venueId: string,
+    @ZodBody(venuePerkSchema) { luckoPerk }: z.output<typeof venuePerkSchema>,
+  ) {
+    return this.checkin.setPerk(venueId, luckoPerk)
   }
 }

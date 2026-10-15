@@ -29,6 +29,32 @@ export class CheckinService {
     private readonly xp: XpService,
   ) {}
 
+  /** Avantage Lucko du lieu, saisi par son gérant ; réservé aux lieux partenaires (LKO-92). */
+  async perk(venueId: string) {
+    const venue = await this.partnerVenue(venueId)
+    return { luckoPerk: venue.luckoPerk }
+  }
+
+  async setPerk(venueId: string, luckoPerk: string | null) {
+    await this.partnerVenue(venueId)
+    return this.prisma.venue.update({
+      where: { id: venueId },
+      data: { luckoPerk: luckoPerk || null },
+      select: { luckoPerk: true },
+    })
+  }
+
+  private async partnerVenue(venueId: string) {
+    const venue = await this.prisma.venue.findUnique({
+      where: { id: venueId },
+      select: { isPartner: true, luckoPerk: true },
+    })
+    if (!venue) throw new NotFoundException('Lieu introuvable')
+    if (!venue.isPartner)
+      throw new ForbiddenException('L’avantage Lucko est réservé aux lieux partenaires')
+    return venue
+  }
+
   token(userId: string) {
     return signQrToken(this.key, userId)
   }

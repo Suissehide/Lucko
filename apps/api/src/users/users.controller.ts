@@ -29,11 +29,10 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express'
 import { ApiBody, ApiConsumes, ApiNoContentResponse, ApiTags } from '@nestjs/swagger'
 import { z } from 'zod'
-import { CurrentUser } from '../auth/auth.decorators'
+import { AllowPendingConsent, CurrentUser } from '../auth/auth.decorators'
 import { ZodBody, ZodQuery, ZodResponse } from '../common/zod'
 import type { User } from '../generated/prisma/client'
 import { PrismaService } from '../prisma/prisma.service'
-import { StorageService } from '../storage/storage.service'
 import { AVATAR_MAX_BYTES } from './avatar.rules'
 import { UsersService } from './users.service'
 
@@ -43,7 +42,6 @@ export class UsersController {
   constructor(
     private readonly prisma: PrismaService,
     private readonly users: UsersService,
-    private readonly storage: StorageService,
   ) {}
 
   @Get('me')
@@ -122,6 +120,7 @@ export class UsersController {
    */
   @Post('me/birth-date')
   @HttpCode(204)
+  @AllowPendingConsent()
   async setBirthDate(
     @CurrentUser() user: User,
     @ZodBody(setBirthDateSchema) { birthDate }: SetBirthDateInput,
@@ -142,51 +141,9 @@ export class UsersController {
   // ponytail: les comptes enfants (13-14 ans) restent sans parent, à traiter avec le consentement parental
   @Delete('me')
   @HttpCode(204)
+  @AllowPendingConsent()
   @ApiNoContentResponse()
-  async deleteMe(@CurrentUser() user: User) {
-    const now = new Date()
-    const upcoming = { startsAt: { gte: now } }
-    await this.prisma.$transaction([
-      this.prisma.playerGameProfile.deleteMany({ where: { userId: user.id } }),
-      this.prisma.venueStaff.deleteMany({ where: { userId: user.id } }),
-      // Appareils oubliés : plus aucune notification
-      this.prisma.pushToken.deleteMany({ where: { userId: user.id } }),
-      this.prisma.playIntent.deleteMany({ where: { userId: user.id } }),
-      // Blocages levés ; les signalements restent pour la modération
-      this.prisma.block.deleteMany({
-        where: { OR: [{ blockerId: user.id }, { blockedId: user.id }] },
-      }),
-      // Sessions et moyens de connexion Better Auth : plus aucune connexion possible
-      this.prisma.session.deleteMany({ where: { userId: user.id } }),
-      this.prisma.account.deleteMany({ where: { userId: user.id } }),
-      this.prisma.eventRegistration.deleteMany({ where: { userId: user.id, event: upcoming } }),
-      this.prisma.roomParticipant.deleteMany({ where: { userId: user.id, room: upcoming } }),
-      this.prisma.room.updateMany({
-        where: { hostId: user.id, ...upcoming, status: { in: ['OPEN', 'FULL', 'CONFIRMED'] } },
-        data: { status: 'CANCELLED' },
-      }),
-      this.prisma.user.update({
-        where: { id: user.id },
-        data: {
-          email: `${user.id}@supprime.invalid`,
-          name: '',
-          image: null,
-          pseudo: null,
-          birthDate: null,
-          avatarUrl: null,
-          avatarStatus: null,
-          city: null,
-          latitude: null,
-          longitude: null,
-          availability: [],
-          vibes: [],
-          parentId: null,
-          parentalConsentAt: null,
-          playedGames: { set: [] },
-          deletedAt: now,
-        },
-      }),
-    ])
-    await this.storage.remove(user.avatarUrl)
+  deleteMe(@CurrentUser() user: User) {
+    return this.users.deleteAccount(user)
   }
 }

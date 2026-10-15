@@ -16,6 +16,7 @@
     "db:seed": "prisma generate && prisma db seed",
     "db:studio": "prisma studio",
     "address-keys:rotate": "tsx src/rooms/rotate-address-key.ts",
+    "venues:import-osm": "tsx src/venues/import-osm-venues.ts",
     "db:reset": "prisma migrate reset --force && prisma generate && prisma db seed"
   },
   "dependencies": {

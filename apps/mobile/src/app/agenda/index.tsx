@@ -111,6 +111,43 @@ export default function AgendaScreen() {
   const clearAll = <TextLink label="Tout effacer" onPress={view.clearAll} />
   const chips = view.chips.map((c) => <FilterTag key={c.label} {...c} />)
 
+  const block = (
+    key: string,
+    label: string,
+    aside: string | undefined,
+    items: typeof view.results,
+    withDay = false,
+  ) => (
+    <View key={key} style={{ gap: wide ? 10 : 8 }}>
+      <View
+        style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', columnGap: 12 }}
+      >
+        <Typography variant="h2" style={wide ? null : { fontSize: 18, lineHeight: 19 }}>
+          {label}
+        </Typography>
+        {aside ? <Typography variant="small">{aside}</Typography> : null}
+      </View>
+      {wide ? (
+        <ListCard>
+          {items.map((e, i) => (
+            <AgendaRow
+              key={e.id}
+              {...agendaRowProps(e, true, withDay)}
+              wide
+              first={i === 0}
+              onPress={() => open(e)}
+              action={<RowAction entry={e} />}
+            />
+          ))}
+        </ListCard>
+      ) : (
+        items.map((e) => (
+          <AgendaRow key={e.id} {...agendaRowProps(e, false, withDay)} onPress={() => open(e)} />
+        ))
+      )}
+    </View>
+  )
+
   const list: ReactNode = !agenda.data ? (
     agenda.isError ? (
       <Banner
@@ -130,34 +167,18 @@ export default function AgendaScreen() {
       text="Élargis le rayon ou dis-nous à quoi tu veux jouer : on te prévient dès qu'une room s'ouvre."
     />
   ) : (
-    view.groups.map((g) => (
-      <View key={g.day} style={{ gap: wide ? 10 : 8 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 12 }}>
-          <Typography variant="h2" style={wide ? null : { fontSize: 18, lineHeight: 19 }}>
-            {g.label}
-          </Typography>
-          {wide ? <Typography variant="small">{g.count}</Typography> : null}
-        </View>
-        {wide ? (
-          <ListCard>
-            {g.items.map((e, i) => (
-              <AgendaRow
-                key={e.id}
-                {...agendaRowProps(e, true)}
-                wide
-                first={i === 0}
-                onPress={() => open(e)}
-                action={<RowAction entry={e} />}
-              />
-            ))}
-          </ListCard>
-        ) : (
-          g.items.map((e) => (
-            <AgendaRow key={e.id} {...agendaRowProps(e, false)} onPress={() => open(e)} />
-          ))
-        )}
-      </View>
-    ))
+    <>
+      {view.partners.length
+        ? block(
+            'partners',
+            'Chez nos partenaires',
+            'Ces lieux rémunèrent Lucko pour chaque joueur venu.',
+            view.partners,
+            true,
+          )
+        : null}
+      {view.groups.map((g) => block(g.day, g.label, wide ? g.count : undefined, g.items))}
+    </>
   )
 
   if (wide) {

@@ -28,6 +28,8 @@ import {
   openSettings,
   openVenueAttendance,
   openVenueBilling,
+  openVenueDisputes,
+  openVenuePerk,
   openXp,
 } from '@/lib/navigation'
 import { placeLine, rankProps, vibeLabels, visibleAvatar } from '@/lib/profile'
@@ -143,14 +145,31 @@ export default function ProfileScreen() {
           },
         ]
       : []),
-    // Venues facturables du mois (LKO-79) : gérant d'un lieu partenaire
+    // Avantage Lucko (LKO-92) et venues facturables du mois (LKO-79) : gérant d'un lieu partenaire
     ...(venue.isPartner && venue.role === 'MANAGER'
       ? [
+          {
+            key: `${venue.id}-perk`,
+            title: venue.name,
+            subtitle: 'Avantage Lucko offert aux joueurs',
+            onPress: () => openVenuePerk(venue.id),
+          },
           {
             key: `${venue.id}-billing`,
             title: venue.name,
             subtitle: 'Venues facturables du mois',
             onPress: () => openVenueBilling(venue.id),
+          },
+        ]
+      : []),
+    // Résultats contestés des rooms classées (LKO-83) : le lieu partenaire tranche
+    ...(venue.isPartner
+      ? [
+          {
+            key: `${venue.id}-disputes`,
+            title: venue.name,
+            subtitle: 'Résultats contestés à trancher',
+            onPress: () => openVenueDisputes(venue.id),
           },
         ]
       : []),

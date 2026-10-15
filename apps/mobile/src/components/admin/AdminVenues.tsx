@@ -1,5 +1,6 @@
 import {
   Banner,
+  Button,
   colors,
   EmptyState,
   ListCard,
@@ -10,9 +11,10 @@ import {
   TextField,
 } from '@lucko/design-system'
 import { VENUE_TYPE_LABELS, type VenueStatus } from '@lucko/shared'
-import { MapPinCheck, Search } from 'lucide-react-native'
+import { MapPinCheck, Plus, Search } from 'lucide-react-native'
 import { useState } from 'react'
 import { useWindowDimensions, View } from 'react-native'
+import { openNewVenue } from '@/lib/admin'
 import { useAdminVenuesQuery } from '@/queries/useAdminCatalog'
 import { useAdminDashboardQuery } from '@/queries/useAdminModeration'
 import { AdminScreen } from './AdminScreen'
@@ -46,6 +48,7 @@ export function AdminVenues({ initialId }: { initialId?: string }) {
         style={{ flexDirection: twoPanels ? 'row' : 'column', gap: 20, alignItems: 'flex-start' }}
       >
         <View style={{ width: twoPanels ? 400 : '100%', gap: 12 }}>
+          <Button small kind="venue" icon={Plus} label="Ajouter un lieu" onPress={openNewVenue} />
           <Segmented
             items={FILTERS.map((f, i) =>
               i === 0 && pending !== undefined ? `${f.label} (${pending})` : f.label,

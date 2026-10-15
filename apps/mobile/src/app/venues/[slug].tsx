@@ -6,6 +6,7 @@ import {
   Carousel,
   ClosureRow,
   colors,
+  DataCredit,
   FactCard,
   font,
   HoursCard,
@@ -101,7 +102,7 @@ export default function VenueScreen() {
     ? formatDistance(metersBetween({ latitude: place.lat, longitude: place.lng }, venue))
     : null
   const type = VENUE_TYPE_LABELS[venue.type]
-  const address = `${venue.address}, ${venue.city}`
+  const address = [venue.address, venue.city].filter(Boolean).join(', ')
   const facts = venueFacts(venue)
   const closures = upcomingClosures(venue.closures)
   const access = accessibilityItems(venue.accessibility)
@@ -236,7 +237,12 @@ export default function VenueScreen() {
 
         <Section title="Accès">
           {accessibility}
-          <AddressBlock address={address} transit={venue.transitInfo} contact={contact} />
+          <AddressBlock
+            address={address}
+            transit={venue.transitInfo}
+            contact={contact}
+            fromOsm={!!venue.osmId}
+          />
         </Section>
       </MobileScreen>
     )
@@ -347,13 +353,18 @@ export default function VenueScreen() {
             <View style={{ height: 180, borderBottomWidth: border.base, borderColor: colors.ink }}>
               <ExploreMap
                 center={{ lat: venue.latitude, lng: venue.longitude, label: venue.name }}
-                venues={[{ ...venue, distanceMeters: 0, upcomingEventCount: 0 }]}
+                venues={[venue]}
                 selectedId={venue.id}
                 onSelect={itinerary}
               />
             </View>
             <View style={{ paddingVertical: 14, paddingHorizontal: 18 }}>
-              <AddressBlock address={address} transit={venue.transitInfo} contact={contact} />
+              <AddressBlock
+                address={address}
+                transit={venue.transitInfo}
+                contact={contact}
+                fromOsm={!!venue.osmId}
+              />
             </View>
           </ListCard>
         </View>
@@ -370,16 +381,24 @@ function AddressBlock({
   address,
   transit,
   contact,
+  fromOsm,
 }: {
   address: string
   transit: string | null
   contact: string
+  fromOsm: boolean
 }) {
   return (
     <View style={{ gap: 6 }}>
       <Text style={{ ...font('body', 800), fontSize: 15, color: colors.ink }}>{address}</Text>
       {transit ? <Typography variant="small">{transit}</Typography> : null}
       {contact ? <Typography variant="small">{contact}</Typography> : null}
+      {fromOsm ? (
+        <DataCredit
+          source="© contributeurs OpenStreetMap"
+          href="https://www.openstreetmap.org/copyright"
+        />
+      ) : null}
     </View>
   )
 }

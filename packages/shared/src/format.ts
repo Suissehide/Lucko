@@ -33,6 +33,12 @@ export function formatDayMonth(date: Date | string, timeZone = VENUE_TIME_ZONE) 
   return { day: get('day'), month: get('month').replace('.', '').slice(0, 3).toUpperCase() }
 }
 
+/** « 27 octobre » (heure de Paris par défaut). */
+export const formatLongDay = (date: Date | string, timeZone = VENUE_TIME_ZONE) =>
+  new Intl.DateTimeFormat('fr-FR', { timeZone, day: 'numeric', month: 'long' }).format(
+    new Date(date),
+  )
+
 /** Distance à vol d'oiseau en mètres (haversine), assez précise pour « 1,2 km ». */
 export function metersBetween(
   a: { latitude: number; longitude: number },

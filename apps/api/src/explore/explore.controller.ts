@@ -2,6 +2,9 @@ import {
   type EventsQuery,
   eventListItemSchema,
   eventsQuerySchema,
+  type MapVenuesQuery,
+  mapVenueSchema,
+  mapVenuesQuerySchema,
   roomListItemSchema,
   type VenuesQuery,
   venueDetailSchema,
@@ -31,6 +34,13 @@ export class ExploreController {
   @ZodResponse(z.array(venueListItemSchema))
   venues(@ZodQuery(venuesQuerySchema) query: VenuesQuery, @CurrentUser() user?: User) {
     return this.explore.venues(query, user ?? null)
+  }
+
+  /** Épingles de la zone affichée par la carte (LKO-122), regroupées côté client. */
+  @Get('map/venues')
+  @ZodResponse(z.array(mapVenueSchema))
+  mapVenues(@ZodQuery(mapVenuesQuerySchema) query: MapVenuesQuery) {
+    return this.explore.mapVenues(query)
   }
 
   /** Fiche lieu (B3). */

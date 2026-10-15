@@ -50,6 +50,7 @@ export default function VenuesScreen() {
         height={wide ? 520 : 240}
         center={place}
         venues={shown}
+        openNow={openOnly}
         selectedId={selectedId}
         onSelect={setSelectedId}
       />
@@ -101,8 +102,8 @@ export default function VenuesScreen() {
   const note = (
     <Typography variant="small">
       Classés par distance, à {radiusKm} km autour de toi. À distance égale (moins de{' '}
-      {PARTNER_TIE_METERS} m d’écart), les lieux partenaires passent devant ; un lieu plus proche
-      reste toujours avant.
+      {PARTNER_TIE_METERS} m d’écart), les lieux partenaires, qui rémunèrent Lucko pour chaque
+      joueur venu, passent devant ; un lieu plus proche reste toujours avant.
     </Typography>
   )
 

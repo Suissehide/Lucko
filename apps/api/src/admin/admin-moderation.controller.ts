@@ -122,8 +122,8 @@ export class AdminModerationController {
       avatarUrl: { not: null },
       deletedAt: null,
     } as const
-    const [open, pendingAvatars, oldestAvatar, pendingVenues, suspendedPlayers] = await Promise.all(
-      [
+    const [open, pendingAvatars, oldestAvatar, pendingVenues, suspendedPlayers, disputedResults] =
+      await Promise.all([
         this.prisma.report.findMany({
           where: { resolvedAt: null },
           orderBy: { createdAt: 'asc' },
@@ -141,14 +141,15 @@ export class AdminModerationController {
           select: { name: true },
         }),
         this.prisma.user.count({ where: suspendedNow(now) }),
-      ],
-    )
+        this.prisma.matchResult.count({ where: { status: 'DISPUTED' } }),
+      ])
     return {
       openReports: open.length,
       minorReports: open.filter((r) => isMinor(r.target.birthDate)).length,
       pendingAvatars,
       pendingVenues: pendingVenues.length,
       suspendedPlayers,
+      disputedResults,
       oldestReportAt: open[0]?.createdAt ?? null,
       oldestAvatarAt: oldestAvatar?.updatedAt ?? null,
       pendingVenueNames: pendingVenues.slice(0, 3).map((v) => v.name),

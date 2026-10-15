@@ -1,12 +1,20 @@
-import { colors, FuzzyZoneLabel, fuzzyZone } from '@lucko/design-system'
+import { FuzzyZoneLabel, mapStyle } from '@lucko/design-system'
+import {
+  Camera,
+  GeoJSONSource,
+  Layer,
+  type LayerProps,
+  type MapProps,
+  Map as MapView,
+} from '@maplibre/maplibre-react-native'
 import { View } from 'react-native'
-import MapView, { Circle, Marker } from 'react-native-maps'
 import type { Place } from '@/lib/useLocation'
+import { circlePolygon, homePinLayer, point, zoneFillLayer, zoneLineLayer } from './mapLayers'
 
 /**
- * Carte d'une room à domicile : zone floue tant que l'adresse n'est pas révélée, épingle ensuite.
- * `center` arrive déjà décalé par le serveur (aléatoire et stable par room) : le client n'a jamais
- * les vraies coordonnées avant la révélation.
+ * Carte d'une room à domicile (MapLibre, LKO-122) : zone floue tant que l'adresse n'est pas révélée,
+ * épingle ensuite. `center` arrive déjà décalé par le serveur (aléatoire et stable par room) : le client
+ * n'a jamais les vraies coordonnées avant la révélation.
  */
 export function FuzzyZoneMap({
   center,
@@ -19,32 +27,19 @@ export function FuzzyZoneMap({
   revealed: boolean
   address?: string
 }) {
-  const delta = (radiusM / 111_000) * 3
   return (
     <View style={{ flex: 1 }}>
-      <MapView
-        style={{ flex: 1 }}
-        initialRegion={{
-          latitude: center.lat,
-          longitude: center.lng,
-          latitudeDelta: delta,
-          longitudeDelta: delta,
-        }}
-      >
+      <MapView style={{ flex: 1 }} mapStyle={mapStyle as MapProps['mapStyle']} logo={false}>
+        <Camera center={[center.lng, center.lat]} zoom={14} />
         {revealed ? (
-          <Marker
-            coordinate={{ latitude: center.lat, longitude: center.lng }}
-            pinColor={colors.room}
-          />
+          <GeoJSONSource id="pin" data={point(center)}>
+            <Layer {...(homePinLayer as LayerProps)} />
+          </GeoJSONSource>
         ) : (
-          <Circle
-            center={{ latitude: center.lat, longitude: center.lng }}
-            radius={radiusM}
-            fillColor={fuzzyZone.fill}
-            strokeColor={fuzzyZone.stroke}
-            strokeWidth={fuzzyZone.strokeWidth}
-            lineDashPattern={[...fuzzyZone.dash]}
-          />
+          <GeoJSONSource id="zone" data={circlePolygon(center, radiusM)}>
+            <Layer {...(zoneFillLayer as LayerProps)} />
+            <Layer {...(zoneLineLayer as LayerProps)} />
+          </GeoJSONSource>
         )}
       </MapView>
       <View style={{ position: 'absolute', left: 12, bottom: 12 }}>

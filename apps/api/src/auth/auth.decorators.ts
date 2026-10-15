@@ -5,6 +5,7 @@ import type { AuthRequest } from './auth.service'
 export const IS_PUBLIC = 'isPublic'
 export const ROLES = 'roles'
 export const VENUE_ROLES = 'venueRoles'
+export const ALLOW_PENDING_CONSENT = 'allowPendingConsent'
 
 /** Route accessible sans connexion. Par défaut, toutes les routes exigent un utilisateur connecté. */
 export const Public = () => SetMetadata(IS_PUBLIC, true)
@@ -19,6 +20,9 @@ export const Roles = (...roles: UserRole[]) => SetMetadata(ROLES, roles)
  * Les admins passent toujours.
  */
 export const VenueRoles = (...roles: VenueStaffRole[]) => SetMetadata(VENUE_ROLES, roles)
+
+/** Route ouverte à un 13-14 ans dont le parent n'a pas encore donné son accord (demande d'accord, suppression du compte). */
+export const AllowPendingConsent = () => SetMetadata(ALLOW_PENDING_CONSENT, true)
 
 /** Utilisateur connecté, posé sur la requête par AuthGuard. */
 export const CurrentUser = createParamDecorator(
