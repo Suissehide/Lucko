@@ -1,7 +1,18 @@
 import { Injectable, Logger, type OnModuleDestroy } from '@nestjs/common'
-import { fromPrisma, PgBoss, type SendOptions } from 'pg-boss'
+import { fromPrisma, PgBoss, type SendOptions, type UpdateQueueOptions } from 'pg-boss'
 import { loadEnv } from '../config/env'
 import type { Prisma } from '../generated/prisma/client'
+
+/** Tâches épuisées : gardées 14 jours (rétention pg-boss) pour comprendre et relancer. */
+export const DEAD_LETTER_QUEUE = 'jobs.failed'
+
+/** 5 nouveaux essais espacés de 30 s, 1 min, 2 min… (avec un peu d'aléa), puis la file des échecs. */
+export const QUEUE_DEFAULTS = {
+  retryLimit: 5,
+  retryDelay: 30,
+  retryBackoff: true,
+  deadLetter: DEAD_LETTER_QUEUE,
+} satisfies UpdateQueueOptions
 
 /**
  * File de tâches pg-boss (LKO-106), stockée dans Postgres (schéma `pgboss`, créé au premier
@@ -16,9 +27,11 @@ export class JobsService implements OnModuleDestroy {
   private started?: Promise<PgBoss>
 
   private start() {
-    this.started ??= (() => {
+    this.started ??= (async () => {
       this.boss.on('error', (error) => this.logger.error(error))
-      return this.boss.start()
+      await this.boss.start()
+      await this.boss.createQueue(DEAD_LETTER_QUEUE)
+      return this.boss
     })()
     return this.started
   }
@@ -34,8 +47,22 @@ export class JobsService implements OnModuleDestroy {
   ) {
     const boss = await this.start()
     await boss.createQueue(name)
+    // Et non via createQueue, qui laisse telle quelle une file déjà créée par un déploiement précédent
+    await boss.updateQueue(name, QUEUE_DEFAULTS)
     await boss.work<T>(name, async (jobs) => {
-      for (const job of jobs) await handler(job.data)
+      for (const job of jobs) {
+        const startedAt = Date.now()
+        try {
+          await handler(job.data)
+        } catch (error) {
+          this.logger.error(
+            `${name} ${job.id} en échec`,
+            error instanceof Error ? error.stack : error,
+          )
+          throw error
+        }
+        this.logger.debug(`${name} ${job.id} traitée en ${Date.now() - startedAt} ms`)
+      }
     })
     if (options.cron) await boss.schedule(name, options.cron, null, { tz: 'Europe/Paris' })
   }
