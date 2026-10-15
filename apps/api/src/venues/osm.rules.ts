@@ -1,11 +1,18 @@
 import { metersBetween, type VenueType } from '@lucko/shared'
 
-/** SIREN de Bordeaux Métropole, porté par sa limite administrative dans OSM. */
-const AREA_SIREN = '243300316'
+/**
+ * Métropoles importées, par le SIREN que porte leur limite administrative dans OSM. On en ajoute une
+ * quand Lucko s'y lance ; la ville sert quand un lieu n'a pas `addr:city`.
+ */
+export const OSM_ZONES = [
+  { siren: '243300316', city: 'Bordeaux Métropole' }, // ≈ 580 lieux
+  { siren: '200054781', city: 'Grand Paris' }, // ≈ 6 400 lieux
+] as const
+export type OsmZone = (typeof OSM_ZONES)[number]
 
-/** Cafés, bars, pubs et boutiques de jeux nommés de Bordeaux Métropole (≈ 600 lieux). */
-export const OSM_QUERY = `[out:json][timeout:120];
-area["ref:FR:SIREN"="${AREA_SIREN}"]->.m;
+/** Cafés, bars, pubs et boutiques de jeux nommés d'une zone. */
+export const osmZoneQuery = ({ siren }: OsmZone) => `[out:json][timeout:180];
+area["ref:FR:SIREN"="${siren}"]->.m;
 (
   nwr["amenity"~"^(cafe|bar|pub)$"]["name"](area.m);
   nwr["shop"~"^(games|collector)$"]["name"](area.m);
@@ -86,7 +93,7 @@ export const slugify = (text: string) =>
 export const osmIdOf = (element: Pick<OsmElement, 'type' | 'id'>) => `${element.type}/${element.id}`
 
 /** Champs de la fiche lieu tirés d'OSM ; null si l'élément n'a pas de position. */
-export function toVenue(element: OsmElement) {
+export function toVenue(element: OsmElement, fallbackCity = '') {
   const { tags } = element
   const latitude = element.lat ?? element.center?.lat
   const longitude = element.lon ?? element.center?.lon
@@ -100,7 +107,7 @@ export function toVenue(element: OsmElement) {
       name,
       type,
       address: street,
-      city: tags['addr:city'] ?? 'Bordeaux Métropole',
+      city: tags['addr:city'] ?? fallbackCity,
       latitude,
       longitude,
       phone: tags.phone ?? tags['contact:phone'] ?? null,

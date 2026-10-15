@@ -81,6 +81,14 @@ describe('toVenue', () => {
       toVenue({ type: 'way', id: 4, tags: { amenity: 'cafe', name: 'Sans position' } }),
     ).toBeNull()
   })
+
+  it('sans addr:city, la ville de la zone importée', () => {
+    const v = toVenue(
+      { type: 'node', id: 6, lat: 48.85, lon: 2.35, tags: { amenity: 'pub', name: 'Le Pub' } },
+      'Grand Paris',
+    )
+    expect(v?.venue.city).toBe('Grand Paris')
+  })
 })
 
 describe('isSamePlace', () => {

@@ -1,14 +1,23 @@
 import type { PrismaClient } from '../generated/prisma/client'
-import { isSamePlace, OSM_QUERY, type OsmElement, osmIdOf, slugify, toVenue } from './osm.rules'
+import {
+  isSamePlace,
+  OSM_ZONES,
+  type OsmElement,
+  type OsmZone,
+  osmIdOf,
+  osmZoneQuery,
+  slugify,
+  toVenue,
+} from './osm.rules'
 
 const OVERPASS_URL = 'https://overpass-api.de/api/interpreter'
 
 /** Overpass répond parfois 200 avec une page d'erreur HTML : tout ce qui n'est pas du JSON propre échoue. */
-export async function fetchOverpass(): Promise<OsmElement[]> {
+export async function fetchOverpass(query: string): Promise<OsmElement[]> {
   const res = await fetch(OVERPASS_URL, {
     method: 'POST',
     headers: { 'User-Agent': 'Lucko/1.0 (+https://github.com/Suissehide/Lucko)' },
-    body: new URLSearchParams({ data: OSM_QUERY }),
+    body: new URLSearchParams({ data: query }),
   })
   if (!res.ok || !res.headers.get('content-type')?.includes('json'))
     throw new Error(`Overpass indisponible (${res.status})`)
@@ -18,12 +27,18 @@ export async function fetchOverpass(): Promise<OsmElement[]> {
 }
 
 /**
- * Import et resynchronisation des lieux OSM (LKO-74). Crée les lieux nouveaux (publiés), sauf doublon
+ * Import et resynchronisation des lieux OSM des métropoles d'OSM_ZONES (LKO-74). Crée les lieux nouveaux (publiés), sauf doublon
  * d'un lieu saisi à la main (même nom à moins de 100 m), met à jour les fiches importées et masque
  * celles qui ont disparu d'OSM. Une fiche partenaire ou revendiquée (staff) n'est jamais modifiée.
  */
-export async function importOsmVenues(prisma: PrismaClient, fetchOsm = fetchOverpass) {
-  const elements = await fetchOsm()
+export async function importOsmVenues(
+  prisma: PrismaClient,
+  fetchZone = (zone: OsmZone) => fetchOverpass(osmZoneQuery(zone)),
+) {
+  // Toutes les zones avant la première écriture : une zone en échec relance tout, sans import partiel
+  const elements: { element: OsmElement; city: string }[] = []
+  for (const zone of OSM_ZONES)
+    for (const element of await fetchZone(zone)) elements.push({ element, city: zone.city })
   const existing = await prisma.venue.findMany({
     select: {
       id: true,
@@ -43,8 +58,8 @@ export async function importOsmVenues(prisma: PrismaClient, fetchOsm = fetchOver
   const seen = new Set<string>()
   const counts = { created: 0, updated: 0, duplicates: 0, hidden: 0 }
 
-  for (const element of elements) {
-    const parsed = toVenue(element)
+  for (const { element, city } of elements) {
+    const parsed = toVenue(element, city)
     if (!parsed) continue
     const { venue, openingHours } = parsed
     const osmId = osmIdOf(element)
