@@ -19,6 +19,8 @@ import { persistOptions, queryClient } from '@/lib/queryClient'
 import { Sentry } from '@/lib/sentry'
 import { useMeQuery } from '@/queries/useMe'
 
+const TAB_SCREENS = ['index', 'agenda/index', 'my-games', 'messages', 'profile/index']
+
 function PushSetup() {
   usePush(useMeQuery()?.id)
   return null
@@ -49,6 +51,10 @@ function RootLayout() {
       <PushSetup />
       <PageViews />
       <Stack screenOptions={{ headerShown: false }}>
+        {/* Onglets : chaque écran porte sa barre d'onglets, un glissement ferait défiler la barre avec la page */}
+        {TAB_SCREENS.map((name) => (
+          <Stack.Screen key={name} name={name} options={{ animation: 'none' }} />
+        ))}
         {/* Créer une room : popup par-dessus la page en cours sur le web, plein écran sur téléphone */}
         <Stack.Screen
           name="rooms/new"

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { ScrollView, Text, View } from 'react-native'
+import { Platform, ScrollView, Text, View } from 'react-native'
 import { SITE_URL, SiteFooter } from '../organisms/SiteFooter'
 import { border, colors, font, space } from '../tokens'
 
@@ -13,7 +13,7 @@ export function MobileScreen({
   hero,
   children,
   footer,
-  siteFooter = true,
+  siteFooter = Platform.OS === 'web',
   tabBar,
   venueMode,
   scroll = true,
@@ -25,7 +25,7 @@ export function MobileScreen({
   children: ReactNode
   /** Pied fixe (boutons d'action), au-dessus de la barre d'onglets. */
   footer?: ReactNode
-  /** Pied de page du site en fin de contenu défilant ; `false` sur les parcours (auth…). */
+  /** Pied de page du site en fin de contenu défilant, sur le web seulement ; `false` sur les parcours (auth…). */
   siteFooter?: boolean
   tabBar?: ReactNode
   /** Nom du lieu : affiche la pastille « MODE LIEU · <nom> ». */
