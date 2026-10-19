@@ -109,13 +109,24 @@ export function dayLabel(date: Date | string) {
 }
 
 /** Carte room ; sans `venue` (fiche lieu), le jour remplace le lieu ; à domicile, le quartier. */
+/** Participation du joueur connecté à une room, à la place de l'invitation à rejoindre. */
+export const ROOM_STATUS_LABELS = {
+  ACCEPTED: 'Tu joues ✓',
+  PENDING: 'Demande envoyée',
+  WAITLISTED: "En liste d'attente",
+} as const
+
 export function roomCardProps(
   room: Omit<RoomListItem, 'venue' | 'home'> & Partial<Pick<RoomListItem, 'venue' | 'home'>>,
 ) {
   const missing = Math.max(0, room.capacity - room.players.length)
   return {
     label: `${room.mode === 'RANKED' ? 'Partie classée' : 'Partie libre'} · ${gameLabel(room.game)}${room.bracket ? ` · Bracket ${room.bracket}` : ''}`,
-    title: missing ? `Il manque ${missing} joueur${missing > 1 ? 's' : ''}` : 'Room complète',
+    title: room.myStatus
+      ? ROOM_STATUS_LABELS[room.myStatus]
+      : missing
+        ? `Il manque ${missing} joueur${missing > 1 ? 's' : ''}`
+        : 'Room complète',
     meta: `${room.venue?.name ?? room.home?.areaLabel ?? dayLabel(room.startsAt)} · ${formatHour(room.startsAt)}`,
     players: room.players.map((p) => p.initial),
     capacity: room.capacity,

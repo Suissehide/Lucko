@@ -106,6 +106,8 @@ export const roomListItemSchema = z.object({
   home: z.object({ areaLabel: z.string(), distanceMeters: z.number().int() }).nullable(),
   /** Joueurs acceptés (hôte compris) : initiales seulement, la liste est publique. */
   players: z.array(z.object({ initial: z.string() })),
+  /** Participation du joueur connecté (hôte compris) ; null sans joueur ou sans demande. */
+  myStatus: z.enum(['ACCEPTED', 'PENDING', 'WAITLISTED']).nullable(),
   ratingRange: z.object({ min: z.number().int(), max: z.number().int() }).nullable(),
 })
 

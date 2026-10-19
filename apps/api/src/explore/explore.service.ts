@@ -42,10 +42,11 @@ export const closureRange = <T extends { startsOn: Date; endsOn: Date }>(closure
 const roomInclude = {
   game: { select: { slug: true, name: true } },
   format: { select: { name: true } },
+  // Demandes en cours aussi : elles donnent la participation du joueur connecté, jamais publiées
   participants: {
-    where: { status: 'ACCEPTED' },
+    where: { status: { in: ['ACCEPTED', 'PENDING', 'WAITLISTED'] } },
     orderBy: { createdAt: 'asc' },
-    select: { user: { select: { pseudo: true, gameProfiles: true } } },
+    select: { userId: true, status: true, user: { select: { pseudo: true, gameProfiles: true } } },
   },
 } satisfies Prisma.RoomInclude
 
@@ -84,18 +85,25 @@ export const formatLabel = (room: {
   (room.boardGameCategory ? BOARD_GAME_CATEGORY_LABELS[room.boardGameCategory].label : null)
 
 /** Room publique : initiales des joueurs et fourchette de LK des parties classées. */
-function roomItem({
-  format,
-  participants,
-  ...room
-}: Prisma.RoomGetPayload<{ include: typeof roomInclude }>) {
-  const ratings = participants.flatMap(({ user }) =>
+function roomItem(
+  { format, participants, ...room }: Prisma.RoomGetPayload<{ include: typeof roomInclude }>,
+  viewer: Viewer,
+) {
+  const accepted = participants.filter((p) => p.status === 'ACCEPTED')
+  const ratings = accepted.flatMap(({ user }) =>
     user.gameProfiles.filter((p) => p.formatId === room.formatId).map((p) => p.rating),
   )
   return {
     ...room,
     format: formatLabel({ format, ...room }),
-    players: participants.map(({ user }) => ({ initial: user.pseudo?.slice(0, 1) ?? '?' })),
+    players: accepted.map(({ user }) => ({ initial: user.pseudo?.slice(0, 1) ?? '?' })),
+    // Statuts filtrés par `roomInclude`
+    myStatus:
+      (participants.find((p) => p.userId === viewer?.id)?.status as
+        | 'ACCEPTED'
+        | 'PENDING'
+        | 'WAITLISTED'
+        | undefined) ?? null,
     ratingRange:
       room.mode === 'RANKED' && ratings.length
         ? { min: Math.min(...ratings), max: Math.max(...ratings) }
@@ -260,7 +268,7 @@ export class ExploreService {
         })),
       rooms: venue.rooms
         .filter((room) => roomVisibleTo({ ...room, venue }, viewer, now))
-        .map(roomItem),
+        .map((room) => roomItem(room, viewer)),
     }
   }
 
@@ -330,7 +338,7 @@ export class ExploreService {
         if (venue)
           return [
             {
-              ...roomItem(room),
+              ...roomItem(room, viewer),
               venue: { ...venue, distanceMeters: distances.get(venue.id) ?? 0 },
               home: null,
             },
@@ -339,7 +347,7 @@ export class ExploreService {
         return room.atHome && distance <= query.radiusKm * 1000
           ? [
               {
-                ...roomItem(room),
+                ...roomItem(room, viewer),
                 venue: null,
                 home: { areaLabel: room.homeAreaLabel ?? 'À domicile', distanceMeters: distance },
               },

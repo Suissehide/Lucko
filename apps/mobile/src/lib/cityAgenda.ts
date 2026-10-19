@@ -12,7 +12,15 @@ import {
   type RoomListItem,
   VENUE_TIME_ZONE,
 } from '@lucko/shared'
-import { eventPlaces, GAMES, gameLabel, localDay, matchesGame, shortDay } from './explore'
+import {
+  eventPlaces,
+  GAMES,
+  gameLabel,
+  localDay,
+  matchesGame,
+  ROOM_STATUS_LABELS,
+  shortDay,
+} from './explore'
 import { type AgendaAction, agendaAction } from './venue'
 
 /** Rendez-vous des lieux partenaires mis en avant en tête de l'agenda. */
@@ -67,7 +75,7 @@ export type AgendaEntry = {
   free: boolean
   full: boolean
   adult: boolean
-  /** null : room (« Rejoindre »). */
+  /** null : room où le joueur n'est pas (« Rejoindre »). */
   action: AgendaAction | null
 }
 
@@ -125,7 +133,7 @@ function roomEntry(r: RoomListItem): AgendaEntry {
     free: true,
     full: r.players.length >= r.capacity,
     adult: false,
-    action: null,
+    action: r.myStatus ? { kind: 'ghost', label: ROOM_STATUS_LABELS[r.myStatus] } : null,
   }
 }
 

@@ -2275,6 +2275,8 @@ export interface operations {
                             players: {
                                 initial: string;
                             }[];
+                            /** @enum {string|null} */
+                            myStatus: "ACCEPTED" | "PENDING" | "WAITLISTED" | null;
                             ratingRange: {
                                 min: number;
                                 max: number;
@@ -2380,6 +2382,8 @@ export interface operations {
                         players: {
                             initial: string;
                         }[];
+                        /** @enum {string|null} */
+                        myStatus: "ACCEPTED" | "PENDING" | "WAITLISTED" | null;
                         ratingRange: {
                             min: number;
                             max: number;

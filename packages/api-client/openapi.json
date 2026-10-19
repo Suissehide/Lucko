@@ -3060,6 +3060,15 @@
                               ]
                             }
                           },
+                          "myStatus": {
+                            "nullable": true,
+                            "type": "string",
+                            "enum": [
+                              "ACCEPTED",
+                              "PENDING",
+                              "WAITLISTED"
+                            ]
+                          },
                           "ratingRange": {
                             "nullable": true,
                             "type": "object",
@@ -3090,6 +3099,7 @@
                           "format",
                           "bracket",
                           "players",
+                          "myStatus",
                           "ratingRange"
                         ]
                       }
@@ -3492,6 +3502,15 @@
                           ]
                         }
                       },
+                      "myStatus": {
+                        "nullable": true,
+                        "type": "string",
+                        "enum": [
+                          "ACCEPTED",
+                          "PENDING",
+                          "WAITLISTED"
+                        ]
+                      },
                       "ratingRange": {
                         "nullable": true,
                         "type": "object",
@@ -3524,6 +3543,7 @@
                       "venue",
                       "home",
                       "players",
+                      "myStatus",
                       "ratingRange"
                     ]
                   }
