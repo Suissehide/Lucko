@@ -7,6 +7,7 @@ import {
   adminVenueQuerySchema,
   adminVenueSchema,
   cancelEventSchema,
+  createGameSchema,
   createVenueSchema,
   mergeGamesSchema,
   osmVenuePreviewSchema,
@@ -14,6 +15,7 @@ import {
 } from '@lucko/shared'
 import {
   BadGatewayException,
+  BadRequestException,
   ConflictException,
   Controller,
   Get,
@@ -69,6 +71,19 @@ const toAdminEvent = ({
   ...event,
   gameIds: games.map((g) => g.id),
   registered: _count.registrations,
+})
+
+const gameInclude = {
+  formats: { select: { id: true, slug: true, name: true }, orderBy: { name: 'asc' } },
+  _count: { select: { rooms: true, events: true, players: true } },
+} satisfies Prisma.GameInclude
+
+const toAdminGame = ({
+  _count,
+  ...game
+}: Prisma.GameGetPayload<{ include: typeof gameInclude }>) => ({
+  ...game,
+  ..._count,
 })
 
 /** Back-office (LKO-20) : validation des lieux, événements (démarrage à froid), fusion des jeux. */
@@ -248,12 +263,30 @@ export class AdminCatalogController {
   async games() {
     const games = await this.prisma.game.findMany({
       orderBy: { name: 'asc' },
-      include: {
-        formats: { select: { id: true, slug: true, name: true }, orderBy: { name: 'asc' } },
-        _count: { select: { rooms: true, events: true, players: true } },
-      },
+      include: gameInclude,
     })
-    return games.map(({ _count, ...game }) => ({ ...game, ..._count }))
+    return games.map(toAdminGame)
+  }
+
+  /** Ajoute un jeu au catalogue, avec ses formats. */
+  @Post('games')
+  @Admin('GAME_CREATE')
+  @ZodResponse(adminGameSchema)
+  async createGame(
+    @ZodBody(createGameSchema) { formats, ...game }: z.output<typeof createGameSchema>,
+  ) {
+    const slug = slugify(game.name)
+    if (!slug) throw new BadRequestException('Le nom doit contenir des lettres ou des chiffres')
+    const existing = await this.prisma.game.findUnique({ where: { slug }, select: { name: true } })
+    if (existing) throw new ConflictException(`« ${existing.name} » existe déjà dans le catalogue`)
+    const rows = formats.map((f) => ({ ...f, slug: slugify(f.name) }))
+    if (rows.some((f) => !f.slug) || new Set(rows.map((f) => f.slug)).size < rows.length)
+      throw new BadRequestException('Chaque format doit avoir un nom distinct')
+    const created = await this.prisma.game.create({
+      data: { ...game, slug, formats: { create: rows } },
+      include: gameInclude,
+    })
+    return toAdminGame(created)
   }
 
   /** Fond le jeu `:id` (doublon) dans `intoId`, sans perte de données, puis le supprime. */

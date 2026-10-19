@@ -4,6 +4,7 @@ import {
   AVATAR_STATUSES,
   EVENT_REPEAT_MAX_WEEKS,
   EVENT_TYPES,
+  GAME_KINDS,
   REGISTRATION_MODES,
   REPORT_REASONS,
   REPORT_RESOLUTIONS,
@@ -278,6 +279,45 @@ export const mergeGamesSchema = z.object({
   intoId: z.string().min(1, { message: 'Choisis le jeu cible' }),
 })
 export type MergeGamesInput = z.infer<typeof mergeGamesSchema>
+
+const playersSchema = z
+  .number({ message: 'Indique un nombre' })
+  .int()
+  .min(1, { message: 'Au moins 1' })
+  .max(20, { message: '20 maximum' })
+
+const playerRange = <T extends { minPlayers: number; maxPlayers: number }>(v: T) =>
+  v.maxPlayers >= v.minPlayers
+
+/** Format d'un jeu ajouté par un admin (Standard, Draft…). */
+export const gameFormatInputSchema = z
+  .object({
+    name: z.string().trim().min(1, { message: 'Nomme le format' }).max(60),
+    minPlayers: playersSchema,
+    maxPlayers: playersSchema,
+    durationMinutes: z
+      .number({ message: 'Indique une durée' })
+      .int()
+      .min(5, { message: '5 minutes minimum' })
+      .max(600, { message: '600 minutes maximum' }),
+  })
+  .refine(playerRange, { message: 'Au moins le minimum', path: ['maxPlayers'] })
+
+/** POST /admin/games : un TCG a au moins un format (une room classée en exige un). */
+export const createGameSchema = z
+  .object({
+    name: z.string().trim().min(2, { message: 'Nom trop court' }).max(80),
+    kind: z.enum(GAME_KINDS),
+    minPlayers: playersSchema,
+    maxPlayers: playersSchema,
+    formats: z.array(gameFormatInputSchema).max(20),
+  })
+  .refine(playerRange, { message: 'Au moins le minimum', path: ['maxPlayers'] })
+  .refine((g) => g.kind !== 'TCG' || g.formats.length > 0, {
+    message: 'Ajoute au moins un format',
+    path: ['formats'],
+  })
+export type CreateGameInput = z.infer<typeof createGameSchema>
 
 /** Jeu dans le back-office : de quoi repérer les doublons. */
 export const adminGameSchema = z.object({

@@ -1,6 +1,7 @@
 import type {
   AdminEventInput,
   CancelEventInput,
+  CreateGameInput,
   CreateVenueInput,
   UpdateVenueInput,
   VenueStatus,
@@ -94,7 +95,13 @@ export function useAdminCatalogMutations() {
     onSuccess,
   })
 
-  return { createVenue, updateVenue, saveEvent, cancelEvent, mergeGames }
+  const createGame = useMutation({
+    mutationKey: [ADMIN.CREATE_GAME],
+    mutationFn: (body: CreateGameInput) => unwrap(api.POST('/admin/games', { body })),
+    onSuccess,
+  })
+
+  return { createVenue, updateVenue, saveEvent, cancelEvent, mergeGames, createGame }
 }
 
 type SaveEvent = { venueId: string; eventId?: string; body: AdminEventInput }

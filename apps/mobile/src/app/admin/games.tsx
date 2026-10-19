@@ -11,9 +11,11 @@ import {
   Typography,
 } from '@lucko/design-system'
 import type { AdminGame } from '@lucko/shared'
+import { Plus } from 'lucide-react-native'
 import { useState } from 'react'
 import { useWindowDimensions, View } from 'react-native'
 import { AdminScreen } from '@/components/admin/AdminScreen'
+import { NewGame } from '@/components/admin/NewGame'
 import { duplicateOf, mergeSummary } from '@/lib/admin'
 import { useAdminCatalogMutations, useAdminGamesQuery } from '@/queries/useAdminCatalog'
 
@@ -33,7 +35,7 @@ const count = (key: 'rooms' | 'events' | 'players', label: string, width: number
   }) satisfies Column<AdminGame>
 
 /**
- * Catalogue des jeux : fusionner un doublon dans le bon jeu. Formats, profils (LK), rooms,
+ * Catalogue des jeux : ajouter un jeu, ou fusionner un doublon dans le bon jeu. Formats, profils (LK), rooms,
  * événements, lieux et joueurs passent au jeu cible, puis le doublon est supprimé.
  */
 export default function AdminGamesScreen() {
@@ -42,7 +44,8 @@ export default function AdminGamesScreen() {
   const { mergeGames } = useAdminCatalogMutations()
   const [mergingId, setMergingId] = useState<string | null>(null)
   const [intoId, setIntoId] = useState<string | null>(null)
-  const [merged, setMerged] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
+  const [adding, setAdding] = useState(false)
   const all = games.data ?? []
   const merging = all.find((g) => g.id === mergingId)
 
@@ -147,7 +150,7 @@ export default function AdminGamesScreen() {
                 { id: source.id, intoId: target.id },
                 {
                   onSuccess: () => {
-                    setMerged(`« ${source.name} » a été fusionné dans « ${target.name} ».`)
+                    setNotice(`« ${source.name} » a été fusionné dans « ${target.name} ».`)
                     setMergingId(null)
                   },
                 },
@@ -162,9 +165,31 @@ export default function AdminGamesScreen() {
   return (
     <AdminScreen
       section="games"
-      note="Fusionne les doublons : les rooms, événements et profils de jeu sont déplacés vers le jeu cible."
+      note="Ajoute un jeu avec ses formats, ou fusionne les doublons : les rooms, événements et profils de jeu sont déplacés vers le jeu cible."
     >
-      {merged ? <Banner tone="ok" message={merged} /> : null}
+      {notice ? <Banner tone="ok" message={notice} /> : null}
+      {adding ? (
+        <NewGame
+          onCancel={() => setAdding(false)}
+          onDone={(game) => {
+            setNotice(`« ${game.name} » a été ajouté au catalogue.`)
+            setAdding(false)
+          }}
+        />
+      ) : (
+        <View style={{ flexDirection: 'row' }}>
+          <Button
+            small
+            kind="venue"
+            icon={Plus}
+            label="Ajouter un jeu"
+            onPress={() => {
+              setNotice(null)
+              setAdding(true)
+            }}
+          />
+        </View>
+      )}
       {games.isError ? (
         <Banner tone="err" message={games.error.message} />
       ) : !games.data ? (

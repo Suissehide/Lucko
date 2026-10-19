@@ -180,7 +180,14 @@ export class AdminService {
         select: { id: true, title: true, venueId: true },
       }),
       this.prisma.game.findMany({
-        where: { id: { in: actions.filter((a) => a.action === 'GAME_MERGE').map(mergedInto) } },
+        where: {
+          id: {
+            in: [
+              ...actions.filter((a) => a.action === 'GAME_MERGE').map(mergedInto),
+              ...ids('game'),
+            ],
+          },
+        },
         select: { id: true, name: true },
       }),
     ])
