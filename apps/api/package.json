@@ -14,6 +14,7 @@
     "db:migrate": "prisma migrate dev && prisma generate",
     "db:deploy": "prisma migrate deploy && prisma generate",
     "db:seed": "prisma generate && prisma db seed",
+    "games:seed": "tsx prisma/seed-games.ts",
     "db:studio": "prisma studio",
     "address-keys:rotate": "tsx src/rooms/rotate-address-key.ts",
     "venues:import-osm": "tsx src/venues/import-osm-venues.ts",
