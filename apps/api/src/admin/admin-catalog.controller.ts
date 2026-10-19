@@ -7,8 +7,8 @@ import {
   adminVenueQuerySchema,
   adminVenueSchema,
   cancelEventSchema,
-  createGameSchema,
   createVenueSchema,
+  gameInputSchema,
   mergeGamesSchema,
   osmVenuePreviewSchema,
   updateVenueSchema,
@@ -74,7 +74,17 @@ const toAdminEvent = ({
 })
 
 const gameInclude = {
-  formats: { select: { id: true, slug: true, name: true }, orderBy: { name: 'asc' } },
+  formats: {
+    select: {
+      id: true,
+      slug: true,
+      name: true,
+      minPlayers: true,
+      maxPlayers: true,
+      durationMinutes: true,
+    },
+    orderBy: { name: 'asc' },
+  },
   _count: { select: { rooms: true, events: true, players: true } },
 } satisfies Prisma.GameInclude
 
@@ -85,6 +95,12 @@ const toAdminGame = ({
   ...game,
   ..._count,
 })
+
+/** Deux formats d'un même jeu ne peuvent pas avoir le même nom (ni le même slug). */
+function checkFormatSlugs(rows: { slug: string }[]) {
+  if (rows.some((f) => !f.slug) || new Set(rows.map((f) => f.slug)).size < rows.length)
+    throw new BadRequestException('Chaque format doit avoir un nom distinct')
+}
 
 /** Back-office (LKO-20) : validation des lieux, événements (démarrage à froid), fusion des jeux. */
 @ApiTags('admin')
@@ -273,20 +289,72 @@ export class AdminCatalogController {
   @Admin('GAME_CREATE')
   @ZodResponse(adminGameSchema)
   async createGame(
-    @ZodBody(createGameSchema) { formats, ...game }: z.output<typeof createGameSchema>,
+    @ZodBody(gameInputSchema) { formats, ...game }: z.output<typeof gameInputSchema>,
   ) {
     const slug = slugify(game.name)
     if (!slug) throw new BadRequestException('Le nom doit contenir des lettres ou des chiffres')
-    const existing = await this.prisma.game.findUnique({ where: { slug }, select: { name: true } })
-    if (existing) throw new ConflictException(`« ${existing.name} » existe déjà dans le catalogue`)
-    const rows = formats.map((f) => ({ ...f, slug: slugify(f.name) }))
-    if (rows.some((f) => !f.slug) || new Set(rows.map((f) => f.slug)).size < rows.length)
-      throw new BadRequestException('Chaque format doit avoir un nom distinct')
+    await this.checkGameName(game.name)
+    const rows = formats.map(({ id: _, ...f }) => ({ ...f, slug: slugify(f.name) }))
+    checkFormatSlugs(rows)
     const created = await this.prisma.game.create({
       data: { ...game, slug, formats: { create: rows } },
       include: gameInclude,
     })
     return toAdminGame(created)
+  }
+
+  /**
+   * Modifie un jeu et ses formats : les formats absents sont retirés, sauf s'ils ont déjà des rooms
+   * ou des LK. Les slugs ne bougent pas (couleurs, filtres d'Explorer, fusion) ; le type non plus.
+   */
+  @Put('games/:id')
+  @Admin('GAME_UPDATE')
+  @ZodResponse(adminGameSchema)
+  async updateGame(
+    @Param('id') id: string,
+    @ZodBody(gameInputSchema) { formats, ...game }: z.output<typeof gameInputSchema>,
+  ) {
+    const current = await this.prisma.game.findUnique({
+      where: { id },
+      include: {
+        formats: {
+          select: { id: true, slug: true, _count: { select: { rooms: true, profiles: true } } },
+        },
+      },
+    })
+    if (!current) throw new NotFoundException('Jeu introuvable')
+    if (game.kind !== current.kind)
+      throw new BadRequestException('Le type d’un jeu ne se change pas')
+    await this.checkGameName(game.name, id)
+    const byId = new Map(current.formats.map((f) => [f.id, f]))
+    if (formats.some((f) => f.id && !byId.has(f.id)))
+      throw new BadRequestException('Format introuvable')
+    const rows = formats.map((f) => ({
+      ...f,
+      slug: (f.id && byId.get(f.id)?.slug) || slugify(f.name),
+    }))
+    checkFormatSlugs(rows)
+    const kept = new Set(formats.map((f) => f.id))
+    const removed = current.formats.filter((f) => !kept.has(f.id))
+    if (removed.some((f) => f._count.rooms || f._count.profiles))
+      throw new ConflictException(
+        'Un format qui a déjà des rooms ou des joueurs classés ne peut pas être retiré',
+      )
+    const updated = await this.prisma.game.update({
+      where: { id },
+      data: {
+        ...game,
+        formats: {
+          deleteMany: { id: { in: removed.map((f) => f.id) } },
+          update: rows.flatMap(({ id: formatId, ...data }) =>
+            formatId ? [{ where: { id: formatId }, data }] : [],
+          ),
+          create: rows.flatMap(({ id: formatId, ...data }) => (formatId ? [] : [data])),
+        },
+      },
+      include: gameInclude,
+    })
+    return toAdminGame(updated)
   }
 
   /** Fond le jeu `:id` (doublon) dans `intoId`, sans perte de données, puis le supprime. */
@@ -333,6 +401,18 @@ export class AdminCatalogController {
     const match =
       near.find((v) => v.osmId === venue.osmId) ?? near.find((v) => isSamePlace(v, venue))
     return match ? { id: match.id, name: match.name } : null
+  }
+
+  /** Un autre jeu porte déjà ce nom (ou le slug qu'il donnerait) : doublon. */
+  private async checkGameName(name: string, id?: string) {
+    const homonym = await this.prisma.game.findFirst({
+      where: {
+        id: id ? { not: id } : undefined,
+        OR: [{ slug: slugify(name) }, { name: { equals: name, mode: 'insensitive' } }],
+      },
+      select: { name: true },
+    })
+    if (homonym) throw new ConflictException(`« ${homonym.name} » existe déjà dans le catalogue`)
   }
 
   private async venueOr404(id: string) {

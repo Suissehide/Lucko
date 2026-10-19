@@ -1,2 +1,3 @@
 -- AlterEnum
 ALTER TYPE "AdminActionKind" ADD VALUE 'GAME_CREATE';
+ALTER TYPE "AdminActionKind" ADD VALUE 'GAME_UPDATE';

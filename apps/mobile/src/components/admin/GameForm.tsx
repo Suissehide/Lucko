@@ -1,5 +1,5 @@
 import { Button, colors, IconButton, Inset, Typography } from '@lucko/design-system'
-import { type AdminGame, createGameSchema, type GameKind } from '@lucko/shared'
+import { type AdminGame, type GameKind, gameInputSchema } from '@lucko/shared'
 import { useStore } from '@tanstack/react-form'
 import { Plus, Trash2 } from 'lucide-react-native'
 import { View } from 'react-native'
@@ -11,37 +11,65 @@ const KINDS: { key: GameKind; label: string }[] = [
   { key: 'BOARD_GAME', label: 'Jeu de société' },
 ]
 
-const newFormat = () => ({ name: '', minPlayers: '2', maxPlayers: '2', durationMinutes: '45' })
+const newFormat = () => ({
+  id: undefined as string | undefined,
+  name: '',
+  minPlayers: '2',
+  maxPlayers: '2',
+  durationMinutes: '45',
+})
+
+const valuesOf = (game: AdminGame) => ({
+  name: game.name,
+  kind: game.kind,
+  minPlayers: String(game.minPlayers),
+  maxPlayers: String(game.maxPlayers),
+  formats: game.formats.map((f) => ({
+    id: f.id as string | undefined,
+    name: f.name,
+    minPlayers: String(f.minPlayers),
+    maxPlayers: String(f.maxPlayers),
+    durationMinutes: String(f.durationMinutes),
+  })),
+})
 
 const row = { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start', gap: 12 } as const
 const cell = { flexGrow: 1, flexBasis: 110 }
 
-/** Ajout d'un jeu au catalogue : un TCG avec ses formats, ou un jeu de société avec ses joueurs. */
-export function NewGame({
+/**
+ * Ajout (sans `game`) ou modification d'un jeu : un TCG avec ses formats, ou un jeu de société avec
+ * ses joueurs. Le type ne change pas une fois le jeu créé.
+ */
+export function GameForm({
+  game,
   onDone,
   onCancel,
 }: {
+  game?: AdminGame
   onDone: (game: AdminGame) => void
   onCancel: () => void
 }) {
-  const { createGame } = useAdminCatalogMutations()
+  const { saveGame } = useAdminCatalogMutations()
   const form = useAppForm({
-    defaultValues: {
-      name: '',
-      kind: 'TCG' as GameKind,
-      minPlayers: '2',
-      maxPlayers: '4',
-      formats: [{ ...newFormat(), name: 'Standard' }],
-    },
+    defaultValues: game
+      ? valuesOf(game)
+      : {
+          name: '',
+          kind: 'TCG' as GameKind,
+          minPlayers: '2',
+          maxPlayers: '4',
+          formats: [{ ...newFormat(), name: 'Standard' }],
+        },
     onSubmit: async ({ value, formApi }) => {
       const tcg = value.kind === 'TCG'
-      const parsed = createGameSchema.safeParse({
+      const parsed = gameInputSchema.safeParse({
         name: value.name,
         kind: value.kind,
         minPlayers: Number(value.minPlayers),
         maxPlayers: Number(value.maxPlayers),
         formats: tcg
           ? value.formats.map((f) => ({
+              id: f.id,
               name: f.name,
               minPlayers: Number(f.minPlayers),
               maxPlayers: Number(f.maxPlayers),
@@ -63,7 +91,7 @@ export function NewGame({
         return
       }
       try {
-        onDone(await createGame.mutateAsync(parsed.data))
+        onDone(await saveGame.mutateAsync({ id: game?.id, body: parsed.data }))
       } catch (error) {
         formApi.setErrorMap({
           onSubmit: { form: error instanceof Error ? error.message : 'Réessaie.', fields: {} },
@@ -76,7 +104,7 @@ export function NewGame({
   return (
     <Inset>
       <Typography variant="title" style={{ fontSize: 15 }}>
-        Nouveau jeu
+        {game ? `Modifier « ${game.name} »` : 'Nouveau jeu'}
       </Typography>
       <View style={row}>
         <View style={{ flexGrow: 2, flexBasis: 220 }}>
@@ -84,9 +112,11 @@ export function NewGame({
             {(field) => <field.Text label="Nom" placeholder="Riftbound, Ark Nova…" autoFocus />}
           </form.AppField>
         </View>
-        <form.AppField name="kind">
-          {(field) => <field.Choice label="Type" options={KINDS} />}
-        </form.AppField>
+        {game ? null : (
+          <form.AppField name="kind">
+            {(field) => <field.Choice label="Type" options={KINDS} />}
+          </form.AppField>
+        )}
       </View>
       {tcg ? (
         <form.AppField name="formats" mode="array">
@@ -156,7 +186,11 @@ export function NewGame({
         <form.FormError />
         <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 8 }}>
           <Button small kind="ghost" label="Annuler" onPress={onCancel} />
-          <form.SubmitButton small kind="venue" label="Ajouter au catalogue" />
+          <form.SubmitButton
+            small
+            kind="venue"
+            label={game ? 'Enregistrer' : 'Ajouter au catalogue'}
+          />
         </View>
       </form.AppForm>
     </Inset>

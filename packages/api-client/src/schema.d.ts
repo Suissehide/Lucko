@@ -1108,6 +1108,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/games/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["AdminCatalogController_updateGame"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/games/{id}/merge": {
         parameters: {
             query?: never;
@@ -4570,7 +4586,7 @@ export interface operations {
                         actions: {
                             id: string;
                             /** @enum {string} */
-                            action: "REPORT_DISMISS" | "REPORT_WARN" | "REPORT_SUSPEND" | "USER_SUSPEND" | "USER_UNSUSPEND" | "AVATAR_APPROVE" | "AVATAR_REJECT" | "VENUE_CREATE" | "VENUE_UPDATE" | "EVENT_CREATE" | "EVENT_UPDATE" | "EVENT_CANCEL" | "EVENT_HIDE" | "GAME_MERGE" | "GAME_CREATE" | "VISIT_DECIDE" | "RESULT_DECIDE" | "RESULT_VOID";
+                            action: "REPORT_DISMISS" | "REPORT_WARN" | "REPORT_SUSPEND" | "USER_SUSPEND" | "USER_UNSUSPEND" | "AVATAR_APPROVE" | "AVATAR_REJECT" | "VENUE_CREATE" | "VENUE_UPDATE" | "EVENT_CREATE" | "EVENT_UPDATE" | "EVENT_CANCEL" | "EVENT_HIDE" | "GAME_MERGE" | "GAME_CREATE" | "GAME_UPDATE" | "VISIT_DECIDE" | "RESULT_DECIDE" | "RESULT_VOID";
                             targetId: string;
                             target: {
                                 /** @enum {string} */
@@ -4728,7 +4744,7 @@ export interface operations {
                     "application/json": {
                         id: string;
                         /** @enum {string} */
-                        action: "REPORT_DISMISS" | "REPORT_WARN" | "REPORT_SUSPEND" | "USER_SUSPEND" | "USER_UNSUSPEND" | "AVATAR_APPROVE" | "AVATAR_REJECT" | "VENUE_CREATE" | "VENUE_UPDATE" | "EVENT_CREATE" | "EVENT_UPDATE" | "EVENT_CANCEL" | "EVENT_HIDE" | "GAME_MERGE" | "GAME_CREATE" | "VISIT_DECIDE" | "RESULT_DECIDE" | "RESULT_VOID";
+                        action: "REPORT_DISMISS" | "REPORT_WARN" | "REPORT_SUSPEND" | "USER_SUSPEND" | "USER_UNSUSPEND" | "AVATAR_APPROVE" | "AVATAR_REJECT" | "VENUE_CREATE" | "VENUE_UPDATE" | "EVENT_CREATE" | "EVENT_UPDATE" | "EVENT_CANCEL" | "EVENT_HIDE" | "GAME_MERGE" | "GAME_CREATE" | "GAME_UPDATE" | "VISIT_DECIDE" | "RESULT_DECIDE" | "RESULT_VOID";
                         targetId: string;
                         target: {
                             /** @enum {string} */
@@ -5221,10 +5237,17 @@ export interface operations {
                         id: string;
                         slug: string;
                         name: string;
+                        /** @enum {string} */
+                        kind: "TCG" | "BOARD_GAME";
+                        minPlayers: number;
+                        maxPlayers: number;
                         formats: {
                             id: string;
                             slug: string;
                             name: string;
+                            minPlayers: number;
+                            maxPlayers: number;
+                            durationMinutes: number;
                         }[];
                         rooms: number;
                         events: number;
@@ -5250,6 +5273,7 @@ export interface operations {
                     minPlayers: number;
                     maxPlayers: number;
                     formats: {
+                        id?: string;
                         name: string;
                         minPlayers: number;
                         maxPlayers: number;
@@ -5268,10 +5292,74 @@ export interface operations {
                         id: string;
                         slug: string;
                         name: string;
+                        /** @enum {string} */
+                        kind: "TCG" | "BOARD_GAME";
+                        minPlayers: number;
+                        maxPlayers: number;
                         formats: {
                             id: string;
                             slug: string;
                             name: string;
+                            minPlayers: number;
+                            maxPlayers: number;
+                            durationMinutes: number;
+                        }[];
+                        rooms: number;
+                        events: number;
+                        players: number;
+                    };
+                };
+            };
+        };
+    };
+    AdminCatalogController_updateGame: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name: string;
+                    /** @enum {string} */
+                    kind: "TCG" | "BOARD_GAME";
+                    minPlayers: number;
+                    maxPlayers: number;
+                    formats: {
+                        id?: string;
+                        name: string;
+                        minPlayers: number;
+                        maxPlayers: number;
+                        durationMinutes: number;
+                    }[];
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        id: string;
+                        slug: string;
+                        name: string;
+                        /** @enum {string} */
+                        kind: "TCG" | "BOARD_GAME";
+                        minPlayers: number;
+                        maxPlayers: number;
+                        formats: {
+                            id: string;
+                            slug: string;
+                            name: string;
+                            minPlayers: number;
+                            maxPlayers: number;
+                            durationMinutes: number;
                         }[];
                         rooms: number;
                         events: number;

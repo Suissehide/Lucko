@@ -133,6 +133,7 @@ export const ACTION_TARGET: Record<
   EVENT_HIDE: 'event',
   GAME_MERGE: 'merge',
   GAME_CREATE: 'game',
+  GAME_UPDATE: 'game',
   VISIT_DECIDE: 'visit',
   RESULT_DECIDE: 'room',
   RESULT_VOID: 'room',
