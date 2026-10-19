@@ -646,6 +646,71 @@ async function main() {
       capacity: 10,
       games: ['magic'],
     },
+    // Les deux prochaines semaines : chaque soir, plusieurs rendez-vous dans des lieux et des formats variés
+    ...(
+      [
+        [
+          0,
+          ludotheque,
+          'THEMED',
+          'Quiz musical et jeux de rapidité',
+          20,
+          30,
+          30,
+          0,
+          'jeux-de-societe',
+        ],
+        [1, gobelin, 'GAME_NIGHT', 'Soirée Flesh and Blood', 19, 0, 10, 0, 'flesh-and-blood'],
+        [
+          1,
+          pixel,
+          'INITIATION',
+          'Initiation Star Wars Unlimited',
+          18,
+          30,
+          8,
+          0,
+          'star-wars-unlimited',
+        ],
+        [2, shop, 'TOURNAMENT', 'Tournoi Lorcana Core', 19, 0, 6, 500, 'lorcana'],
+        [2, bar, 'THEMED', 'Soirée jeux coopératifs', 20, 0, 20, 0, 'jeux-de-societe'],
+        [3, pixel, 'GAME_NIGHT', 'Soirée Pokémon pour tous', 18, 0, 16, 0, 'pokemon'],
+        [3, gobelin, 'TOURNAMENT', 'Tournoi Riftbound', 19, 30, 16, 600, 'riftbound'],
+        [4, ludotheque, 'GAME_NIGHT', 'Grands jeux en famille', 17, 0, 24, 0, 'jeux-de-societe'],
+        [4, shop, 'GAME_NIGHT', 'Draft du vendredi', 19, 30, 8, 1500, 'magic'],
+        [5, pixel, 'TOURNAMENT', 'Tournoi Altered', 14, 0, 20, 800, 'altered'],
+        [5, bar, 'THEMED', 'Murder party', 20, 30, 12, 1200, 'jeux-de-societe'],
+        [6, gobelin, 'INITIATION', 'Découvrir Digimon', 15, 0, 8, 0, 'digimon'],
+        [6, ludotheque, 'GAME_NIGHT', 'Dimanche jeux de société', 14, 30, 30, 0, 'jeux-de-societe'],
+        [
+          8,
+          shop,
+          'PRERELEASE',
+          'Avant-première Flesh and Blood',
+          19,
+          0,
+          24,
+          3500,
+          'flesh-and-blood',
+        ],
+        [9, pixel, 'GAME_NIGHT', 'Soirée One Piece', 19, 0, 12, 0, 'one-piece'],
+        [10, bar, 'INITIATION', 'Initiation aux jeux experts', 19, 0, 10, 0, 'jeux-de-societe'],
+        [11, gobelin, 'TOURNAMENT', 'Tournoi Yu-Gi-Oh! locaux', 19, 30, 24, 400, 'yugioh'],
+        [12, shop, 'TOURNAMENT', 'Tournoi Pokémon Étendu', 14, 0, 32, 800, 'pokemon'],
+        [12, ludotheque, 'THEMED', 'Soirée jeux de bluff', 20, 0, 20, 0, 'jeux-de-societe'],
+        [13, pixel, 'GAME_NIGHT', 'Soirée Lorcana', 15, 0, 12, 0, 'lorcana'],
+      ] as const
+    ).map(([days, venue, type, title, hours, minutes, capacity, priceCents, game], i) => ({
+      id: `demo-quinzaine-${i + 1}`,
+      venueId: venue.id,
+      type,
+      title,
+      startsAt: daysLater(days, hours, minutes),
+      capacity,
+      priceCents: priceCents || null,
+      minAge: title === 'Murder party' ? 18 : null,
+      games: [game] as string[],
+    })),
     // Passé (historique de Mes parties)
     {
       id: 'demo-passe-tournoi-lorcana',
@@ -666,6 +731,8 @@ async function main() {
       games: ['magic'],
     },
   ]
+  // Dates relatives au jour du seed : relancé un autre jour, une occurrence prendrait la date de la suivante
+  await prisma.event.deleteMany({ where: { seriesId: 'demo-serie-commander-mardi' } })
   for (const { games: slugs, ...event } of events) {
     const games = { set: slugs.map((slug) => ({ slug })) }
     await prisma.event.upsert({
@@ -694,6 +761,29 @@ async function main() {
       (userId) => ['demo-tournoi-pioneer', userId, 'REGISTERED'] as const,
     ),
     ['demo-tournoi-yugioh', 'demo-ines', 'REGISTERED'],
+    // Léa : inscrite ce soir et à plusieurs soirées de la quinzaine, en liste d'attente d'un tournoi complet
+    ...[
+      'demo-ce-soir-commander',
+      'demo-quinzaine-2',
+      'demo-quinzaine-6',
+      'demo-quinzaine-9',
+      'demo-quinzaine-11',
+      'demo-quinzaine-14',
+      'demo-quinzaine-17',
+    ].map((eventId) => [eventId, 'joueur-demo', 'REGISTERED'] as const),
+    ['demo-quinzaine-4', 'joueur-demo', 'WAITLISTED'],
+    ...['demo-alix', 'demo-theo', 'demo-jade', 'demo-maya', 'demo-noah', 'demo-hugo'].map(
+      (userId) => ['demo-quinzaine-4', userId, 'REGISTERED'] as const,
+    ),
+    ...['demo-sam', 'demo-ines', 'demo-theo'].map(
+      (userId) => ['demo-quinzaine-9', userId, 'REGISTERED'] as const,
+    ),
+    ...['demo-alix', 'demo-jade', 'demo-noah', 'demo-hugo', 'demo-maya'].map(
+      (userId) => ['demo-quinzaine-11', userId, 'REGISTERED'] as const,
+    ),
+    ...['demo-sam', 'demo-ines'].map(
+      (userId) => ['demo-quinzaine-2', userId, 'REGISTERED'] as const,
+    ),
   ]
   for (const [eventId, userId, status] of registrations) {
     await prisma.eventRegistration.upsert({
