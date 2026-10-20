@@ -4,6 +4,7 @@ import {
   AVATAR_STATUSES,
   EVENT_REPEAT_MAX_WEEKS,
   EVENT_TYPES,
+  GAME_KINDS,
   REGISTRATION_MODES,
   REPORT_REASONS,
   REPORT_RESOLUTIONS,
@@ -279,12 +280,67 @@ export const mergeGamesSchema = z.object({
 })
 export type MergeGamesInput = z.infer<typeof mergeGamesSchema>
 
-/** Jeu dans le back-office : de quoi repérer les doublons. */
+const playersSchema = z
+  .number({ message: 'Indique un nombre' })
+  .int()
+  .min(1, { message: 'Au moins 1' })
+  .max(20, { message: '20 maximum' })
+
+const playerRange = <T extends { minPlayers: number; maxPlayers: number }>(v: T) =>
+  v.maxPlayers >= v.minPlayers
+
+/** Format d'un jeu saisi par un admin (Standard, Draft…) ; `id` pour un format existant. */
+export const gameFormatInputSchema = z
+  .object({
+    id: z.string().min(1).optional(),
+    name: z.string().trim().min(1, { message: 'Nomme le format' }).max(60),
+    minPlayers: playersSchema,
+    maxPlayers: playersSchema,
+    durationMinutes: z
+      .number({ message: 'Indique une durée' })
+      .int()
+      .min(5, { message: '5 minutes minimum' })
+      .max(600, { message: '600 minutes maximum' }),
+  })
+  .refine(playerRange, { message: 'Au moins le minimum', path: ['maxPlayers'] })
+
+/**
+ * POST /admin/games et PUT /admin/games/:id (formats absents : retirés). Un TCG a au moins un format :
+ * une room TCG en exige un.
+ */
+export const gameInputSchema = z
+  .object({
+    name: z.string().trim().min(2, { message: 'Nom trop court' }).max(80),
+    kind: z.enum(GAME_KINDS),
+    minPlayers: playersSchema,
+    maxPlayers: playersSchema,
+    formats: z.array(gameFormatInputSchema).max(20),
+  })
+  .refine(playerRange, { message: 'Au moins le minimum', path: ['maxPlayers'] })
+  .refine((g) => g.kind !== 'TCG' || g.formats.length > 0, {
+    message: 'Ajoute au moins un format',
+    path: ['formats'],
+  })
+export type GameInput = z.infer<typeof gameInputSchema>
+
+/** Jeu dans le back-office : de quoi le modifier et repérer les doublons. */
 export const adminGameSchema = z.object({
   id: z.string(),
   slug: z.string(),
   name: z.string(),
-  formats: z.array(z.object({ id: z.string(), slug: z.string(), name: z.string() })),
+  kind: z.enum(GAME_KINDS),
+  minPlayers: z.number().int(),
+  maxPlayers: z.number().int(),
+  formats: z.array(
+    z.object({
+      id: z.string(),
+      slug: z.string(),
+      name: z.string(),
+      minPlayers: z.number().int(),
+      maxPlayers: z.number().int(),
+      durationMinutes: z.number().int(),
+    }),
+  ),
   rooms: z.number().int(),
   events: z.number().int(),
   players: z.number().int(),

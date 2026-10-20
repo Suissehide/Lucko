@@ -119,9 +119,18 @@ export function DataTable<T extends { id: string }>({
                   <View style={{ flex: 1 }}>{primary ? cell(byKey.get(primary), r) : null}</View>
                   {statusKey ? cell(byKey.get(statusKey), r) : null}
                 </View>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    flexWrap: 'wrap',
+                    justifyContent: 'space-between',
+                    gap: 8,
+                  }}
+                >
                   {cardKeys.map((k) => (
-                    <View key={k}>{cell(byKey.get(k), r)}</View>
+                    <View key={k} style={{ flexShrink: 1 }}>
+                      {cell(byKey.get(k), r)}
+                    </View>
                   ))}
                   {rowActions?.(r)}
                 </View>

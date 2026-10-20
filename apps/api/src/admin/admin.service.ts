@@ -180,7 +180,14 @@ export class AdminService {
         select: { id: true, title: true, venueId: true },
       }),
       this.prisma.game.findMany({
-        where: { id: { in: actions.filter((a) => a.action === 'GAME_MERGE').map(mergedInto) } },
+        where: {
+          id: {
+            in: [
+              ...actions.filter((a) => a.action === 'GAME_MERGE').map(mergedInto),
+              ...ids('game'),
+            ],
+          },
+        },
         select: { id: true, name: true },
       }),
     ])
@@ -191,6 +198,14 @@ export class AdminService {
       ...events.map((e) => [e.id, { type: 'venue', id: e.venueId, label: e.title }] as const),
       ...games.map((g) => [g.id, { type: 'game', id: g.id, label: g.name }] as const),
     ])
+    // Jeu supprimé : son nom reste dans le journal (renvoyé par la suppression)
+    for (const a of actions)
+      if (a.action === 'GAME_DELETE' && !targets.has(a.targetId))
+        targets.set(a.targetId, {
+          type: 'game',
+          id: a.targetId,
+          label: String((a.data as { name?: unknown } | null)?.name ?? 'Jeu supprimé'),
+        })
     return actions.map((a) => ({
       ...a,
       target: targets.get(a.action === 'GAME_MERGE' ? mergedInto(a) : a.targetId) ?? null,

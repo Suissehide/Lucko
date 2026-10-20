@@ -110,13 +110,39 @@ export function planProfileMerge(source: Profile[], target: Profile[]) {
   return { move, remove }
 }
 
+type GameUsage = {
+  rooms: number
+  events: number
+  eventSeries: number
+  venues: number
+  players: number
+  profiles: number
+}
+
+const USAGE_LABELS: [keyof GameUsage, string, string][] = [
+  ['rooms', 'room', 'rooms'],
+  ['events', 'événement', 'événements'],
+  ['eventSeries', 'série d’événements', 'séries d’événements'],
+  ['venues', 'lieu', 'lieux'],
+  ['players', 'joueur qui le déclare', 'joueurs qui le déclarent'],
+  ['profiles', 'profil classé', 'profils classés'],
+]
+
+/** Ce qui utilise encore un jeu (« 2 rooms, 1 lieu »), null s'il peut être supprimé sans rien perdre. */
+export function gameUsage(usage: GameUsage) {
+  const parts = USAGE_LABELS.filter(([key]) => usage[key] > 0).map(
+    ([key, one, many]) => `${usage[key]} ${usage[key] > 1 ? many : one}`,
+  )
+  return parts.length ? parts.join(', ') : null
+}
+
 /**
  * Ce que désigne le `targetId` d'une action du journal : la création d'un événement vise le lieu
  * (route /venues/:id/events), la fusion vise le doublon supprimé (on montre le jeu gardé).
  */
 export const ACTION_TARGET: Record<
   AdminActionKind,
-  'report' | 'user' | 'venue' | 'event' | 'merge' | 'visit' | 'room'
+  'report' | 'user' | 'venue' | 'event' | 'merge' | 'game' | 'visit' | 'room'
 > = {
   REPORT_DISMISS: 'report',
   REPORT_WARN: 'report',
@@ -132,6 +158,9 @@ export const ACTION_TARGET: Record<
   EVENT_CANCEL: 'event',
   EVENT_HIDE: 'event',
   GAME_MERGE: 'merge',
+  GAME_CREATE: 'game',
+  GAME_UPDATE: 'game',
+  GAME_DELETE: 'game',
   VISIT_DECIDE: 'visit',
   RESULT_DECIDE: 'room',
   RESULT_VOID: 'room',

@@ -46,7 +46,8 @@ export class AuditInterceptor implements NestInterceptor {
             // Création : pas de `:id` dans la route, la cible est ce qui vient d'être créé
             targetId: String(request.params.id ?? (result as { id?: string } | null)?.id ?? ''),
             reason: typeof body.reason === 'string' ? body.reason : '',
-            data: body as Prisma.InputJsonObject,
+            // Suppression : pas de corps, on garde ce que la route renvoie (le nom de ce qui a disparu)
+            data: (request.method === 'DELETE' ? result : body) as Prisma.InputJsonObject,
           },
         })
         return result

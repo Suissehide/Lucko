@@ -2,6 +2,7 @@ import type {
   AdminEventInput,
   CancelEventInput,
   CreateVenueInput,
+  GameInput,
   UpdateVenueInput,
   VenueStatus,
 } from '@lucko/shared'
@@ -94,7 +95,26 @@ export function useAdminCatalogMutations() {
     onSuccess,
   })
 
-  return { createVenue, updateVenue, saveEvent, cancelEvent, mergeGames }
+  /** Création, ou modification avec `id`. */
+  const saveGame = useMutation({
+    mutationKey: [ADMIN.SAVE_GAME],
+    mutationFn: ({ id, body }: { id?: string; body: GameInput }) =>
+      unwrap(
+        id
+          ? api.PUT('/admin/games/{id}', { params: { path: { id } }, body })
+          : api.POST('/admin/games', { body }),
+      ),
+    onSuccess,
+  })
+
+  const deleteGame = useMutation({
+    mutationKey: [ADMIN.DELETE_GAME],
+    mutationFn: (id: string) =>
+      unwrap(api.DELETE('/admin/games/{id}', { params: { path: { id } } })),
+    onSuccess,
+  })
+
+  return { createVenue, updateVenue, saveEvent, cancelEvent, mergeGames, saveGame, deleteGame }
 }
 
 type SaveEvent = { venueId: string; eventId?: string; body: AdminEventInput }

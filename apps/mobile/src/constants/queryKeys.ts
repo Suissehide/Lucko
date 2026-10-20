@@ -107,6 +107,8 @@ export const ADMIN = {
   CANCEL_EVENT: 'admin_cancel_event',
   GAMES: 'admin_games',
   MERGE_GAMES: 'admin_merge_games',
+  SAVE_GAME: 'admin_save_game',
+  DELETE_GAME: 'admin_delete_game',
 } as const
 
 export const CHAT = {

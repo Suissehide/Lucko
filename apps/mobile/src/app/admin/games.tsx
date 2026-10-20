@@ -11,9 +11,11 @@ import {
   Typography,
 } from '@lucko/design-system'
 import type { AdminGame } from '@lucko/shared'
+import { Plus } from 'lucide-react-native'
 import { useState } from 'react'
 import { useWindowDimensions, View } from 'react-native'
 import { AdminScreen } from '@/components/admin/AdminScreen'
+import { GameForm } from '@/components/admin/GameForm'
 import { duplicateOf, mergeSummary } from '@/lib/admin'
 import { useAdminCatalogMutations, useAdminGamesQuery } from '@/queries/useAdminCatalog'
 
@@ -33,7 +35,7 @@ const count = (key: 'rooms' | 'events' | 'players', label: string, width: number
   }) satisfies Column<AdminGame>
 
 /**
- * Catalogue des jeux : fusionner un doublon dans le bon jeu. Formats, profils (LK), rooms,
+ * Catalogue des jeux : ajouter ou modifier un jeu, ou fusionner un doublon dans le bon jeu. Formats, profils (LK), rooms,
  * événements, lieux et joueurs passent au jeu cible, puis le doublon est supprimé.
  */
 export default function AdminGamesScreen() {
@@ -42,12 +44,16 @@ export default function AdminGamesScreen() {
   const { mergeGames } = useAdminCatalogMutations()
   const [mergingId, setMergingId] = useState<string | null>(null)
   const [intoId, setIntoId] = useState<string | null>(null)
-  const [merged, setMerged] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
+  const [adding, setAdding] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
   const all = games.data ?? []
-  const merging = all.find((g) => g.id === mergingId)
+  const openId = mergingId ?? editingId
+  const opened = all.find((g) => g.id === openId)
 
   const open = (game: AdminGame) => {
     mergeGames.reset()
+    setEditingId(null)
     setMergingId(mergingId === game.id ? null : game.id)
     setIntoId(duplicateOf(game, all)?.id ?? null)
   }
@@ -89,15 +95,29 @@ export default function AdminGamesScreen() {
     {
       key: 'merge',
       label: '',
-      width: 180,
+      width: 290,
       align: 'right',
       render: (g) => (
-        <Button
-          small
-          kind={mergingId === g.id ? 'rating' : 'ghost'}
-          label="Fusionner dans…"
-          onPress={() => open(g)}
-        />
+        <View
+          style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-end', gap: 6 }}
+        >
+          <Button
+            small
+            kind={editingId === g.id ? 'rating' : 'ghost'}
+            label="Modifier"
+            onPress={() => {
+              setMergingId(null)
+              setNotice(null)
+              setEditingId(editingId === g.id ? null : g.id)
+            }}
+          />
+          <Button
+            small
+            kind={mergingId === g.id ? 'rating' : 'ghost'}
+            label="Fusionner dans…"
+            onPress={() => open(g)}
+          />
+        </View>
       ),
     },
   ]
@@ -147,7 +167,7 @@ export default function AdminGamesScreen() {
                 { id: source.id, intoId: target.id },
                 {
                   onSuccess: () => {
-                    setMerged(`« ${source.name} » a été fusionné dans « ${target.name} ».`)
+                    setNotice(`« ${source.name} » a été fusionné dans « ${target.name} ».`)
                     setMergingId(null)
                   },
                 },
@@ -159,12 +179,52 @@ export default function AdminGamesScreen() {
     )
   }
 
+  const editPanel = (game: AdminGame) => (
+    <GameForm
+      key={game.id}
+      game={game}
+      onCancel={() => setEditingId(null)}
+      onDeleted={() => {
+        setNotice(`« ${game.name} » a été supprimé du catalogue.`)
+        setEditingId(null)
+      }}
+      onDone={(saved) => {
+        setNotice(`« ${saved.name} » a été modifié.`)
+        setEditingId(null)
+      }}
+    />
+  )
+  const panel = (g: AdminGame) =>
+    g.id === mergingId ? mergePanel(g) : g.id === editingId ? editPanel(g) : null
+
   return (
     <AdminScreen
       section="games"
-      note="Fusionne les doublons : les rooms, événements et profils de jeu sont déplacés vers le jeu cible."
+      note="Ajoute ou modifie un jeu avec ses formats, ou fusionne les doublons : les rooms, événements et profils de jeu sont déplacés vers le jeu cible."
     >
-      {merged ? <Banner tone="ok" message={merged} /> : null}
+      {notice ? <Banner tone="ok" message={notice} /> : null}
+      {adding ? (
+        <GameForm
+          onCancel={() => setAdding(false)}
+          onDone={(game) => {
+            setNotice(`« ${game.name} » a été ajouté au catalogue.`)
+            setAdding(false)
+          }}
+        />
+      ) : (
+        <View style={{ flexDirection: 'row' }}>
+          <Button
+            small
+            kind="venue"
+            icon={Plus}
+            label="Ajouter un jeu"
+            onPress={() => {
+              setNotice(null)
+              setAdding(true)
+            }}
+          />
+        </View>
+      )}
       {games.isError ? (
         <Banner tone="err" message={games.error.message} />
       ) : !games.data ? (
@@ -173,14 +233,14 @@ export default function AdminGamesScreen() {
         <DataTable
           columns={columns}
           rows={all}
-          selected={mergingId ? [mergingId] : []}
-          expanded={(g) => (g.id === mergingId ? mergePanel(g) : null)}
+          selected={openId ? [openId] : []}
+          expanded={panel}
           mobileCards={narrow}
           primary="name"
           cardKeys={['formats', 'merge']}
         />
       )}
-      {narrow && merging ? mergePanel(merging) : null}
+      {narrow && opened ? panel(opened) : null}
     </AdminScreen>
   )
 }

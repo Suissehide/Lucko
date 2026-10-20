@@ -10802,6 +10802,9 @@
                               "EVENT_CANCEL",
                               "EVENT_HIDE",
                               "GAME_MERGE",
+                              "GAME_CREATE",
+                              "GAME_UPDATE",
+                              "GAME_DELETE",
                               "VISIT_DECIDE",
                               "RESULT_DECIDE",
                               "RESULT_VOID"
@@ -11137,6 +11140,9 @@
                           "EVENT_CANCEL",
                           "EVENT_HIDE",
                           "GAME_MERGE",
+                          "GAME_CREATE",
+                          "GAME_UPDATE",
+                          "GAME_DELETE",
                           "VISIT_DECIDE",
                           "RESULT_DECIDE",
                           "RESULT_VOID"
@@ -12652,6 +12658,23 @@
                       "name": {
                         "type": "string"
                       },
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "TCG",
+                          "BOARD_GAME"
+                        ]
+                      },
+                      "minPlayers": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      "maxPlayers": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
                       "formats": {
                         "type": "array",
                         "items": {
@@ -12665,12 +12688,30 @@
                             },
                             "name": {
                               "type": "string"
+                            },
+                            "minPlayers": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "maxPlayers": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "durationMinutes": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
                             }
                           },
                           "required": [
                             "id",
                             "slug",
-                            "name"
+                            "name",
+                            "minPlayers",
+                            "maxPlayers",
+                            "durationMinutes"
                           ]
                         }
                       },
@@ -12694,12 +12735,450 @@
                       "id",
                       "slug",
                       "name",
+                      "kind",
+                      "minPlayers",
+                      "maxPlayers",
                       "formats",
                       "rooms",
                       "events",
                       "players"
                     ]
                   }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "post": {
+        "operationId": "AdminCatalogController_createGame",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 80
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "TCG",
+                      "BOARD_GAME"
+                    ]
+                  },
+                  "minPlayers": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 20
+                  },
+                  "maxPlayers": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 20
+                  },
+                  "formats": {
+                    "maxItems": 20,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "name": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 60
+                        },
+                        "minPlayers": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 20
+                        },
+                        "maxPlayers": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 20
+                        },
+                        "durationMinutes": {
+                          "type": "integer",
+                          "minimum": 5,
+                          "maximum": 600
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "minPlayers",
+                        "maxPlayers",
+                        "durationMinutes"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "name",
+                  "kind",
+                  "minPlayers",
+                  "maxPlayers",
+                  "formats"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "slug": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "TCG",
+                        "BOARD_GAME"
+                      ]
+                    },
+                    "minPlayers": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "maxPlayers": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "formats": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "slug": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "minPlayers": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "maxPlayers": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "durationMinutes": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "slug",
+                          "name",
+                          "minPlayers",
+                          "maxPlayers",
+                          "durationMinutes"
+                        ]
+                      }
+                    },
+                    "rooms": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "events": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "players": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "slug",
+                    "name",
+                    "kind",
+                    "minPlayers",
+                    "maxPlayers",
+                    "formats",
+                    "rooms",
+                    "events",
+                    "players"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/games/{id}": {
+      "put": {
+        "operationId": "AdminCatalogController_updateGame",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 80
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "TCG",
+                      "BOARD_GAME"
+                    ]
+                  },
+                  "minPlayers": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 20
+                  },
+                  "maxPlayers": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 20
+                  },
+                  "formats": {
+                    "maxItems": 20,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "name": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 60
+                        },
+                        "minPlayers": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 20
+                        },
+                        "maxPlayers": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 20
+                        },
+                        "durationMinutes": {
+                          "type": "integer",
+                          "minimum": 5,
+                          "maximum": 600
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "minPlayers",
+                        "maxPlayers",
+                        "durationMinutes"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "name",
+                  "kind",
+                  "minPlayers",
+                  "maxPlayers",
+                  "formats"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "slug": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "TCG",
+                        "BOARD_GAME"
+                      ]
+                    },
+                    "minPlayers": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "maxPlayers": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "formats": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "slug": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "minPlayers": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "maxPlayers": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "durationMinutes": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "slug",
+                          "name",
+                          "minPlayers",
+                          "maxPlayers",
+                          "durationMinutes"
+                        ]
+                      }
+                    },
+                    "rooms": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "events": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "players": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "slug",
+                    "name",
+                    "kind",
+                    "minPlayers",
+                    "maxPlayers",
+                    "formats",
+                    "rooms",
+                    "events",
+                    "players"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "admin"
+        ]
+      },
+      "delete": {
+        "operationId": "AdminCatalogController_deleteGame",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "name"
+                  ]
                 }
               }
             }

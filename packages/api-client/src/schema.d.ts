@@ -1101,8 +1101,24 @@ export interface paths {
         };
         get: operations["AdminCatalogController_games"];
         put?: never;
-        post?: never;
+        post: operations["AdminCatalogController_createGame"];
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/games/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["AdminCatalogController_updateGame"];
+        post?: never;
+        delete: operations["AdminCatalogController_deleteGame"];
         options?: never;
         head?: never;
         patch?: never;
@@ -4570,7 +4586,7 @@ export interface operations {
                         actions: {
                             id: string;
                             /** @enum {string} */
-                            action: "REPORT_DISMISS" | "REPORT_WARN" | "REPORT_SUSPEND" | "USER_SUSPEND" | "USER_UNSUSPEND" | "AVATAR_APPROVE" | "AVATAR_REJECT" | "VENUE_CREATE" | "VENUE_UPDATE" | "EVENT_CREATE" | "EVENT_UPDATE" | "EVENT_CANCEL" | "EVENT_HIDE" | "GAME_MERGE" | "VISIT_DECIDE" | "RESULT_DECIDE" | "RESULT_VOID";
+                            action: "REPORT_DISMISS" | "REPORT_WARN" | "REPORT_SUSPEND" | "USER_SUSPEND" | "USER_UNSUSPEND" | "AVATAR_APPROVE" | "AVATAR_REJECT" | "VENUE_CREATE" | "VENUE_UPDATE" | "EVENT_CREATE" | "EVENT_UPDATE" | "EVENT_CANCEL" | "EVENT_HIDE" | "GAME_MERGE" | "GAME_CREATE" | "GAME_UPDATE" | "GAME_DELETE" | "VISIT_DECIDE" | "RESULT_DECIDE" | "RESULT_VOID";
                             targetId: string;
                             target: {
                                 /** @enum {string} */
@@ -4728,7 +4744,7 @@ export interface operations {
                     "application/json": {
                         id: string;
                         /** @enum {string} */
-                        action: "REPORT_DISMISS" | "REPORT_WARN" | "REPORT_SUSPEND" | "USER_SUSPEND" | "USER_UNSUSPEND" | "AVATAR_APPROVE" | "AVATAR_REJECT" | "VENUE_CREATE" | "VENUE_UPDATE" | "EVENT_CREATE" | "EVENT_UPDATE" | "EVENT_CANCEL" | "EVENT_HIDE" | "GAME_MERGE" | "VISIT_DECIDE" | "RESULT_DECIDE" | "RESULT_VOID";
+                        action: "REPORT_DISMISS" | "REPORT_WARN" | "REPORT_SUSPEND" | "USER_SUSPEND" | "USER_UNSUSPEND" | "AVATAR_APPROVE" | "AVATAR_REJECT" | "VENUE_CREATE" | "VENUE_UPDATE" | "EVENT_CREATE" | "EVENT_UPDATE" | "EVENT_CANCEL" | "EVENT_HIDE" | "GAME_MERGE" | "GAME_CREATE" | "GAME_UPDATE" | "GAME_DELETE" | "VISIT_DECIDE" | "RESULT_DECIDE" | "RESULT_VOID";
                         targetId: string;
                         target: {
                             /** @enum {string} */
@@ -5221,15 +5237,157 @@ export interface operations {
                         id: string;
                         slug: string;
                         name: string;
+                        /** @enum {string} */
+                        kind: "TCG" | "BOARD_GAME";
+                        minPlayers: number;
+                        maxPlayers: number;
                         formats: {
                             id: string;
                             slug: string;
                             name: string;
+                            minPlayers: number;
+                            maxPlayers: number;
+                            durationMinutes: number;
                         }[];
                         rooms: number;
                         events: number;
                         players: number;
                     }[];
+                };
+            };
+        };
+    };
+    AdminCatalogController_createGame: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name: string;
+                    /** @enum {string} */
+                    kind: "TCG" | "BOARD_GAME";
+                    minPlayers: number;
+                    maxPlayers: number;
+                    formats: {
+                        id?: string;
+                        name: string;
+                        minPlayers: number;
+                        maxPlayers: number;
+                        durationMinutes: number;
+                    }[];
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        id: string;
+                        slug: string;
+                        name: string;
+                        /** @enum {string} */
+                        kind: "TCG" | "BOARD_GAME";
+                        minPlayers: number;
+                        maxPlayers: number;
+                        formats: {
+                            id: string;
+                            slug: string;
+                            name: string;
+                            minPlayers: number;
+                            maxPlayers: number;
+                            durationMinutes: number;
+                        }[];
+                        rooms: number;
+                        events: number;
+                        players: number;
+                    };
+                };
+            };
+        };
+    };
+    AdminCatalogController_updateGame: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name: string;
+                    /** @enum {string} */
+                    kind: "TCG" | "BOARD_GAME";
+                    minPlayers: number;
+                    maxPlayers: number;
+                    formats: {
+                        id?: string;
+                        name: string;
+                        minPlayers: number;
+                        maxPlayers: number;
+                        durationMinutes: number;
+                    }[];
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        id: string;
+                        slug: string;
+                        name: string;
+                        /** @enum {string} */
+                        kind: "TCG" | "BOARD_GAME";
+                        minPlayers: number;
+                        maxPlayers: number;
+                        formats: {
+                            id: string;
+                            slug: string;
+                            name: string;
+                            minPlayers: number;
+                            maxPlayers: number;
+                            durationMinutes: number;
+                        }[];
+                        rooms: number;
+                        events: number;
+                        players: number;
+                    };
+                };
+            };
+        };
+    };
+    AdminCatalogController_deleteGame: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        name: string;
+                    };
                 };
             };
         };
