@@ -184,6 +184,10 @@ export default function AdminGamesScreen() {
       key={game.id}
       game={game}
       onCancel={() => setEditingId(null)}
+      onDeleted={() => {
+        setNotice(`« ${game.name} » a été supprimé du catalogue.`)
+        setEditingId(null)
+      }}
       onDone={(saved) => {
         setNotice(`« ${saved.name} » a été modifié.`)
         setEditingId(null)

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  gameUsage,
   isSuspended,
   planFormatMerge,
   planProfileMerge,
@@ -73,5 +74,15 @@ describe('e-mails de la modération', () => {
     expect(html).not.toContain('<script>')
     expect(html).toContain('&lt;script&gt;alert(1)&lt;/script&gt; &amp; &quot;co&quot;')
     expect(html).toContain('Bonjour &lt;b&gt;x&lt;/b&gt;,')
+  })
+})
+
+describe('gameUsage', () => {
+  const none = { rooms: 0, events: 0, eventSeries: 0, venues: 0, players: 0, profiles: 0 }
+  it('null pour un jeu inutilisé, sinon ce qui le retient', () => {
+    expect(gameUsage(none)).toBeNull()
+    expect(gameUsage({ ...none, rooms: 2, venues: 1, profiles: 3 })).toBe(
+      '2 rooms, 1 lieu, 3 profils classés',
+    )
   })
 })

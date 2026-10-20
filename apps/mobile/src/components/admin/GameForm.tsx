@@ -1,7 +1,8 @@
-import { Button, colors, IconButton, Inset, Typography } from '@lucko/design-system'
+import { Banner, Button, colors, IconButton, Inset, Typography } from '@lucko/design-system'
 import { type AdminGame, type GameKind, gameInputSchema } from '@lucko/shared'
 import { useStore } from '@tanstack/react-form'
 import { Plus, Trash2 } from 'lucide-react-native'
+import { useState } from 'react'
 import { View } from 'react-native'
 import { useAppForm } from '@/hooks/formConfig'
 import { useAdminCatalogMutations } from '@/queries/useAdminCatalog'
@@ -38,18 +39,21 @@ const cell = { flexGrow: 1, flexBasis: 110 }
 
 /**
  * Ajout (sans `game`) ou modification d'un jeu : un TCG avec ses formats, ou un jeu de société avec
- * ses joueurs. Le type ne change pas une fois le jeu créé.
+ * ses joueurs. Le type ne change pas une fois le jeu créé ; un jeu que rien n'utilise peut être supprimé.
  */
 export function GameForm({
   game,
   onDone,
   onCancel,
+  onDeleted,
 }: {
   game?: AdminGame
   onDone: (game: AdminGame) => void
   onCancel: () => void
+  onDeleted?: () => void
 }) {
-  const { saveGame } = useAdminCatalogMutations()
+  const { saveGame, deleteGame } = useAdminCatalogMutations()
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const form = useAppForm({
     defaultValues: game
       ? valuesOf(game)
@@ -182,9 +186,49 @@ export function GameForm({
           </View>
         </View>
       )}
+      {confirmDelete && game ? (
+        <View style={{ gap: 8 }}>
+          <Typography variant="small" weight={800} style={{ color: colors.room }}>
+            « {game.name} » et ses formats seront supprimés. Cette action est définitive.
+          </Typography>
+          {deleteGame.isError ? <Banner tone="err" message={deleteGame.error.message} /> : null}
+          <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 8 }}>
+            <Button
+              small
+              kind="ghost"
+              label="Garder le jeu"
+              onPress={() => setConfirmDelete(false)}
+            />
+            <Button
+              small
+              kind="room"
+              label="Supprimer"
+              disabled={deleteGame.isPending}
+              onPress={() => deleteGame.mutate(game.id, { onSuccess: onDeleted })}
+            />
+          </View>
+        </View>
+      ) : null}
       <form.AppForm>
         <form.FormError />
-        <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 8 }}>
+        <View
+          style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-end', gap: 8 }}
+        >
+          {game && !confirmDelete ? (
+            <View style={{ flexGrow: 1 }}>
+              <View style={{ flexDirection: 'row' }}>
+                <Button
+                  small
+                  kind="ghost"
+                  label="Supprimer le jeu"
+                  onPress={() => {
+                    deleteGame.reset()
+                    setConfirmDelete(true)
+                  }}
+                />
+              </View>
+            </View>
+          ) : null}
           <Button small kind="ghost" label="Annuler" onPress={onCancel} />
           <form.SubmitButton
             small

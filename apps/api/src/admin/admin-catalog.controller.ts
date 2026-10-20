@@ -18,6 +18,7 @@ import {
   BadRequestException,
   ConflictException,
   Controller,
+  Delete,
   Get,
   HttpCode,
   NotFoundException,
@@ -36,6 +37,7 @@ import { PrismaService } from '../prisma/prisma.service'
 import { isSamePlace, osmElementQuery, slugify, toVenue } from '../venues/osm.rules'
 import { fetchOverpass } from '../venues/osm-import'
 import { Admin } from './admin.decorators'
+import { gameUsage } from './admin.rules'
 import { AdminService } from './admin.service'
 
 const DAY_MS = 24 * 60 * 60 * 1000
@@ -355,6 +357,32 @@ export class AdminCatalogController {
       include: gameInclude,
     })
     return toAdminGame(updated)
+  }
+
+  /** Supprime un jeu que rien n'utilise (ajouté par erreur) ; sinon, le fusionner dans un autre. */
+  @Delete('games/:id')
+  @Admin('GAME_DELETE')
+  @ZodResponse(z.object({ name: z.string() }))
+  async deleteGame(@Param('id') id: string) {
+    const game = await this.prisma.game.findUnique({
+      where: { id },
+      select: {
+        name: true,
+        _count: {
+          select: { rooms: true, events: true, eventSeries: true, venues: true, players: true },
+        },
+        formats: { select: { _count: { select: { profiles: true } } } },
+      },
+    })
+    if (!game) throw new NotFoundException('Jeu introuvable')
+    const usage = gameUsage({
+      ...game._count,
+      profiles: game.formats.reduce((n, f) => n + f._count.profiles, 0),
+    })
+    if (usage)
+      throw new ConflictException(`Ce jeu est encore utilisé (${usage}) : fusionne-le plutôt`)
+    await this.prisma.game.delete({ where: { id } })
+    return { name: game.name }
   }
 
   /** Fond le jeu `:id` (doublon) dans `intoId`, sans perte de données, puis le supprime. */

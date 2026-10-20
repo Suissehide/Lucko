@@ -107,7 +107,14 @@ export function useAdminCatalogMutations() {
     onSuccess,
   })
 
-  return { createVenue, updateVenue, saveEvent, cancelEvent, mergeGames, saveGame }
+  const deleteGame = useMutation({
+    mutationKey: [ADMIN.DELETE_GAME],
+    mutationFn: (id: string) =>
+      unwrap(api.DELETE('/admin/games/{id}', { params: { path: { id } } })),
+    onSuccess,
+  })
+
+  return { createVenue, updateVenue, saveEvent, cancelEvent, mergeGames, saveGame, deleteGame }
 }
 
 type SaveEvent = { venueId: string; eventId?: string; body: AdminEventInput }
