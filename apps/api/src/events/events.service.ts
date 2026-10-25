@@ -4,6 +4,7 @@ import type { z } from 'zod'
 import type { User } from '../generated/prisma/client'
 import { PrismaService } from '../prisma/prisma.service'
 import { RealtimeGateway } from '../realtime/realtime.gateway'
+import { promoteWaitlist } from './event-capacity'
 import { registrationOutcome, seriesView, withUtm } from './events.rules'
 
 const registered = { registrations: { where: { status: 'REGISTERED' as const } } }
@@ -104,17 +105,9 @@ export class EventsService {
         data: { status: 'CANCELLED' },
       })
       if (mine.status !== 'REGISTERED') return
-      const next = await tx.eventRegistration.findFirst({
-        where: { eventId: id, status: 'WAITLISTED' },
-        orderBy: { createdAt: 'asc' },
-      })
+      // Seulement s'il reste vraiment une place (capacité réduite entre-temps, LKO-152)
       // ponytail: le joueur promu n'est pas encore prévenu, notification avec LKO-108
-      if (next) {
-        await tx.eventRegistration.update({
-          where: { eventId_userId: { eventId: id, userId: next.userId } },
-          data: { status: 'REGISTERED' },
-        })
-      }
+      await promoteWaitlist(tx, id)
     })
     await this.realtime.revoke({ type: 'event-chat', id }, [user.id])
     this.realtime.changed({ type: 'event', id })

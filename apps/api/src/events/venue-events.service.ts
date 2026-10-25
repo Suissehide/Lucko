@@ -28,6 +28,7 @@ import { MailService } from '../mail/mail.service'
 import { PrismaService } from '../prisma/prisma.service'
 import { PushService } from '../push/push.service'
 import { RealtimeGateway } from '../realtime/realtime.gateway'
+import { assertCapacity, promoteWaitlist } from './event-capacity'
 import {
   durationOf,
   type EventChange,
@@ -297,6 +298,8 @@ export class VenueEventsService implements OnModuleInit {
       await this.prisma.$transaction(async (tx) => {
         if (input.status === 'DRAFT' && event.status === 'PUBLISHED')
           await this.assertNoRegistrations(tx, { id: eventId })
+        // Pas sous le nombre d'inscrits ; des places en plus vont à la liste d'attente (LKO-152)
+        await assertCapacity(tx, { id: eventId }, input.capacity)
         await tx.event.update({
           where: { id: eventId },
           data: {
@@ -307,6 +310,7 @@ export class VenueEventsService implements OnModuleInit {
             games: { set: gameRefs(input.gameIds) },
           },
         })
+        await promoteWaitlist(tx, eventId)
         if (event.status === 'PUBLISHED' && timesChanged(event, times))
           await this.notify(tx, [eventId], 'moved')
       })
@@ -330,6 +334,7 @@ export class VenueEventsService implements OnModuleInit {
     await this.prisma.$transaction(async (tx) => {
       if (input.status === 'DRAFT' && series.status === 'PUBLISHED')
         await this.assertNoRegistrations(tx, upcoming)
+      await assertCapacity(tx, upcoming, input.capacity)
       await tx.eventSeries.update({
         where: { id: seriesId },
         data: {
@@ -362,6 +367,7 @@ export class VenueEventsService implements OnModuleInit {
             games: { set: gameRefs(input.gameIds) },
           },
         })
+        await promoteWaitlist(tx, occurrence.id)
         if (occurrence.status === 'PUBLISHED' && timesChanged(occurrence, times))
           moved.push(occurrence.id)
       }
