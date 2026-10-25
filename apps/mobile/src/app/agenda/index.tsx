@@ -172,7 +172,7 @@ export default function AgendaScreen() {
         ? block(
             'partners',
             'Chez nos partenaires',
-            'Ces lieux rémunèrent Lucko pour chaque joueur venu.',
+            'Mis en avant : ces lieux sont partenaires de Lucko (partenariat payant).',
             view.partners,
             true,
           )

@@ -14,7 +14,7 @@ import {
 } from '@lucko/design-system'
 import { addMonths, formatDayMonth, formatPrice, type VenueVisits } from '@lucko/shared'
 import { useLocalSearchParams } from 'expo-router'
-import { Receipt } from 'lucide-react-native'
+import { ChevronRight, Receipt } from 'lucide-react-native'
 import { useState } from 'react'
 import { Platform, Share, View } from 'react-native'
 import { DetailScreen } from '@/components/DetailScreen'
@@ -85,10 +85,15 @@ export default function VenueBillingScreen() {
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
         <Button
           kind="ghost"
-          label="‹ Mois précédent"
+          label="Mois précédent"
           onPress={() => setMonth(addMonths(month, -1))}
         />
-        <Button kind="ghost" label="Mois suivant ›" onPress={() => setMonth(addMonths(month, 1))} />
+        <Button
+          kind="ghost"
+          label="Mois suivant"
+          icon={ChevronRight}
+          onPress={() => setMonth(addMonths(month, 1))}
+        />
       </View>
 
       {visits.isError ? (

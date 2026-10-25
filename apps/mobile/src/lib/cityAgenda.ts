@@ -301,7 +301,13 @@ export function agendaView(
 
   // Mise en avant des lieux partenaires (LKO-92) : leurs prochains rendez-vous, en plus de la liste par jour
   const partners = results.filter((e) => e.venue.isPartner).slice(0, PARTNER_HIGHLIGHTS)
-  return { results, partners, groups: dayGroups(results, days), menus, toggles, chips, clearAll }
+  // Mis en avant en tête, ils ne sont pas répétés dans les jours (LKO-137)
+  const highlighted = new Set(partners)
+  const groups = dayGroups(
+    results.filter((e) => !highlighted.has(e)),
+    days,
+  )
+  return { results, partners, groups, menus, toggles, chips, clearAll }
 }
 
 // * AFFICHAGE

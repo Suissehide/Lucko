@@ -1,3 +1,4 @@
+import { ArrowRight } from 'lucide-react-native'
 import { Pressable, Text, View } from 'react-native'
 import { Raised } from '../atoms/Raised'
 import { useHover } from '../atoms/useHover'
@@ -51,9 +52,7 @@ export function QueueCard({
           >
             {value}
           </Text>
-          <Text style={{ ...font('body', 800), fontSize: 18, color: colors.ink, marginBottom: 8 }}>
-            →
-          </Text>
+          <ArrowRight size={20} color={colors.ink} strokeWidth={3} style={{ marginBottom: 10 }} />
         </View>
         <Text style={{ ...font('body', 800), fontSize: 15, color: colors.ink }}>{label}</Text>
         <Text numberOfLines={1} style={{ ...font('body', 400), fontSize: 13, color: colors.muted }}>
