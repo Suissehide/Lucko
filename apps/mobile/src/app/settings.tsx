@@ -42,7 +42,7 @@ const WIDE = 900
 
 const backToProfile = () => (router.canGoBack() ? router.back() : router.replace('/profile'))
 
-// ponytail: mot de passe, fournisseur lié et langue attendent leurs écrans (section Compte)
+// ponytail: fournisseur lié et langue attendent leurs écrans (section Compte)
 const LUCKO_LINKS = [
   {
     label: 'Aide',
@@ -201,6 +201,7 @@ export default function SettingsScreen() {
               value: blocked === undefined ? undefined : blocked ? String(blocked) : 'Aucun',
               onPress: () => router.push('/blocked'),
             },
+            { label: 'Mot de passe', onPress: () => router.push('/password') },
             ...(me.childCount
               ? [
                   {
@@ -303,6 +304,12 @@ export default function SettingsScreen() {
                     : 'Aucun'
               }
               onPress={() => router.push('/blocked')}
+            />
+            <SettingsRow
+              wide
+              label="Mot de passe"
+              description="Change-le à tout moment ; tes autres appareils sont déconnectés."
+              onPress={() => router.push('/password')}
             />
             {me.childCount ? (
               <SettingsRow

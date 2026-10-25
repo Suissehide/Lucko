@@ -6,6 +6,7 @@ import { APIError } from 'better-auth/api'
 import { isSuspended, suspensionMessage } from '../admin/admin.rules'
 import type { Env } from '../config/env'
 import type { PrismaClient } from '../generated/prisma/client'
+import { RESET_PASSWORD_EXPIRES_SEC, resetPasswordMail } from './auth.mails'
 
 /** Fournisseur actif seulement si ses deux variables sont renseignées (le dev tourne sans identifiants Apple / Google). */
 function provider(clientId?: string, clientSecret?: string) {
@@ -15,14 +16,28 @@ function provider(clientId?: string, clientSecret?: string) {
 /**
  * Better Auth (LKO-9) : e-mail + mot de passe, Apple, Google ; sessions en cookie, stockées dans Postgres.
  * Routes servies sous /api/auth/* (montées dans main.ts, avant le body parser de Nest).
+ * `sendMail` : envoi par MailService (Mailpit en dev), pour le lien de mot de passe oublié (LKO-138).
  */
-export function createAuth(prisma: PrismaClient, env: Env) {
+export function createAuth(
+  prisma: PrismaClient,
+  env: Env,
+  sendMail: (mail: { to: string; subject: string; html: string }) => Promise<unknown>,
+) {
   return betterAuth({
     baseURL: env.BETTER_AUTH_URL,
     secret: env.BETTER_AUTH_SECRET,
     database: prismaAdapter(prisma, { provider: 'postgresql' }),
-    // ponytail: pas de vérification d'e-mail ni de mot de passe oublié (envoi d'e-mails à brancher, Mailpit en dev)
-    emailAndPassword: { enabled: true, minPasswordLength: PASSWORD_MIN },
+    // ponytail: pas de vérification d'e-mail (LKO-22)
+    emailAndPassword: {
+      enabled: true,
+      minPasswordLength: PASSWORD_MIN,
+      // Mot de passe oublié : lien par e-mail, valable une heure ; les autres sessions sont fermées
+      sendResetPassword: async ({ user, url }) => {
+        await sendMail({ to: user.email, ...resetPasswordMail(url) })
+      },
+      resetPasswordTokenExpiresIn: RESET_PASSWORD_EXPIRES_SEC,
+      revokeSessionsOnPasswordReset: true,
+    },
     socialProviders: {
       google: provider(env.GOOGLE_CLIENT_ID, env.GOOGLE_CLIENT_SECRET),
       apple: provider(env.APPLE_CLIENT_ID, env.APPLE_CLIENT_SECRET),
