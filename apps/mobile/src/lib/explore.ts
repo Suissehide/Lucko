@@ -43,6 +43,7 @@ export function todayLine(city: string, short?: boolean) {
   return `${date.charAt(0).toUpperCase()}${date.slice(1)} · ${city}`
 }
 
+/** Places restantes, toujours dites « libres » (LKO-134) : « 7 places libres sur 8 », « Complet ». */
 export function eventPlaces(
   event: Pick<EventListItem, 'registrationMode' | 'capacity' | 'registeredCount'>,
 ) {
@@ -50,7 +51,8 @@ export function eventPlaces(
   if (event.registrationMode === 'EXTERNAL') return 'Inscription externe'
   if (event.capacity === null) return null
   const left = Math.max(0, event.capacity - event.registeredCount)
-  return left ? `${left} place${left > 1 ? 's' : ''} sur ${event.capacity}` : 'Complet'
+  const s = left > 1 ? 's' : ''
+  return left ? `${left} place${s} libre${s} sur ${event.capacity}` : 'Complet'
 }
 
 export const isFull = (event: Pick<EventListItem, 'capacity' | 'registeredCount'>) =>
