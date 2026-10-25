@@ -2073,6 +2073,9 @@
                     "childEmail": {
                       "type": "string"
                     },
+                    "parentEmail": {
+                      "type": "string"
+                    },
                     "childAge": {
                       "type": "integer",
                       "minimum": -9007199254740991,
@@ -2094,6 +2097,7 @@
                   },
                   "required": [
                     "childEmail",
+                    "parentEmail",
                     "childAge",
                     "status",
                     "deadline"

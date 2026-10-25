@@ -69,7 +69,10 @@ export default function ConsentScreen() {
       </Frame>
     )
   else if (request.data) {
-    const { childEmail, childAge, deadline } = request.data
+    const { childEmail, parentEmail, childAge, deadline } = request.data
+    // L'accord se donne avec le compte de l'adresse qui a reçu le lien (LKO-154)
+    const otherAccount =
+      !!me?.email && me.email.trim().toLowerCase() !== parentEmail.trim().toLowerCase()
     content = (
       <Frame
         title="Accord parental"
@@ -80,7 +83,7 @@ export default function ConsentScreen() {
               {me ? (
                 <Button
                   label="Donner mon accord"
-                  disabled={!checked || grant.isPending}
+                  disabled={!checked || grant.isPending || otherAccount}
                   onPress={() => grant.mutate()}
                 />
               ) : (
@@ -108,10 +111,16 @@ export default function ConsentScreen() {
           suivrez son activité et pourrez retirer votre accord à tout moment depuis Réglages, Mes
           enfants. Questions : {CONTACT_EMAIL}.
         </Typography>
+        {otherAccount ? (
+          <Note tone="room">
+            Vous êtes connecté avec {me?.email}. Connectez-vous (ou créez votre compte) avec{' '}
+            {parentEmail}, l’adresse qui a reçu ce lien, pour donner votre accord.
+          </Note>
+        ) : null}
         <Note>
           {me
             ? 'Votre compte Lucko sera lié au sien.'
-            : 'Il vous faut un compte Lucko, à votre nom : il sera lié au sien.'}{' '}
+            : `Il vous faut un compte Lucko avec l’adresse ${parentEmail}, celle qui a reçu ce lien : il sera lié au sien.`}{' '}
           Sans accord avant le {formatLongDay(deadline)}, son compte sera supprimé.
         </Note>
         <Checkbox

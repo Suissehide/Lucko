@@ -18,6 +18,15 @@ export const consentKey = (secret = 'lucko-dev-auth-secret') =>
   createHmac('sha256', secret).update('lucko-parental-consent').digest()
 
 /** Date de suppression d'un compte 13-14 ans resté sans accord. */
+/**
+ * Le parent donne son accord avec le compte de l'adresse qui a reçu le lien (LKO-154) : sinon un ado pourrait
+ * indiquer une 2e adresse à lui, créer un compte « adulte » et valider son propre accord. Motif, ou null.
+ */
+export const parentEmailRefusal = (accountEmail: string, parentEmail: string) =>
+  accountEmail.trim().toLowerCase() === parentEmail.trim().toLowerCase()
+    ? null
+    : `Connectez-vous avec le compte Lucko de l’adresse ${parentEmail}, celle qui a reçu ce lien`
+
 export const consentDeadline = (accountCreatedAt: Date) =>
   new Date(accountCreatedAt.getTime() + PARENTAL_CONSENT_DAYS * DAY_MS)
 
