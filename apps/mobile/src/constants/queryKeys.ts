@@ -139,6 +139,8 @@ export const ATTENDANCE = {
 export const BILLING = {
   VISITS: 'venue_visits',
   DISPUTE: 'dispute_visit',
+  ADMIN_DISPUTES: 'admin_visit_disputes',
+  DECIDE: 'decide_visit',
 } as const
 
 /** XP de participation et niveaux (LKO-89). */

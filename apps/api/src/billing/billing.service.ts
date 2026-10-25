@@ -83,6 +83,25 @@ export class BillingService {
     })
   }
 
+  /** Admin : venues contestées par les lieux, de la plus ancienne contestation à la plus récente (LKO-146). */
+  async disputes() {
+    const visits = await this.prisma.visit.findMany({
+      where: { status: 'DISPUTED' },
+      orderBy: { disputedAt: 'asc' },
+      include: { user: { select: { pseudo: true } }, venue: { select: { name: true } } },
+    })
+    return visits.map((v) => ({
+      id: v.id,
+      businessDate: isoDate(v.businessDate),
+      venueName: v.venue.name,
+      pseudo: v.user.pseudo,
+      source: v.source,
+      priceCents: v.priceCents,
+      disputeReason: v.disputeReason,
+      disputedAt: v.disputedAt,
+    }))
+  }
+
   /** Admin : garder (VALID) ou annuler une venue, contestée ou non. */
   async decide(visitId: string, status: Extract<VisitStatus, 'VALID' | 'CANCELLED'>) {
     const visit = await this.prisma.visit.findUnique({ where: { id: visitId } })
