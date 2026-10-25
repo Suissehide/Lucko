@@ -16,7 +16,13 @@ import { JobsService } from '../jobs/jobs.service'
 import { PrismaService } from '../prisma/prisma.service'
 import { PushService } from '../push/push.service'
 import { XpService } from '../xp/xp.service'
-import { attendanceClosed, type Marker, presenceLocked } from './attendance.rules'
+import {
+  attendanceClosed,
+  hostAloneRefusal,
+  hostPointsSelf,
+  type Marker,
+  presenceLocked,
+} from './attendance.rules'
 import { lifecycleStatus } from './rooms.rules'
 
 type Tx = Prisma.TransactionClient
@@ -27,6 +33,7 @@ export const ATTENDANCE_REMINDER_JOB = 'rooms.attendance-reminder'
 const sheetInclude = {
   game: { select: { name: true } },
   format: { select: { name: true } },
+  venue: { select: { isPartner: true } },
   participants: {
     where: { status: 'ACCEPTED' },
     orderBy: { createdAt: 'asc' },
@@ -76,6 +83,15 @@ export class AttendanceService implements OnModuleInit {
     if (closed) throw new ConflictException(closed)
     if (role === 'HOST' && entries.some((e) => e.ticketCents !== undefined))
       throw new ForbiddenException('Seul le lieu saisit le montant du ticket')
+    const hostSelf = hostPointsSelf(room)
+    if (role === 'HOST' && hostSelf && entries.some((e) => e.userId === room.hostId && e.present)) {
+      const present = (p: SheetRoom['participants'][number]) =>
+        entries.find((e) => e.userId === p.userId)?.present ?? p.present
+      const refusal = hostAloneRefusal(
+        room.participants.filter((p) => p.userId !== room.hostId && present(p) === true).length,
+      )
+      if (refusal) throw new ConflictException(refusal)
+    }
     const visits = await this.visits(room.venueId, [room])
     const date = businessDate(room.startsAt)
 
@@ -92,6 +108,7 @@ export class AttendanceService implements OnModuleInit {
           },
           role,
           room.hostId,
+          hostSelf,
         )
         if (!locked)
           await tx.roomParticipant.update({
@@ -227,6 +244,7 @@ export class AttendanceService implements OnModuleInit {
             { userId: p.userId, source: p.presenceSource, scanned },
             role,
             room.hostId,
+            hostPointsSelf(room),
           ),
         }
       }),

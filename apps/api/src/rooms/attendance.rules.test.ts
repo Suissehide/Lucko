@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { attendanceClosed, presenceLocked } from './attendance.rules'
+import {
+  attendanceClosed,
+  hostAloneRefusal,
+  hostPointsSelf,
+  presenceLocked,
+} from './attendance.rules'
 
 const startsAt = new Date('2026-10-10T18:00:00Z')
 const room = { status: 'CONFIRMED' as const, startsAt }
@@ -39,5 +44,25 @@ describe('presenceLocked', () => {
   it('l’hôte ne se pointe pas lui-même, le lieu peut', () => {
     expect(presenceLocked({ ...player, userId: 'h' }, 'HOST', 'h')).not.toBeNull()
     expect(presenceLocked({ ...player, userId: 'h' }, 'VENUE', 'h')).toBeNull()
+  })
+
+  it('hors lieu partenaire, l’hôte se pointe lui-même (LKO-149)', () => {
+    expect(presenceLocked({ ...player, userId: 'h' }, 'HOST', 'h', true)).toBeNull()
+    expect(presenceLocked({ ...player, userId: 'h', scanned: true }, 'HOST', 'h', true)).toMatch(
+      /scan/,
+    )
+  })
+})
+
+describe('hôte hors lieu partenaire (LKO-149)', () => {
+  it('à domicile ou dans un lieu non partenaire seulement', () => {
+    expect(hostPointsSelf({ venue: null })).toBe(true)
+    expect(hostPointsSelf({ venue: { isPartner: false } })).toBe(true)
+    expect(hostPointsSelf({ venue: { isPartner: true } })).toBe(false)
+  })
+
+  it('jamais présent seul', () => {
+    expect(hostAloneRefusal(0)).toMatch(/autre joueur/)
+    expect(hostAloneRefusal(1)).toBeNull()
   })
 })
