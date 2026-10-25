@@ -25,7 +25,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Redirect } from 'expo-router'
 import { MoonStar } from 'lucide-react-native'
 import { useState } from 'react'
-import { useWindowDimensions, View } from 'react-native'
+import { Linking, useWindowDimensions, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { MapFrame } from '@/components/explore/MapFrame'
 import { PlayerNav } from '@/components/PlayerNav'
@@ -41,8 +41,8 @@ import {
   venueRowProps,
 } from '@/lib/explore'
 import {
-  notYet,
   openAgenda,
+  openAgendaRooms,
   openCreateRoom,
   openEvent,
   openHome,
@@ -54,6 +54,7 @@ import {
 import { onboarding } from '@/lib/onboarding'
 import { agendaAction } from '@/lib/venue'
 import { useTabBadges } from '@/queries/useChat'
+import { useEventMutations } from '@/queries/useEvent'
 import { useTonightQuery } from '@/queries/useExplore'
 import { useMeQuery } from '@/queries/useMe'
 import { gameDemandQueryOptions } from '@/queries/usePlayIntents'
@@ -121,7 +122,6 @@ export default function HomeScreen() {
     />
   ) : (
     events.map((e, i) => {
-      const action = agendaAction(e)
       return (
         <EventCard
           key={e.id}
@@ -130,9 +130,7 @@ export default function HomeScreen() {
           wide={wide}
           raised={i === 0}
           onPress={() => openEvent(e.id)}
-          action={
-            <Button small kind={action.kind} label={action.label} onPress={() => openEvent(e.id)} />
-          }
+          action={<EventAction event={e} />}
         />
       )
     })
@@ -251,7 +249,7 @@ export default function HomeScreen() {
           <Section title="Soirées ce soir" link="Tout l'agenda" onLink={openAgenda}>
             {eventList}
           </Section>
-          <Section title="Il manque des joueurs" link="Voir les rooms" onLink={notYet}>
+          <Section title="Il manque des joueurs" link="Voir les rooms" onLink={openAgendaRooms}>
             {roomList}
           </Section>
         </View>
@@ -263,5 +261,30 @@ export default function HomeScreen() {
         </View>
       </View>
     </WebScreen>
+  )
+}
+
+/**
+ * Bouton d'une soirée de l'accueil (LKO-129) : fait ce qu'il annonce. « S'inscrire » ou « Liste d'attente »
+ * inscrit tout de suite, « Inscription » ouvre la billetterie ; sinon (ou si l'inscription est refusée, ex.
+ * âge minimum), la fiche de la soirée.
+ */
+function EventAction({ event }: { event: Parameters<typeof agendaAction>[0] & { id: string } }) {
+  const action = agendaAction(event)
+  const { register } = useEventMutations(event.id)
+  const registers = event.registrationMode === 'IN_APP' && !event.myRegistration
+  const onPress = () => {
+    if (action.url) return void Linking.openURL(action.url)
+    if (!registers) return openEvent(event.id)
+    register.mutate(undefined, { onError: () => openEvent(event.id) })
+  }
+  return (
+    <Button
+      small
+      kind={action.kind}
+      label={action.label}
+      disabled={register.isPending}
+      onPress={onPress}
+    />
   )
 }
