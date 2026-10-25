@@ -29,7 +29,7 @@ import { createFormHook } from '@tanstack/react-form'
 import { useQuery } from '@tanstack/react-query'
 import * as Location from 'expo-location'
 import { type ComponentProps, type RefObject, useState } from 'react'
-import { Text, type TextInput, View } from 'react-native'
+import { Platform, Text, type TextInput, View } from 'react-native'
 import { type FormatChoice, type GamesValue, NO_ANSWERS } from '@/forms/games.form'
 import type { CityValue } from '@/lib/city'
 import { citySuggestionsQueryOptions, findCityAt } from '@/queries/useGeocode'
@@ -463,6 +463,20 @@ function LevelQuestions({
 // * FORMULAIRE
 
 /** Bouton d'envoi : grisé pendant l'envoi (validation asynchrone comprise). */
+/**
+ * Envoi refusé : sur le web, le premier champ en erreur (TextField `aria-invalid`) revient à l'écran,
+ * sinon un long formulaire semble ne rien faire (LKO-151). Sur téléphone, l'erreur reste à sa place.
+ */
+function showFirstError() {
+  if (Platform.OS !== 'web') return
+  // Après le rendu des messages d'erreur
+  setTimeout(() => {
+    const field = document.querySelector<HTMLElement>('[aria-invalid="true"]')
+    field?.scrollIntoView({ block: 'center' })
+    field?.focus({ preventScroll: true })
+  }, 0)
+}
+
 function SubmitButton({
   label,
   kind,
@@ -481,7 +495,7 @@ function SubmitButton({
           kind={kind}
           small={small}
           disabled={isSubmitting}
-          onPress={() => void form.handleSubmit()}
+          onPress={() => void form.handleSubmit().then(showFirstError)}
         />
       )}
     </form.Subscribe>
