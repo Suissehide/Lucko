@@ -65,7 +65,7 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets()
   const badges = useTabBadges()
   const me = useMeQuery()
-  const { place, data, failed, retry } = useTonightQuery()
+  const { place, data, failed, retry } = useTonightQuery(me?.searchRadiusKm)
   const [game, setGame] = useState<string | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const { scrollRef, rowProps } = useScrollToRow(selectedId)

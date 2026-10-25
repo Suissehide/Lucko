@@ -1,17 +1,21 @@
 import { DEFAULT_CITY } from '@lucko/shared'
 import * as Location from 'expo-location'
 import { useEffect, useState } from 'react'
+import { useMeQuery } from '@/queries/useMe'
 
 export type Place = { lat: number; lng: number; label: string }
 
 const fallback: Place = { lat: DEFAULT_CITY.lat, lng: DEFAULT_CITY.lng, label: DEFAULT_CITY.name }
 
 /**
- * Position du joueur pour l'exploration. Refus, erreur ou attente : centre de Bordeaux.
+ * Position du joueur pour l'exploration : celle du téléphone si elle est accordée, sinon la ville de son
+ * profil (LKO-147), sinon le centre de Bordeaux.
  * `ready` passe à true une fois la position connue, le repli choisi ou après 3 s sans réponse.
+ * `located` : position du téléphone (distances exactes), pas un repli.
  */
 export function useLocation() {
-  const [place, setPlace] = useState<Place>(fallback)
+  const me = useMeQuery()
+  const [device, setDevice] = useState<Place | null>(null)
   const [ready, setReady] = useState(false)
 
   useEffect(() => {
@@ -26,10 +30,10 @@ export function useLocation() {
           accuracy: Location.Accuracy.Balanced,
         })
         if (!cancelled) {
-          setPlace({ lat: coords.latitude, lng: coords.longitude, label: 'Autour de toi' })
+          setDevice({ lat: coords.latitude, lng: coords.longitude, label: 'Autour de toi' })
         }
       } catch {
-        // Position indisponible (web sans HTTPS, GPS coupé…) : on garde Bordeaux.
+        // Position indisponible (web sans HTTPS, GPS coupé…) : ville du profil ou Bordeaux.
       } finally {
         clearTimeout(timer)
         if (!cancelled) setReady(true)
@@ -41,5 +45,9 @@ export function useLocation() {
     }
   }, [])
 
-  return { place, ready, located: place !== fallback }
+  const profile =
+    me?.city && me.latitude != null && me.longitude != null
+      ? { lat: me.latitude, lng: me.longitude, label: me.city }
+      : null
+  return { place: device ?? profile ?? fallback, ready, located: device !== null }
 }
