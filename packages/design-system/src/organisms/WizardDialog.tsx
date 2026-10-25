@@ -101,7 +101,9 @@ export function WizardDialog({
           </View>
           <ProgressSteps current={progress} total={steps.length} />
         </View>
+        {/* Une étape par clé : chaque étape repart en haut, sans garder le défilement de la précédente (LKO-130) */}
         <ScrollView
+          key={step}
           style={{ flex: 1 }}
           contentContainerStyle={{
             flexGrow: 1,
@@ -202,6 +204,7 @@ export function WizardDialog({
               />
             </View>
             <ScrollView
+              key={step}
               style={{ flex: 1 }}
               contentContainerStyle={{
                 flexGrow: 1,
