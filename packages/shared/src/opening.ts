@@ -14,6 +14,24 @@ export type ClosureRange = {
 const DAY_MS = 24 * 60 * 60 * 1000
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
+/** Durée supposée d'une soirée publiée sans heure de fin (LKO-136). */
+export const EVENT_DEFAULT_DURATION_MS = 3 * 60 * 60 * 1000
+
+/**
+ * Ouvert à `at` : une soirée publiée par le lieu l'ouvre pendant sa durée, même hors de ses horaires
+ * (LKO-136) ; sinon, l'ouverture d'après les horaires (`openNow`, null si horaires inconnus).
+ */
+export const openWithEvents = (
+  openNow: boolean | null,
+  events: { startsAt: Date; endsAt: Date | null }[],
+  at: Date,
+) =>
+  events.some(
+    (e) =>
+      e.startsAt <= at &&
+      at < (e.endsAt ?? new Date(e.startsAt.getTime() + EVENT_DEFAULT_DURATION_MS)),
+  ) || openNow
+
 /** Date locale (« 2026-10-06 »), jour ISO (1 = lundi) et minute depuis minuit à l'heure du lieu. */
 export function localDateTime(now: Date, timeZone = VENUE_TIME_ZONE) {
   const parts = new Intl.DateTimeFormat('en-GB', {

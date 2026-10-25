@@ -5,6 +5,7 @@ import {
   HOME_SAFETY_VERSION,
   type HostAction,
   openingStatus,
+  openWithEvents,
   RATING_PROVISIONAL_GAMES,
   type RoomStatus,
   type roomDetailSchema,
@@ -28,7 +29,7 @@ import {
   venueRefuses,
 } from '../common/minors.rules'
 import { loadEnv } from '../config/env'
-import { closureRange, formatLabel, notBlockedWith } from '../explore/explore.service'
+import { closureRange, formatLabel, liveEvents, notBlockedWith } from '../explore/explore.service'
 import type { Prisma, User } from '../generated/prisma/client'
 import { JobsService } from '../jobs/jobs.service'
 import { PlayIntentsService } from '../play-intents/play-intents.service'
@@ -156,7 +157,11 @@ export class RoomsService implements OnModuleInit {
       input.venueId
         ? this.prisma.venue.findFirst({
             where: { id: input.venueId, status: 'PUBLISHED' },
-            include: { openingHours: true, closures: { where: { endsOn: { gte: now } } } },
+            include: {
+              openingHours: true,
+              closures: { where: { endsOn: { gte: now } } },
+              events: liveEvents(input.startsAt),
+            },
           })
         : null,
       this.prisma.room.count({
@@ -170,9 +175,14 @@ export class RoomsService implements OnModuleInit {
       { ...input, home },
       {
         game,
+        // Une soirée du lieu en cours à cette heure l'ouvre, même hors horaires (LKO-136)
         venueOpen: venue
-          ? openingStatus(venue.openingHours, venue.closures.map(closureRange), input.startsAt)
-              .openNow
+          ? openWithEvents(
+              openingStatus(venue.openingHours, venue.closures.map(closureRange), input.startsAt)
+                .openNow,
+              venue.events,
+              input.startsAt,
+            )
           : null,
         hostIsMinor: isMinor(host, now),
         venueRefusesHost: venueRefuses(venue, host, now),

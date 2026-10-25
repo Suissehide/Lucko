@@ -7,6 +7,7 @@ import {
   localDateTime,
   monthGrid,
   openingStatus,
+  openWithEvents,
   rangesOn,
 } from './opening'
 
@@ -145,5 +146,27 @@ describe('agendaRangeDays', () => {
     const days = agendaRangeDays('week', wednesday)
     expect(days).toHaveLength(7)
     expect([days[0], days[6]]).toEqual(['2026-10-07', '2026-10-13'])
+  })
+})
+
+describe('openWithEvents (LKO-136)', () => {
+  const at = new Date('2026-10-25T19:30:00Z')
+  const event = (start: string, end: string | null = null) => ({
+    startsAt: new Date(start),
+    endsAt: end ? new Date(end) : null,
+  })
+
+  it('une soirée en cours ouvre le lieu, même fermé d’après ses horaires', () => {
+    expect(openWithEvents(false, [event('2026-10-25T18:30:00Z')], at)).toBe(true)
+    expect(openWithEvents(null, [event('2026-10-25T18:30:00Z', '2026-10-25T21:00:00Z')], at)).toBe(
+      true,
+    )
+  })
+
+  it('sans fin, la soirée dure 3 h ; avant ou après, les horaires décident', () => {
+    expect(openWithEvents(false, [event('2026-10-25T16:00:00Z')], at)).toBe(false)
+    expect(openWithEvents(false, [event('2026-10-25T20:00:00Z')], at)).toBe(false)
+    expect(openWithEvents(null, [], at)).toBeNull()
+    expect(openWithEvents(true, [], at)).toBe(true)
   })
 })
