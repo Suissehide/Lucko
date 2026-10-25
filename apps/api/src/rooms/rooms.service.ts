@@ -44,6 +44,7 @@ import {
   purgeBefore,
   revealAt,
   sealAddress,
+  stableDraws,
 } from './home.rules'
 import { ResultsService } from './results.service'
 import {
@@ -183,7 +184,9 @@ export class RoomsService implements OnModuleInit {
     if (refusal) throw new BadRequestException(refusal)
 
     // Seule la zone floue est gardée en clair ; position exacte et adresse, chiffrées, si l'hôte la donne
-    const center = home ? fuzzyCenter(home.lat, home.lng) : null
+    const center = home
+      ? fuzzyCenter(home.lat, home.lng, stableDraws(this.addressKeys, host.id, home.lat, home.lng))
+      : null
     const room = await this.prisma.room.create({
       data: {
         ...input,
