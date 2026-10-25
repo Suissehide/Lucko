@@ -110,6 +110,7 @@ export default function CreateRoomScreen() {
   const [error, setError] = useState<string | null>(null)
   const [confirmClose, setConfirmClose] = useState(false)
   const [safety, setSafety] = useState(false)
+  const [shared, setShared] = useState<ShareOutcome>(null)
   const { createRoom } = useRoomMutations()
 
   const center = { lat: me?.latitude ?? DEFAULT_CITY.lat, lng: me?.longitude ?? DEFAULT_CITY.lng }
@@ -191,13 +192,13 @@ export default function CreateRoomScreen() {
     <SuccessState
       compact={!wide}
       title="Room créée"
-      text={`Ta room « ${title} » est en ligne ${draft.atHome ? 'chez toi' : `à ${venue?.name ?? 'ce lieu'}`}. On prévient ${waiting == null ? 'les joueurs' : `les ${waiting} joueurs`} qui attendent ce jeu près d'ici.`}
+      text={`Ta room « ${title} » est en ligne ${draft.atHome ? 'chez toi' : `à ${venue?.name ?? 'ce lieu'}`}. On prévient ${waiting == null ? 'les joueurs' : `les ${waiting} joueurs`} qui attendent ce jeu près d'ici.${shared === 'failed' ? `\nCopie impossible, voici le lien : ${roomUrl(createdId)}` : ''}`}
       actions={
         <>
           <Button
             kind="ghost"
-            label="Partager le lien"
-            onPress={() => void shareRoom(createdId, title)}
+            label={shared === 'copied' ? 'Lien copié' : 'Partager le lien'}
+            onPress={() => void shareRoom(createdId, title).then(setShared)}
           />
           <Button
             kind="rating"
@@ -322,11 +323,21 @@ export default function CreateRoomScreen() {
   )
 }
 
+const roomUrl = (id: string) => Linking.createURL(`/rooms/${id}`)
+
+/** Copie web : réussie, refusée (permission, presse-papiers absent : LKO-127) ; null pour le partage du système. */
+type ShareOutcome = 'copied' | 'failed' | null
+
 /** Lien de la room : partage du système, sinon copie dans le presse-papiers (web). */
-async function shareRoom(id: string, title: string) {
-  const url = Linking.createURL(`/rooms/${id}`)
-  if (Platform.OS === 'web' && !navigator.share) return navigator.clipboard?.writeText(url)
+async function shareRoom(id: string, title: string): Promise<ShareOutcome> {
+  const url = roomUrl(id)
+  if (Platform.OS === 'web' && !navigator.share)
+    return (navigator.clipboard?.writeText(url) ?? Promise.reject()).then(
+      () => 'copied' as const,
+      () => 'failed' as const,
+    )
   await Share.share({ title, message: url, url }).catch(() => undefined)
+  return null
 }
 
 function Field({ label, aside, children }: { label: string; aside?: string; children: ReactNode }) {
