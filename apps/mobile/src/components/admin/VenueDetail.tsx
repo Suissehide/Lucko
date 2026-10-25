@@ -26,7 +26,7 @@ const eventLine = (event: AdminEvent) =>
   [
     eventWhen(event.startsAt, event.endsAt),
     event.capacity
-      ? `${event.registered}/${event.capacity} places`
+      ? `${event.registered} inscrits sur ${event.capacity} places`
       : `${event.registered} inscrits`,
     formatPrice(event.priceCents),
   ]

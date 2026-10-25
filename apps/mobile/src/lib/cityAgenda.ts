@@ -81,11 +81,12 @@ export type AgendaEntry = {
 
 const ADULT_AGE = 18
 
+/** Places libres, comme sur la fiche et l'accueil (LKO-134), et non les places prises. */
 function seats(taken: number, max: number): AgendaEntry['places'] {
   const left = max - taken
   if (left <= 0) return { text: 'Complet', short: 'Complet', tone: 'off' }
-  if (left === 1) return { text: '1 place', short: '1 pl.', tone: 'alert' }
-  return { text: `${taken} / ${max} places`, short: `${taken} / ${max}` }
+  if (left === 1) return { text: '1 place libre', short: '1 libre', tone: 'alert' }
+  return { text: `${left} places libres sur ${max}`, short: `${left} libres` }
 }
 
 function eventEntry(e: EventListItem): AgendaEntry {
