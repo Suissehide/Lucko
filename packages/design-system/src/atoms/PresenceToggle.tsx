@@ -4,7 +4,10 @@ import { useHover } from './useHover'
 
 export type Presence = 'present' | 'absent'
 
-/** Pointage d'un joueur : Là / Absent. `null` = pas encore pointé, aucun segment actif. */
+/**
+ * Pointage d'un joueur : Là / Absent. `null` = pas encore pointé, aucun segment actif.
+ * Sans `onChange` (pointage pas encore ouvert, clos, ou présence verrouillée) : grisé et inactif (LKO-159).
+ */
 export function PresenceToggle({
   value,
   onChange,
@@ -26,12 +29,14 @@ export function PresenceToggle({
         borderColor: colors.ink,
         borderRadius: 9,
         overflow: 'hidden',
+        opacity: onChange ? 1 : 0.45,
       }}
     >
       <Segment
         text="Là"
         active={value === 'present'}
         bg={colors.venue}
+        disabled={!onChange}
         onPress={() => onChange?.('present')}
       />
       <Segment
@@ -39,6 +44,7 @@ export function PresenceToggle({
         active={value === 'absent'}
         bg={colors.room}
         divider
+        disabled={!onChange}
         onPress={() => onChange?.('absent')}
       />
     </View>
@@ -50,12 +56,14 @@ function Segment({
   active,
   bg,
   divider,
+  disabled,
   onPress,
 }: {
   text: string
   active: boolean
   bg: string
   divider?: boolean
+  disabled?: boolean
   onPress: () => void
 }) {
   const { hovered, hoverProps } = useHover()
@@ -63,8 +71,10 @@ function Segment({
     <Pressable
       role="radio"
       aria-checked={active}
+      aria-disabled={disabled}
+      disabled={disabled}
       onPress={onPress}
-      {...hoverProps}
+      {...(disabled ? {} : hoverProps)}
       style={{
         minWidth: sizes.touch,
         minHeight: 40,
