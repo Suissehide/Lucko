@@ -24,6 +24,7 @@ import { withdrawnChildMail } from '../consent/consent.rules'
 import { Prisma, type User } from '../generated/prisma/client'
 import { MailService } from '../mail/mail.service'
 import { PrismaService } from '../prisma/prisma.service'
+import { RealtimeGateway } from '../realtime/realtime.gateway'
 import { StorageService } from '../storage/storage.service'
 import { eventStatus, roomStatus, STILL_UPCOMING_MS } from './agenda.rules'
 import { avatarVerdict, type ImageScores, imageType, SIGHTENGINE_MODELS } from './avatar.rules'
@@ -43,6 +44,7 @@ export class UsersService {
     private readonly prisma: PrismaService,
     private readonly storage: StorageService,
     private readonly mail: MailService,
+    private readonly realtime: RealtimeGateway,
   ) {}
 
   async profile(user: User): Promise<z.output<typeof meSchema>> {
@@ -351,6 +353,8 @@ export class UsersService {
         },
       }),
     ])
+    // Plus de temps réel sur ses appareils encore connectés (LKO-139)
+    this.realtime.disconnectUser(user.id)
     await this.storage.remove(user.avatarUrl)
   }
 }

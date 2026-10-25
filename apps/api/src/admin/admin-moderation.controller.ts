@@ -21,6 +21,7 @@ import { z } from 'zod'
 import { ZodBody, ZodQuery, ZodResponse } from '../common/zod'
 import type { Prisma } from '../generated/prisma/client'
 import { PrismaService } from '../prisma/prisma.service'
+import { RealtimeGateway } from '../realtime/realtime.gateway'
 import { StorageService } from '../storage/storage.service'
 import { Admin } from './admin.decorators'
 import { isSuspended } from './admin.rules'
@@ -110,6 +111,7 @@ export class AdminModerationController {
     private readonly prisma: PrismaService,
     private readonly admin: AdminService,
     private readonly storage: StorageService,
+    private readonly realtime: RealtimeGateway,
   ) {}
 
   @Get('dashboard')
@@ -202,7 +204,7 @@ export class AdminModerationController {
     @Param('id') id: string,
     @ZodBody(resolveReportSchema) body: z.output<typeof resolveReportSchema>,
   ) {
-    await this.prisma.$transaction(async (tx) => {
+    const targetId = await this.prisma.$transaction(async (tx) => {
       const report = await tx.report.findFirst({ where: { id, resolvedAt: null } })
       if (!report) throw new NotFoundException('Signalement introuvable ou déjà traité')
       const resolved = { resolvedAt: new Date(), resolution: body.resolution }
@@ -215,7 +217,9 @@ export class AdminModerationController {
           data: resolved,
         })
       }
+      return report.targetId
     })
+    if (body.resolution === 'SUSPENDED') this.realtime.disconnectUser(targetId)
   }
 
   @Get('users')
@@ -293,6 +297,7 @@ export class AdminModerationController {
     @ZodBody(suspendSchema) body: z.output<typeof suspendSchema>,
   ) {
     await this.prisma.$transaction((tx) => this.admin.suspend(id, body, tx))
+    this.realtime.disconnectUser(id)
   }
 
   @Post('users/:id/unsuspend')

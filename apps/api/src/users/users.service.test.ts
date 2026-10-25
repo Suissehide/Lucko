@@ -36,7 +36,12 @@ function setup(children: User[]) {
   const mail = { send: vi.fn() }
   const storage = { remove: vi.fn() }
   return {
-    service: new UsersService(prisma as never, storage as never, mail as never),
+    service: new UsersService(
+      prisma as never,
+      storage as never,
+      mail as never,
+      { disconnectUser: vi.fn() } as never,
+    ),
     prisma,
     mail,
   }
