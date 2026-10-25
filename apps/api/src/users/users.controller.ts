@@ -136,9 +136,9 @@ export class UsersController {
   /**
    * Suppression du compte (exigence Apple, RGPD) : le joueur est anonymisé et ne peut plus se connecter
    * (`deletedAt`). La ligne reste pour les venues facturées aux lieux et l'historique des parties,
-   * mais plus rien ne l'identifie ; ses places à venir sont libérées.
+   * mais plus rien ne l'identifie ; ses places à venir sont libérées. Pour un parent, vaut retrait de
+   * son accord : ses enfants de moins de 15 ans sont supprimés aussi (LKO-148).
    */
-  // ponytail: les comptes enfants (13-14 ans) restent sans parent, à traiter avec le consentement parental
   @Delete('me')
   @HttpCode(204)
   @AllowPendingConsent()
