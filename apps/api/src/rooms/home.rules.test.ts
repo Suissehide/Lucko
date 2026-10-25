@@ -9,10 +9,37 @@ import {
   purgeBefore,
   revealAt,
   sealAddress,
+  stableDraws,
 } from './home.rules'
 
 const now = new Date('2026-10-05T12:00:00Z')
 const home = { lat: 44.8378, lng: -0.5792 }
+
+describe('stableDraws (LKO-155)', () => {
+  const keys = addressKeys()
+  const center = (hostId: string, at = home) =>
+    fuzzyCenter(at.lat, at.lng, stableDraws(keys, hostId, at.lat, at.lng))
+
+  it('même hôte, même adresse : même zone floue, room après room', () => {
+    expect(center('h1')).toEqual(center('h1'))
+    // Géocodage à quelques mètres près : même zone
+    expect(center('h1', { lat: 44.83781, lng: -0.57921 })).toEqual(center('h1'))
+  })
+
+  it('un autre hôte ou une autre adresse : un autre tirage', () => {
+    expect(center('h2')).not.toEqual(center('h1'))
+    expect(center('h1', { lat: 44.85, lng: -0.57 })).not.toEqual(center('h1'))
+  })
+
+  it('tirages dans [0, 1)', () => {
+    const draw = stableDraws(keys, 'h1', home.lat, home.lng)
+    for (let i = 0; i < 20; i++) {
+      const value = draw()
+      expect(value).toBeGreaterThanOrEqual(0)
+      expect(value).toBeLessThan(1)
+    }
+  })
+})
 
 describe('fuzzyCenter', () => {
   it('le cercle de 500 m contient toujours le point réel, même au bord du tirage', () => {

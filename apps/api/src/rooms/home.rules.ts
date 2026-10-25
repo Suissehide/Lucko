@@ -1,4 +1,4 @@
-import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'node:crypto'
+import { createCipheriv, createDecipheriv, createHash, createHmac, randomBytes } from 'node:crypto'
 import {
   HOME_ADDRESS_REVEAL_MS,
   HOME_FUZZY_RADIUS_M,
@@ -22,7 +22,8 @@ export function distanceMeters(a: { lat: number; lng: number }, b: { lat: number
 /**
  * Centre de la zone floue (archi §8) : le point réel décalé au hasard jusqu'à 80 % du rayon, puis arrondi
  * au millième (~110 m). Le cercle de 500 m contient toujours le point réel. Tiré une seule fois, à la
- * création : un centre recalculé à chaque requête permettrait de trianguler l'adresse.
+ * création, et le même pour toutes les rooms d'un hôte à cette adresse (`stableDraws`) : un centre
+ * différent à chaque fois permettrait de trianguler l'adresse.
  */
 export function fuzzyCenter(lat: number, lng: number, random = Math.random) {
   const distance = HOME_FUZZY_RADIUS_M * 0.8 * Math.sqrt(random())
@@ -33,6 +34,30 @@ export function fuzzyCenter(lat: number, lng: number, random = Math.random) {
     lng: round(
       lng + ((distance * Math.sin(angle)) / (EARTH_M * Math.cos(rad(lat)))) * (180 / Math.PI),
     ),
+  }
+}
+
+/**
+ * Tirage de `fuzzyCenter` stable pour un hôte et une adresse (LKO-155) : chaque nouvelle room au même
+ * endroit reprend la même zone floue, sinon croiser les cercles de plusieurs rooms resserrerait l'adresse.
+ * HMAC secret (clé des adresses) : la zone ne se recalcule pas sans la clé. Position arrondie à ~10 m.
+ */
+export function stableDraws(
+  { active, keys }: AddressKeys,
+  hostId: string,
+  lat: number,
+  lng: number,
+) {
+  const key = keys.get(active)
+  if (!key) throw new Error('Clé d’adresse active introuvable')
+  const digest = createHmac('sha256', key)
+    .update(`fuzzy:${hostId}:${lat.toFixed(4)}:${lng.toFixed(4)}`)
+    .digest()
+  let offset = 0
+  return () => {
+    const draw = digest.readUInt32BE(offset) / 2 ** 32
+    offset = (offset + 4) % digest.length
+    return draw
   }
 }
 
