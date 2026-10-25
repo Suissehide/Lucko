@@ -11,9 +11,14 @@ import { disconnectRealtime } from '@/lib/realtime'
 
 // * QUERIES
 
+/** null sans session : un 401 est une réponse, pas une erreur (sinon chaque écran relançait /me en boucle, LKO-126). */
 export const meQueryOptions = queryOptions({
   queryKey: [ME.GET],
-  queryFn: () => unwrap(api.GET('/me')),
+  queryFn: () =>
+    unwrap(api.GET('/me')).catch((error) => {
+      if (error instanceof ApiError && error.status === 401) return null
+      throw error
+    }),
 })
 
 /**
@@ -21,14 +26,12 @@ export const meQueryOptions = queryOptions({
  * `required` : écran réservé aux joueurs connectés, renvoie vers /auth sans session.
  */
 export function useMeQuery({ required = false } = {}) {
-  const { data, error } = useQuery(meQueryOptions)
-  const unauthenticated = error instanceof ApiError && error.status === 401
+  const { data, isSuccess } = useQuery(meQueryOptions)
+  const unauthenticated = isSuccess && data === null
   useEffect(() => {
-    if (!unauthenticated) return
-    forgetMe()
-    if (required) router.replace('/auth')
+    if (unauthenticated && required) router.replace('/auth')
   }, [unauthenticated, required])
-  return unauthenticated ? null : (data ?? null)
+  return data ?? null
 }
 
 /** Oublie le joueur connecté (déconnexion, changement de compte). */
