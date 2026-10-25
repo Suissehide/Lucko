@@ -1,3 +1,5 @@
+import './zod-fr'
+
 export * from './age'
 export * from './calendar'
 export * from './constants'

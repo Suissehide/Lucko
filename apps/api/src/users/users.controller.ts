@@ -20,7 +20,9 @@ import {
   ForbiddenException,
   Get,
   HttpCode,
+  type NestInterceptor,
   Patch,
+  PayloadTooLargeException,
   Post,
   Put,
   UploadedFile,
@@ -28,6 +30,7 @@ import {
 } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { ApiBody, ApiConsumes, ApiNoContentResponse, ApiTags } from '@nestjs/swagger'
+import { catchError, throwError } from 'rxjs'
 import { z } from 'zod'
 import { AllowPendingConsent, CurrentUser } from '../auth/auth.decorators'
 import { ZodBody, ZodQuery, ZodResponse } from '../common/zod'
@@ -35,6 +38,24 @@ import type { User } from '../generated/prisma/client'
 import { PrismaService } from '../prisma/prisma.service'
 import { AVATAR_MAX_BYTES } from './avatar.rules'
 import { UsersService } from './users.service'
+
+/** Photo trop lourde : message en français au lieu du « File too large » de multer (LKO-156). */
+const avatarTooLarge: NestInterceptor = {
+  intercept: (_context, next) =>
+    next
+      .handle()
+      .pipe(
+        catchError((error) =>
+          throwError(() =>
+            error instanceof PayloadTooLargeException
+              ? new PayloadTooLargeException(
+                  `Photo trop lourde : ${AVATAR_MAX_BYTES / 1024 / 1024} Mo maximum`,
+                )
+              : error,
+          ),
+        ),
+      ),
+}
 
 @ApiTags('users')
 @Controller()
@@ -62,7 +83,10 @@ export class UsersController {
 
   /** Photo de profil (champ `file`, 5 Mo max). 400 si ce n'est pas une image, 422 si elle est refusée. */
   @Post('me/avatar')
-  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: AVATAR_MAX_BYTES } }))
+  @UseInterceptors(
+    avatarTooLarge,
+    FileInterceptor('file', { limits: { fileSize: AVATAR_MAX_BYTES } }),
+  )
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: { type: 'object', properties: { file: { type: 'string', format: 'binary' } } },
