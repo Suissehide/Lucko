@@ -83,7 +83,7 @@ export function EventForm({
       <View style={row}>
         <View style={cell}>
           <form.AppField name="date">
-            {(field) => <field.Text label="Date" placeholder="2026-10-24" />}
+            {(field) => <field.Text label="Date" placeholder="AAAA-MM-JJ" />}
           </form.AppField>
         </View>
         <View style={cell}>

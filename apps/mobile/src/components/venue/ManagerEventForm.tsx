@@ -108,7 +108,7 @@ export function ManagerEventForm({
               {(field) => (
                 <field.Text
                   label={values.repeat === 'NONE' ? 'Date' : 'Première date'}
-                  placeholder="2026-10-24"
+                  placeholder="AAAA-MM-JJ"
                 />
               )}
             </form.AppField>
@@ -141,7 +141,7 @@ export function ManagerEventForm({
           {(field) => (
             <field.Text
               label="Jusqu’au (facultatif)"
-              placeholder="2027-06-30"
+              placeholder="AAAA-MM-JJ"
               help="Sans date de fin, les dates sont publiées 3 mois à l’avance"
             />
           )}
