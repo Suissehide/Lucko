@@ -19,16 +19,28 @@ export function attendanceClosed(
 }
 
 /**
- * Joueur que ce rôle ne peut pas pointer : motif, ou null. Le scan du QR vaut présence ; le lieu fait
- * foi sur l'hôte ; l'hôte ne se pointe pas lui-même (anti-abus : pas d'XP gagnée seul).
+ * Hors lieu partenaire (domicile, lieu sans staff ni scan), personne d'autre ne peut pointer l'hôte : il se
+ * pointe lui-même, avec au moins un autre joueur présent (LKO-149, voir `hostAloneRefusal`).
+ */
+export const hostPointsSelf = (room: { venue: { isPartner: boolean } | null }) =>
+  !room.venue?.isPartner
+
+/** L'hôte se pointe présent sans aucun autre joueur présent : refusé (anti-abus : pas d'XP gagnée seul). */
+export const hostAloneRefusal = (othersPresent: number) =>
+  othersPresent > 0 ? null : 'Pointe d’abord au moins un autre joueur présent'
+
+/**
+ * Joueur que ce rôle ne peut pas pointer : motif, ou null. Le scan du QR vaut présence ; dans un lieu
+ * partenaire, le lieu fait foi sur l'hôte, qui ne se pointe pas lui-même (`hostSelf` : voir `hostPointsSelf`).
  */
 export function presenceLocked(
   player: { userId: string; source: Marker | null; scanned: boolean },
   role: Marker,
   hostId: string,
+  hostSelf = false,
 ): string | null {
   if (player.scanned) return 'Présence validée par le scan du QR Lucko'
-  if (role === 'HOST' && player.userId === hostId)
+  if (role === 'HOST' && player.userId === hostId && !hostSelf)
     return 'Ta présence est pointée par le lieu ou le scan'
   if (role === 'HOST' && player.source === 'VENUE') return 'Déjà pointé par le lieu'
   return null
