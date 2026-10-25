@@ -1,11 +1,4 @@
-import {
-  ConfirmDialog,
-  Panel,
-  ScreenHeader,
-  SkeletonCard,
-  TextLink,
-  Typography,
-} from '@lucko/design-system'
+import { ConfirmDialog, Panel, ScreenHeader, TextLink, Typography } from '@lucko/design-system'
 import { type Me, PLAY_VIBE_LABELS, PLAY_VIBES } from '@lucko/shared'
 import { useStore } from '@tanstack/react-form'
 import { router, useNavigation } from 'expo-router'
@@ -13,6 +6,7 @@ import { usePreventRemove } from 'expo-router/react-navigation'
 import { ArrowLeft } from 'lucide-react-native'
 import { type ReactNode, useEffect, useState } from 'react'
 import { useWindowDimensions, View } from 'react-native'
+import { MeLoading } from '@/components/MeLoading'
 import { PlayerScreen } from '@/components/PlayerScreen'
 import { IdentityFields } from '@/components/profile/IdentityFields'
 import { WhereFields } from '@/components/profile/WhereFields'
@@ -39,7 +33,7 @@ export default function EditProfileScreen() {
       pushed
       header={<ScreenHeader title="Modifier" onBack={backToProfile} />}
     >
-      <SkeletonCard />
+      <MeLoading />
     </PlayerScreen>
   )
 }

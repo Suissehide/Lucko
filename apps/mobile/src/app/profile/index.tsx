@@ -11,7 +11,6 @@ import {
   RankCard,
   RankRow,
   Section,
-  SkeletonCard,
   space,
   TextLink,
   Typography,
@@ -20,6 +19,7 @@ import { xpLevel } from '@lucko/shared'
 import { router } from 'expo-router'
 import { Settings } from 'lucide-react-native'
 import { useWindowDimensions, View } from 'react-native'
+import { MeLoading } from '@/components/MeLoading'
 import { PlayerScreen } from '@/components/PlayerScreen'
 import {
   openManageVenue,
@@ -72,8 +72,7 @@ export default function ProfileScreen() {
   if (!me) {
     return (
       <PlayerScreen tab="profil" wide={wide} header={header}>
-        <SkeletonCard />
-        <SkeletonCard />
+        <MeLoading double />
       </PlayerScreen>
     )
   }
