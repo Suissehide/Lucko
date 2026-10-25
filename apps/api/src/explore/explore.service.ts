@@ -11,6 +11,7 @@ import {
   type MapVenue,
   type MapVenuesQuery,
   openingStatus,
+  openWithEvents,
   type roomListItemSchema,
   VENUE_AGENDA_MONTHS,
   type VenueListItem,
@@ -31,6 +32,13 @@ const DAY_MS = 24 * 60 * 60 * 1000
 /** Colonne `@db.Date` (minuit UTC) ↔ date locale « 2026-11-01 ». */
 const toLocalDate = (date: Date) => date.toISOString().slice(0, 10)
 const fromLocalDate = (date: string) => new Date(`${date}T00:00:00Z`)
+
+/** Soirées publiées qui peuvent être en cours à `at` (LKO-136, voir `openWithEvents`). */
+export const liveEvents = (at: Date) =>
+  ({
+    where: { status: 'PUBLISHED', startsAt: { lte: at, gte: new Date(at.getTime() - DAY_MS) } },
+    select: { startsAt: true, endsAt: true },
+  }) satisfies Prisma.Venue$eventsArgs
 
 /** Fermeture en dates locales, forme attendue par `openingStatus`. */
 export const closureRange = <T extends { startsOn: Date; endsOn: Date }>(closure: T) => ({
@@ -164,6 +172,11 @@ export class ExploreService {
         },
       },
     })
+    // Soirées en cours à `at` : elles ouvrent le lieu (LKO-136)
+    const live = await this.prisma.event.findMany({
+      where: { venueId: { in: venues.map((v) => v.id) }, ...liveEvents(at).where },
+      select: { venueId: true, ...liveEvents(at).select },
+    })
     return venues
       .map(({ openingHours, closures, events, ...venue }) => {
         const { openNow, closesAtMinute } = openingStatus(
@@ -174,7 +187,11 @@ export class ExploreService {
         return {
           ...venue,
           distanceMeters: distances.get(venue.id) ?? 0,
-          openNow,
+          openNow: openWithEvents(
+            openNow,
+            live.filter((e) => e.venueId === venue.id),
+            at,
+          ),
           closesAtMinute,
           upcomingEventCount: events.filter((event) => eventVisibleTo(event, viewer, now)).length,
         }
@@ -205,11 +222,18 @@ export class ExploreService {
         id: true,
         openingHours: true,
         closures: { where: { endsOn: { gte: yesterday } } },
+        events: liveEvents(now),
       },
     })
     const ids = new Set(
       open
-        .filter((v) => openingStatus(v.openingHours, v.closures.map(closureRange), now).openNow)
+        .filter((v) =>
+          openWithEvents(
+            openingStatus(v.openingHours, v.closures.map(closureRange), now).openNow,
+            v.events,
+            now,
+          ),
+        )
         .map((v) => v.id),
     )
     return rows.filter((r) => ids.has(r.id))
