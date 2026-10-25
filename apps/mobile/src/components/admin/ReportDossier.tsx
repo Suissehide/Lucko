@@ -27,6 +27,7 @@ import {
   suspensionDays,
 } from '@/lib/admin'
 import { shortDay } from '@/lib/explore'
+import { openEvent } from '@/lib/navigation'
 import { useAdminModerationMutations, useAdminUserQuery } from '@/queries/useAdminModeration'
 
 /** Dossier d'un signalement : le joueur visé, ses antécédents, le motif et la décision. */
@@ -56,6 +57,7 @@ export function ReportDossier({ report, onDone }: { report: AdminReport; onDone:
                 </View>
                 {user ? (
                   <Typography variant="small">
+                    {report.event ? 'Organisateur de l’événement · ' : ''}
                     {user.email} · inscrit le {shortDay(user.createdAt)}
                   </Typography>
                 ) : null}
@@ -91,6 +93,15 @@ export function ReportDossier({ report, onDone }: { report: AdminReport; onDone:
             </>
           ),
         },
+        ...(report.event
+          ? [
+              {
+                key: 'event',
+                label: 'Événement signalé',
+                children: <ReportedEvent event={report.event} />,
+              },
+            ]
+          : []),
         {
           key: 'decision',
           label: 'Décision',
@@ -150,5 +161,49 @@ export function ReportDossier({ report, onDone }: { report: AdminReport; onDone:
         },
       ]}
     />
+  )
+}
+
+/** Événement signalé (LKO-153) : lequel, et le masquer de l'app avec un motif (journal d'audit). */
+function ReportedEvent({ event }: { event: NonNullable<AdminReport['event']> }) {
+  const { hideEvent } = useAdminModerationMutations()
+  const [hiding, setHiding] = useState(false)
+  const hidden = event.status === 'HIDDEN'
+  return (
+    <View style={{ gap: 10 }}>
+      <View style={{ gap: 2 }}>
+        <Typography variant="title">{event.title}</Typography>
+        <Typography variant="small">
+          {`${event.venueName} · ${dateTime(event.startsAt)}${hidden ? ' · masqué' : ''}`}
+        </Typography>
+      </View>
+      {hiding ? (
+        <ReasonForm
+          label="Masquer l’événement : pourquoi ?"
+          placeholder="Ex. contenu trompeur, lieu inexistant"
+          consequence="Il disparaît de l’app ; les inscrits sont prévenus comme d’une annulation."
+          confirmLabel="Masquer"
+          confirmKind="danger"
+          busy={hideEvent.isPending}
+          error={hideEvent.error?.message}
+          onCancel={() => setHiding(false)}
+          onConfirm={({ text }) =>
+            hideEvent.mutate({ id: event.id, reason: text }, { onSuccess: () => setHiding(false) })
+          }
+        />
+      ) : (
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+          <Button small kind="ghost" label="Voir l’événement" onPress={() => openEvent(event.id)} />
+          {hidden ? null : (
+            <Button
+              small
+              kind="danger"
+              label="Masquer l’événement"
+              onPress={() => setHiding(true)}
+            />
+          )}
+        </View>
+      )}
+    </View>
   )
 }

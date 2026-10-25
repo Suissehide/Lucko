@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { REPORT_REASONS } from '../constants'
 import { isoDateTime } from './common'
+import { EVENT_STATUSES } from './event'
 
 /** POST /users/:id/report : motif obligatoire, précisions facultatives. */
 export const reportSchema = z.object({
@@ -35,6 +36,16 @@ export const adminReportSchema = z.object({
     /** Signalements encore ouverts sur ce joueur, celui-ci compris. */
     openReports: z.number().int(),
   }),
+  /** Événement signalé (LKO-153) : le joueur visé est alors le gérant qui l'a publié. */
+  event: z
+    .object({
+      id: z.string(),
+      title: z.string(),
+      startsAt: isoDateTime,
+      venueName: z.string(),
+      status: z.enum(EVENT_STATUSES),
+    })
+    .nullable(),
 })
 
 export type AdminReport = z.input<typeof adminReportSchema>

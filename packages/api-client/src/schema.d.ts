@@ -4492,6 +4492,15 @@ export interface operations {
                             minor: boolean;
                             openReports: number;
                         };
+                        event: {
+                            id: string;
+                            title: string;
+                            /** Format: date-time */
+                            startsAt: string;
+                            venueName: string;
+                            /** @enum {string} */
+                            status: "DRAFT" | "PUBLISHED" | "CANCELLED" | "HIDDEN";
+                        } | null;
                     }[];
                 };
             };
