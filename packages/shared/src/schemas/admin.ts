@@ -217,8 +217,12 @@ export const createVenueSchema = z.object({
 })
 export type CreateVenueInput = z.infer<typeof createVenueSchema>
 
-/** GET /admin/venues/osm/:type/:id : fiche pré-remplie depuis OSM, et le lieu déjà en base qui lui ressemble. */
+/**
+ * GET /admin/venues/osm/:type/:id : fiche pré-remplie depuis OSM, et le lieu déjà en base qui lui ressemble.
+ * Ville souvent absente d'OSM : vide ici (l'app prend celle de la recherche), exigée seulement à la création (LKO-145).
+ */
 export const osmVenuePreviewSchema = createVenueSchema.extend({
+  city: z.string().trim().max(80),
   duplicate: z.object({ id: z.string(), name: z.string() }).nullable(),
 })
 export type OsmVenuePreview = z.infer<typeof osmVenuePreviewSchema>
