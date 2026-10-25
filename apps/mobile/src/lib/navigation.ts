@@ -24,6 +24,9 @@ export const openVenues = () => router.push('/venues')
 /** Agenda de la ville : rooms et événements des prochains jours (LKO-62). */
 export const openAgenda = () => router.push('/agenda')
 
+/** Agenda limité aux rooms qui cherchent des joueurs (« Voir les rooms » de l'accueil, LKO-128). */
+export const openAgendaRooms = () => router.push({ pathname: '/agenda', params: { type: 'ROOM' } })
+
 /** « Je veux jouer à… » : jeux attendus, prévenu à l'ouverture d'une room (LKO-17). */
 export const openPlayIntents = () => router.push('/agenda/play-intents')
 
@@ -87,6 +90,3 @@ export function openTab(tab: string) {
   const route = TAB_ROUTES[tab as keyof typeof TAB_ROUTES]
   if (route) router.navigate(route)
 }
-
-// ponytail: listes complètes (programme, rooms, carte) pas encore faites
-export const notYet = () => {}
