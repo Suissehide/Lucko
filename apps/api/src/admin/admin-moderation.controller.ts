@@ -180,12 +180,23 @@ export class AdminModerationController {
       include: {
         reporter: { select: { id: true, pseudo: true } },
         target: { select: { id: true, pseudo: true, birthDate: true, ...openReports } },
+        // Signalement d'un événement (LKO-153) : l'admin voit lequel, et peut le masquer
+        event: {
+          select: {
+            id: true,
+            title: true,
+            startsAt: true,
+            status: true,
+            venue: { select: { name: true } },
+          },
+        },
       },
     })
     return reports
-      .map(({ target: { birthDate, _count, ...target }, ...report }) => ({
+      .map(({ target: { birthDate, _count, ...target }, event, ...report }) => ({
         ...report,
         target: { ...target, minor: isMinor(birthDate), openReports: _count.reportsReceived },
+        event: event && { ...event, venueName: event.venue.name },
       }))
       .sort((a, b) => Number(urgent(b)) - Number(urgent(a)))
   }

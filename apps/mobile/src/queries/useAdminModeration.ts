@@ -86,5 +86,18 @@ export function useAdminModerationMutations() {
     onSuccess,
   })
 
-  return { resolveReport, suspend, unsuspend, approveAvatar, rejectAvatar }
+  /** Masquer un événement signalé (LKO-153) : il disparaît de l'app, les inscrits sont prévenus. */
+  const hideEvent = useMutation({
+    mutationKey: [ADMIN.HIDE_EVENT],
+    mutationFn: ({ id, reason }: AdminReasonInput & { id: string }) =>
+      unwrap(
+        api.POST('/admin/events/{id}/hide', {
+          params: { path: { id } },
+          body: { reason, series: false },
+        }),
+      ),
+    onSuccess,
+  })
+
+  return { resolveReport, suspend, unsuspend, approveAvatar, rejectAvatar, hideEvent }
 }

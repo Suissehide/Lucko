@@ -94,6 +94,7 @@ export const ADMIN = {
   ACTIONS: 'admin_actions',
   REPORTS: 'admin_reports',
   RESOLVE_REPORT: 'admin_resolve_report',
+  HIDE_EVENT: 'admin_hide_event',
   USERS: 'admin_users',
   USER: 'admin_user',
   SUSPEND: 'admin_suspend',
