@@ -5,6 +5,7 @@ import type { Request } from 'express'
 import { isSuspended } from '../admin/admin.rules'
 import { loadEnv } from '../config/env'
 import type { User, VenueStaffRole } from '../generated/prisma/client'
+import { MailService } from '../mail/mail.service'
 import { PrismaService } from '../prisma/prisma.service'
 import { type Auth, createAuth } from './better-auth'
 
@@ -17,8 +18,11 @@ export class AuthService {
   /** Handler Express des routes /api/auth/* (inscription, connexion, Apple, Google, déconnexion). */
   readonly handler: ReturnType<typeof toNodeHandler>
 
-  constructor(private readonly prisma: PrismaService) {
-    this.auth = createAuth(prisma, loadEnv())
+  constructor(
+    private readonly prisma: PrismaService,
+    mail: MailService,
+  ) {
+    this.auth = createAuth(prisma, loadEnv(), (content) => mail.send(content))
     this.handler = toNodeHandler(this.auth)
   }
 

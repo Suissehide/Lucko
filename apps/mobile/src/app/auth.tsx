@@ -7,6 +7,7 @@ import {
   Note,
   Segmented,
   SITE_URL,
+  TextLink,
   Typography,
 } from '@lucko/design-system'
 import {
@@ -29,7 +30,7 @@ import { authClient } from '@/lib/auth'
 import { ApiError, queryClient } from '@/lib/queryClient'
 import { forgetMe, meQueryOptions, useMeMutations } from '@/queries/useMe'
 
-type Step = 'welcome' | 'email' | 'birth' | AgeRegime
+type Step = 'welcome' | 'email' | 'forgot' | 'birth' | AgeRegime
 
 /** Page à rouvrir après la connexion (`/auth?next=/consent/…`), seulement un chemin de l'app. */
 const afterAuth = { next: '/' }
@@ -167,8 +168,14 @@ export default function AuthScreen() {
           setPassword(p)
           setStep('birth')
         }}
+        onForgot={(e) => {
+          setEmail(e)
+          setStep('forgot')
+        }}
       />
     )
+  } else if (step === 'forgot') {
+    content = <ForgotStep email={email} onBack={() => setStep('email')} />
   } else if (step === 'birth') {
     content = (
       <BirthStep onBack={() => setStep(social ? 'welcome' : 'email')} onDone={finishBirth} />
@@ -221,12 +228,14 @@ function AccountStep({
   onMode,
   onBack,
   onCreate,
+  onForgot,
 }: {
   email: string
   mode: AccountMode
   onMode: (mode: AccountMode) => void
   onBack: () => void
   onCreate: (email: string, password: string) => void
+  onForgot: (email: string) => void
 }) {
   const passwordRef = useRef<TextInput>(null)
   const create = mode === 'create'
@@ -313,6 +322,92 @@ function AccountStep({
           />
         )}
       </form.AppField>
+      {create ? null : (
+        <TextLink
+          muted
+          label="Mot de passe oublié ?"
+          onPress={() => onForgot(form.state.values.email.trim())}
+        />
+      )}
+    </Frame>
+  )
+}
+
+/**
+ * Mot de passe oublié (LKO-138) : Better Auth envoie un lien valable une heure, qui rouvre l'app sur
+ * /reset-password. Même réponse que le compte existe ou non (pas de fuite des e-mails inscrits).
+ */
+function ForgotStep({ email, onBack }: { email: string; onBack: () => void }) {
+  const [sent, setSent] = useState(false)
+  const form = useAppForm({
+    defaultValues: { email },
+    onSubmit: async ({ value, formApi }) => {
+      const { error } = await authClient.requestPasswordReset({
+        email: emailSchema.parse(value.email),
+        redirectTo: Linking.createURL('/reset-password'),
+      })
+      if (error)
+        return formApi.setErrorMap({
+          onSubmit: { form: 'Impossible d’envoyer le lien pour l’instant. Réessaie.', fields: {} },
+        })
+      setSent(true)
+    },
+  })
+
+  return (
+    <Frame
+      title="Mot de passe oublié"
+      onBack={onBack}
+      footer={
+        sent ? (
+          <StepButton label="Revenir à la connexion" kind="ghost" onPress={onBack} />
+        ) : (
+          <form.AppForm>
+            <StepAction>
+              <form.SubmitButton label="Recevoir le lien" />
+            </StepAction>
+          </form.AppForm>
+        )
+      }
+    >
+      {sent ? (
+        <Banner
+          tone="info"
+          message="Si un compte existe avec cette adresse, tu vas recevoir un e-mail avec un lien pour choisir un nouveau mot de passe. Pense à regarder tes spams."
+        />
+      ) : (
+        <>
+          <Typography>
+            Indique l’adresse de ton compte : on t’envoie un lien pour choisir un nouveau mot de
+            passe.
+          </Typography>
+          <form.AppField
+            name="email"
+            validators={{
+              onSubmit: ({ value }) =>
+                emailSchema.safeParse(value).success
+                  ? undefined
+                  : 'Cette adresse e-mail ne semble pas valide. Vérifie-la.',
+            }}
+          >
+            {(field) => (
+              <field.Text
+                label="Adresse e-mail"
+                placeholder="toi@exemple.fr"
+                autoFocus
+                autoCapitalize="none"
+                autoComplete="email"
+                keyboardType="email-address"
+                returnKeyType="send"
+                onSubmitEditing={() => void form.handleSubmit()}
+              />
+            )}
+          </form.AppField>
+          <form.AppForm>
+            <form.FormError />
+          </form.AppForm>
+        </>
+      )}
     </Frame>
   )
 }
