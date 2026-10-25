@@ -2,6 +2,8 @@ import { randomUUID } from 'node:crypto'
 import {
   type AgendaPeriod,
   type agendaItemSchema,
+  ageOn,
+  DIGITAL_MAJORITY_AGE,
   HOME_SAFETY_VERSION,
   type meSchema,
   type myGamesSchema,
@@ -18,7 +20,9 @@ import {
 import type { z } from 'zod'
 import { needsParentalConsent } from '../common/minors.rules'
 import { loadEnv } from '../config/env'
+import { withdrawnChildMail } from '../consent/consent.rules'
 import { Prisma, type User } from '../generated/prisma/client'
+import { MailService } from '../mail/mail.service'
 import { PrismaService } from '../prisma/prisma.service'
 import { StorageService } from '../storage/storage.service'
 import { eventStatus, roomStatus, STILL_UPCOMING_MS } from './agenda.rules'
@@ -38,6 +42,7 @@ export class UsersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly storage: StorageService,
+    private readonly mail: MailService,
   ) {}
 
   async profile(user: User): Promise<z.output<typeof meSchema>> {
@@ -289,7 +294,23 @@ export class UsersService {
   async deleteAccount(user: User) {
     const now = new Date()
     const upcoming = { startsAt: { gte: now } }
+    // Parent : supprimer son compte retire son accord (LKO-148). Un enfant de moins de 15 ans perd le sien,
+    // comme après « Retirer mon accord » ; un plus grand ne dépend plus de lui et reste, simplement détaché.
+    const children = await this.prisma.user.findMany({
+      where: { parentId: user.id, deletedAt: null },
+    })
+    for (const child of children.filter(
+      (c) => c.birthDate && ageOn(c.birthDate, now) < DIGITAL_MAJORITY_AGE,
+    )) {
+      await this.deleteAccount(child)
+      await this.prisma.parentalConsent.updateMany({
+        where: { childId: child.id, status: 'GRANTED' },
+        data: { status: 'WITHDRAWN', withdrawnAt: now },
+      })
+      await this.mail.send({ to: child.email, ...withdrawnChildMail() })
+    }
     await this.prisma.$transaction([
+      this.prisma.user.updateMany({ where: { parentId: user.id }, data: { parentId: null } }),
       this.prisma.playerGameProfile.deleteMany({ where: { userId: user.id } }),
       this.prisma.venueStaff.deleteMany({ where: { userId: user.id } }),
       // Appareils oubliés : plus aucune notification
