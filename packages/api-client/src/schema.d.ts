@@ -2013,6 +2013,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         childEmail: string;
+                        parentEmail: string;
                         childAge: number;
                         /** @enum {string} */
                         status: "PENDING" | "GRANTED" | "WITHDRAWN";

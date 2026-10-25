@@ -28,6 +28,8 @@ export type MyParentalConsent = z.input<typeof myParentalConsentSchema>
 /** Demande d'accord vue par le parent qui ouvre le lien de l'e-mail. */
 export const parentalConsentRequestSchema = z.object({
   childEmail: z.string(),
+  /** Adresse qui a reçu le lien : le parent donne son accord avec ce compte-là (LKO-154). */
+  parentEmail: z.string(),
   childAge: z.number().int(),
   status: z.enum(['PENDING', 'GRANTED', 'WITHDRAWN']),
   deadline: isoDateTime,

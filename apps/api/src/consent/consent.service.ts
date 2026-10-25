@@ -25,6 +25,7 @@ import {
   consentKey,
   consentMail,
   fifteenthBirthdays,
+  parentEmailRefusal,
   reminderTimes,
   signConsentToken,
   turnedFifteenMail,
@@ -207,6 +208,7 @@ export class ConsentService implements OnModuleInit {
     const consent = await this.find(token)
     return {
       childEmail: consent.child.email,
+      parentEmail: consent.parentEmail,
       childAge: consent.child.birthDate ? ageOn(consent.child.birthDate) : 0,
       status: consent.status,
       deadline: consentDeadline(consent.child.createdAt),
@@ -227,6 +229,8 @@ export class ConsentService implements OnModuleInit {
       throw new ForbiddenException('Ce lien est réservé à ton parent')
     if (!parent.birthDate || ageOn(parent.birthDate) < ADULT_AGE)
       throw new ForbiddenException('Seul un adulte peut donner son accord')
+    const wrongAccount = parentEmailRefusal(parent.email, consent.parentEmail)
+    if (wrongAccount) throw new ForbiddenException(wrongAccount)
     const now = new Date()
     const sameDeviceSuspected =
       proof.ip !== null &&

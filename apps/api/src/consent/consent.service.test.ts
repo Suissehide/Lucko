@@ -18,7 +18,11 @@ const child = {
   createdAt,
   deletedAt: null,
 } as User
-const parent = { id: 'mum', birthDate: new Date(Date.UTC(year - 40, 0, 1)) } as User
+const parent = {
+  id: 'mum',
+  email: 'mum@x.fr',
+  birthDate: new Date(Date.UTC(year - 40, 0, 1)),
+} as User
 const teen = { id: 'teen', birthDate: new Date(Date.UTC(year - 16, 0, 1)) } as User
 
 const token = (id = 'c1') => signConsentToken(consentKey(), id, consentDeadline(createdAt))
@@ -49,7 +53,14 @@ function setup(consent: object | null, childSessionsFromIp = 0) {
   return { service, prisma, mail, users }
 }
 
-const pending = { id: 'c1', childId: 'kid', child, status: 'PENDING', parentId: null }
+const pending = {
+  id: 'c1',
+  childId: 'kid',
+  child,
+  status: 'PENDING',
+  parentId: null,
+  parentEmail: 'Mum@x.fr',
+}
 const proof = { ip: '1.2.3.4', userAgent: 'Safari' }
 
 describe('ConsentService.grant (LKO-49)', () => {
@@ -79,6 +90,13 @@ describe('ConsentService.grant (LKO-49)', () => {
     await service.grant(token(), parent, proof)
     expect(prisma.parentalConsent.update).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ sameDeviceSuspected: true }) }),
+    )
+  })
+
+  it('refuse un autre compte adulte que celui de l’adresse qui a reçu le lien (LKO-154)', async () => {
+    const other = { ...parent, id: 'stranger', email: 'kid.second@x.fr' } as User
+    await expect(setup(pending).service.grant(token(), other, proof)).rejects.toBeInstanceOf(
+      ForbiddenException,
     )
   })
 
