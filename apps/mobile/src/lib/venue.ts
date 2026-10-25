@@ -212,7 +212,7 @@ export function agendaAction(
     externalUrl?: string | null
   },
 ): AgendaAction {
-  if (event.myRegistration === 'REGISTERED') return { kind: 'ghost', label: 'Inscrit ✓' }
+  if (event.myRegistration === 'REGISTERED') return { kind: 'ghost', label: 'Inscrit' }
   if (event.myRegistration === 'WAITLISTED') return { kind: 'ghost', label: "En liste d'attente" }
   if (event.registrationMode === 'NONE') return { kind: 'ghost', label: 'Voir' }
   if (event.registrationMode === 'EXTERNAL' && event.externalUrl) {

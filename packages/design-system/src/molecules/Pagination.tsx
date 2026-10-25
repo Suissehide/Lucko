@@ -1,3 +1,4 @@
+import { ChevronLeft, ChevronRight } from 'lucide-react-native'
 import { Pressable, Text, View } from 'react-native'
 import { IconButton } from '../atoms/IconButton'
 import { Typography } from '../atoms/Typography'
@@ -42,7 +43,7 @@ export function Pagination({
         <IconButton
           size={32}
           label="Page précédente"
-          icon={<Text style={mono}>‹</Text>}
+          icon={<ChevronLeft size={16} color={colors.ink} strokeWidth={2.5} />}
           onPress={() => onChange(Math.max(1, page - 1))}
         />
         {pageList(page, pages)
@@ -54,7 +55,7 @@ export function Pagination({
         <IconButton
           size={32}
           label="Page suivante"
-          icon={<Text style={mono}>›</Text>}
+          icon={<ChevronRight size={16} color={colors.ink} strokeWidth={2.5} />}
           onPress={() => onChange(Math.min(pages, page + 1))}
         />
       </View>

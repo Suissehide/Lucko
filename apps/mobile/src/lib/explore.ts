@@ -111,7 +111,7 @@ export function dayLabel(date: Date | string) {
 /** Carte room ; sans `venue` (fiche lieu), le jour remplace le lieu ; à domicile, le quartier. */
 /** Participation du joueur connecté à une room, à la place de l'invitation à rejoindre. */
 export const ROOM_STATUS_LABELS = {
-  ACCEPTED: 'Tu joues ✓',
+  ACCEPTED: 'Tu joues',
   PENDING: 'Demande envoyée',
   WAITLISTED: "En liste d'attente",
 } as const
