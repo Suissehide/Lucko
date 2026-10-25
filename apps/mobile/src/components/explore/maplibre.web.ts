@@ -29,6 +29,13 @@ export function useMapLibre(
       center: [center.lng, center.lat],
       zoom,
       attributionControl: { compact: true },
+      // La molette fait défiler la page, pas la carte (LKO-131) : Ctrl / ⌘ + molette, ou deux doigts, pour la carte
+      cooperativeGestures: true,
+      locale: {
+        'CooperativeGesturesHandler.WindowsHelpText': 'Ctrl + molette pour zoomer sur la carte',
+        'CooperativeGesturesHandler.MacHelpText': '⌘ + molette pour zoomer sur la carte',
+        'CooperativeGesturesHandler.MobileHelpText': 'Deux doigts pour déplacer la carte',
+      },
     })
     created.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right')
     created.on('load', () => setMap(created))
