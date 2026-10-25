@@ -95,6 +95,14 @@ export class RealtimeGateway implements OnGatewayInit, OnGatewayConnection {
       .emit(event, { channel, ...payload })
   }
 
+  /**
+   * Coupe tous les appareils d'un joueur suspendu ou supprimé (LKO-139) : la session n'est lue qu'à la
+   * connexion. À appeler après le commit, sinon il se reconnecterait avant que le refus ne vaille.
+   */
+  disconnectUser(id: string) {
+    this.server.in(userRoom(id)).disconnectSockets(true)
+  }
+
   /** Joueurs qui ont le canal ouvert en ce moment. */
   async watchers(channel: Channel) {
     const sockets = await this.server.in(channelName(channel)).fetchSockets()
