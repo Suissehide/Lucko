@@ -1,6 +1,6 @@
 import type { CreateRoomInput, HostAction, RoomDetail } from '@lucko/shared'
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { AGENDA, EXPLORE, ROOM, VENUE } from '@/constants/queryKeys'
+import { AGENDA, CHAT, EXPLORE, ROOM, VENUE } from '@/constants/queryKeys'
 import { api } from '@/lib/api'
 import { queryClient, unwrap } from '@/lib/queryClient'
 import { useRealtime } from '@/lib/realtime'
@@ -41,10 +41,10 @@ export function useRoomQuery(id: string) {
   return query
 }
 
-/** Une room change : Mes parties, l'accueil et la fiche du lieu (places restantes) aussi. */
+/** Une room change : Mes parties, l'accueil, la fiche du lieu (places restantes) et Messages (LKO-132) aussi. */
 const refreshLists = () =>
   Promise.all(
-    [AGENDA.GET, EXPLORE.TONIGHT, VENUE.GET].map((key) =>
+    [AGENDA.GET, EXPLORE.TONIGHT, VENUE.GET, CHAT.LIST].map((key) =>
       queryClient.invalidateQueries({ queryKey: [key] }),
     ),
   )
