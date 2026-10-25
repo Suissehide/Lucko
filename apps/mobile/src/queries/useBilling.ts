@@ -1,5 +1,6 @@
+import type { AdminVisitDecision } from '@lucko/shared'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { BILLING } from '@/constants/queryKeys'
+import { ADMIN, BILLING } from '@/constants/queryKeys'
 import { api } from '@/lib/api'
 import { queryClient, unwrap } from '@/lib/queryClient'
 
@@ -13,6 +14,13 @@ export const useVenueVisitsQuery = (venueId: string, month: string) =>
       unwrap(
         api.GET('/venues/{venueId}/visits', { params: { path: { venueId }, query: { month } } }),
       ),
+  })
+
+/** Admin : venues contestées par les lieux, à trancher (LKO-146). */
+export const useAdminVisitDisputesQuery = () =>
+  useQuery({
+    queryKey: [BILLING.ADMIN_DISPUTES],
+    queryFn: () => unwrap(api.GET('/admin/visits/disputes')),
   })
 
 // * MUTATIONS
@@ -29,4 +37,16 @@ export const useDisputeVisitMutation = (venueId: string) =>
         }),
       ),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: [BILLING.VISITS, venueId] }),
+  })
+
+/** Admin : garder (VALID) ou annuler une venue contestée, avec un motif (journal d'audit). */
+export const useDecideVisitMutation = () =>
+  useMutation({
+    mutationKey: [BILLING.DECIDE],
+    mutationFn: ({ id, ...body }: AdminVisitDecision & { id: string }) =>
+      unwrap(api.POST('/admin/visits/{id}/decision', { params: { path: { id } }, body })),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: [BILLING.ADMIN_DISPUTES] })
+      void queryClient.invalidateQueries({ queryKey: [ADMIN.DASHBOARD] })
+    },
   })

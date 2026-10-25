@@ -122,27 +122,35 @@ export class AdminModerationController {
       avatarUrl: { not: null },
       deletedAt: null,
     } as const
-    const [open, pendingAvatars, oldestAvatar, pendingVenues, suspendedPlayers, disputedResults] =
-      await Promise.all([
-        this.prisma.report.findMany({
-          where: { resolvedAt: null },
-          orderBy: { createdAt: 'asc' },
-          select: { createdAt: true, target: { select: { birthDate: true } } },
-        }),
-        this.prisma.user.count({ where: pendingAvatar }),
-        this.prisma.user.findFirst({
-          where: pendingAvatar,
-          orderBy: { updatedAt: 'asc' },
-          select: { updatedAt: true },
-        }),
-        this.prisma.venue.findMany({
-          where: { status: 'PENDING' },
-          orderBy: { name: 'asc' },
-          select: { name: true },
-        }),
-        this.prisma.user.count({ where: suspendedNow(now) }),
-        this.prisma.matchResult.count({ where: { status: 'DISPUTED' } }),
-      ])
+    const [
+      open,
+      pendingAvatars,
+      oldestAvatar,
+      pendingVenues,
+      suspendedPlayers,
+      disputedResults,
+      disputedVisits,
+    ] = await Promise.all([
+      this.prisma.report.findMany({
+        where: { resolvedAt: null },
+        orderBy: { createdAt: 'asc' },
+        select: { createdAt: true, target: { select: { birthDate: true } } },
+      }),
+      this.prisma.user.count({ where: pendingAvatar }),
+      this.prisma.user.findFirst({
+        where: pendingAvatar,
+        orderBy: { updatedAt: 'asc' },
+        select: { updatedAt: true },
+      }),
+      this.prisma.venue.findMany({
+        where: { status: 'PENDING' },
+        orderBy: { name: 'asc' },
+        select: { name: true },
+      }),
+      this.prisma.user.count({ where: suspendedNow(now) }),
+      this.prisma.matchResult.count({ where: { status: 'DISPUTED' } }),
+      this.prisma.visit.count({ where: { status: 'DISPUTED' } }),
+    ])
     return {
       openReports: open.length,
       minorReports: open.filter((r) => isMinor(r.target.birthDate)).length,
@@ -150,6 +158,7 @@ export class AdminModerationController {
       pendingVenues: pendingVenues.length,
       suspendedPlayers,
       disputedResults,
+      disputedVisits,
       oldestReportAt: open[0]?.createdAt ?? null,
       oldestAvatarAt: oldestAvatar?.updatedAt ?? null,
       pendingVenueNames: pendingVenues.slice(0, 3).map((v) => v.name),

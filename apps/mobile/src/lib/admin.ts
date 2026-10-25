@@ -31,6 +31,7 @@ export type AdminSection =
   | 'users'
   | 'avatars'
   | 'results'
+  | 'visits'
   | 'venues'
   | 'games'
 
@@ -40,6 +41,7 @@ const ROUTES: Record<AdminSection, Href> = {
   users: '/admin/users',
   avatars: '/admin/avatars',
   results: '/admin/results',
+  visits: '/admin/visits',
   venues: '/admin/venues',
   games: '/admin/games',
 }
@@ -67,6 +69,7 @@ export const adminSidebarItems = (dashboard?: AdminDashboard): SidebarItem[] => 
   { key: 'avatars', label: 'Photos de profil', badge: badge(dashboard?.pendingAvatars) },
   { key: 'users', label: 'Joueurs', badge: badge(dashboard?.suspendedPlayers) },
   { key: 'results', label: 'Résultats contestés', badge: badge(dashboard?.disputedResults) },
+  { key: 'visits', label: 'Venues contestées', badge: badge(dashboard?.disputedVisits) },
   {
     key: 'venues',
     label: 'Lieux et événements',
@@ -82,6 +85,7 @@ export const ADMIN_TITLES: Record<AdminSection, string> = {
   users: 'Joueurs',
   avatars: 'Photos de profil',
   results: 'Résultats contestés',
+  visits: 'Venues contestées',
   venues: 'Lieux et événements',
   games: 'Jeux',
 }
@@ -92,6 +96,7 @@ export const ADMIN_KICKERS: Record<AdminSection, string> = {
   avatars: 'Modération',
   users: 'Modération',
   results: 'Modération',
+  visits: 'Modération',
   venues: 'Catalogue',
   games: 'Catalogue',
 }
@@ -171,6 +176,13 @@ export function queueCards(d: AdminDashboard) {
       label: 'Résultats contestés',
       color: colors.rating,
       note: d.disputedResults ? 'Rooms classées à trancher' : 'File vide',
+    },
+    {
+      key: 'visits',
+      value: d.disputedVisits,
+      label: 'Venues contestées',
+      color: colors.venue,
+      note: d.disputedVisits ? 'Contestées par les lieux, à trancher' : 'File vide',
     },
   ] as const
 }

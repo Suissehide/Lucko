@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { isoDateTime } from './common'
 
 /** Venues facturables (LKO-79) : le lieu peut contester une venue pendant 14 jours après la soirée. */
 export const DISPUTE_DAYS = 14
@@ -51,5 +52,19 @@ export const adminVisitDecisionSchema = z.object({
   reason: reasonSchema,
 })
 
+/** GET /admin/visits/disputes : venues contestées par les lieux, à trancher (LKO-146). */
+export const adminDisputedVisitSchema = z.object({
+  id: z.string(),
+  businessDate: z.iso.date(),
+  venueName: z.string(),
+  pseudo: z.string().nullable(),
+  source: z.enum(VISIT_SOURCES),
+  priceCents: z.number().int().nullable(),
+  disputeReason: z.string().nullable(),
+  disputedAt: isoDateTime.nullable(),
+})
+
+export type AdminDisputedVisit = z.input<typeof adminDisputedVisitSchema>
+export type AdminVisitDecision = z.input<typeof adminVisitDecisionSchema>
 export type VenueVisit = z.input<typeof venueVisitSchema>
 export type VenueVisits = z.input<typeof venueVisitsSchema>

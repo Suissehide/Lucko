@@ -772,6 +772,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/visits/disputes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["BillingController_disputes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/visits/{id}/decision": {
         parameters: {
             query?: never;
@@ -4322,6 +4338,37 @@ export interface operations {
             };
         };
     };
+    BillingController_disputes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        id: string;
+                        /** Format: date */
+                        businessDate: string;
+                        venueName: string;
+                        pseudo: string | null;
+                        /** @enum {string} */
+                        source: "QR_SCAN" | "CHECK_IN";
+                        priceCents: number | null;
+                        disputeReason: string | null;
+                        /** Format: date-time */
+                        disputedAt: string | null;
+                    }[];
+                };
+            };
+        };
+    };
     BillingController_decide: {
         parameters: {
             query?: never;
@@ -4403,6 +4450,7 @@ export interface operations {
                         pendingVenues: number;
                         suspendedPlayers: number;
                         disputedResults: number;
+                        disputedVisits: number;
                         /** Format: date-time */
                         oldestReportAt: string | null;
                         /** Format: date-time */

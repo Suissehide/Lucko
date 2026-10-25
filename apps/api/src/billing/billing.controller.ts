@@ -1,4 +1,5 @@
 import {
+  adminDisputedVisitSchema,
   adminVisitDecisionSchema,
   disputeVisitSchema,
   venueVisitsQuerySchema,
@@ -6,7 +7,7 @@ import {
 } from '@lucko/shared'
 import { Controller, Get, HttpCode, Param, Post } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
-import type { z } from 'zod'
+import { z } from 'zod'
 import { Admin } from '../admin/admin.decorators'
 import { VenueRoles } from '../auth/auth.decorators'
 import { ZodBody, ZodQuery, ZodResponse } from '../common/zod'
@@ -39,6 +40,14 @@ export class BillingController {
     @ZodBody(disputeVisitSchema) { reason }: z.output<typeof disputeVisitSchema>,
   ) {
     await this.billing.dispute(venueId, id, reason)
+  }
+
+  /** Admin : file des venues contestées par les lieux, à trancher (LKO-146). */
+  @Get('admin/visits/disputes')
+  @Admin()
+  @ZodResponse(z.array(adminDisputedVisitSchema))
+  disputes() {
+    return this.billing.disputes()
   }
 
   /** Admin : garder ou annuler une venue (contestée ou non), tracé dans le journal d'audit. */
