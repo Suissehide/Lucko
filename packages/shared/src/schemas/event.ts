@@ -63,6 +63,13 @@ type Checked = {
   untilDate?: string | null
 }
 
+/**
+ * Les règles croisées tournent même si un champ est déjà en erreur : une date ou une heure mal formée
+ * (« 31/10/2026 ») est signalée par son champ, sans calcul de date qui lèverait « Invalid time value » (LKO-150).
+ */
+const wellFormed = (date: string, time = '00:00') =>
+  z.iso.date().safeParse(date).success && timeSchema.safeParse(time).success
+
 /** Règles croisées : lien externe obligatoire en inscription externe, pas de date passée, fin après début. */
 function checkEvent(value: Checked, ctx: z.RefinementCtx) {
   if (value.registrationMode === 'EXTERNAL' && !value.externalUrl)
@@ -71,7 +78,7 @@ function checkEvent(value: Checked, ctx: z.RefinementCtx) {
       path: ['externalUrl'],
       message: 'Lien de la billetterie requis',
     })
-  if (value.date) {
+  if (value.date && wellFormed(value.date, value.startTime)) {
     const [h = 0, m = 0] = value.startTime.split(':').map(Number)
     if (fromLocalDateTime(value.date, h * 60 + m) <= new Date())
       ctx.addIssue({ code: 'custom', path: ['date'], message: 'Date déjà passée' })
@@ -94,7 +101,7 @@ export const eventCreateSchema = z
   .superRefine(checkEvent)
   .superRefine((value, ctx) => {
     // « 1er vendredi du mois » : la première date doit en être un
-    const rule = value.recurrence && toRrule(value.recurrence, value.date)
+    const rule = value.recurrence && wellFormed(value.date) && toRrule(value.recurrence, value.date)
     if (
       rule &&
       !occurrenceDates(rule, value.date, { from: value.date, to: addDays(value.date, 1) }).length

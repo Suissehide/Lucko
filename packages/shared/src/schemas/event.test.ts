@@ -26,6 +26,17 @@ describe('eventCreateSchema', () => {
     })
   })
 
+  it('date ou heure mal formée : erreur sur le champ, sans planter (LKO-150)', () => {
+    expect(errors({ date: '31/10/2027' })).toEqual(['date'])
+    expect(errors({ date: '31/10/2027', recurrence: { freq: 'WEEKLY', interval: 1 } })).toEqual([
+      'date',
+    ])
+    expect(errors({ startTime: '25:99' })).toEqual(['startTime'])
+    expect(
+      eventUpdateSchema.safeParse({ ...valid, scope: 'occurrence', date: '2027-13-45' }).success,
+    ).toBe(false)
+  })
+
   it('âge minimum : 13 ans au moins', () => {
     expect(errors({ minAge: 12 })).toEqual(['minAge'])
     expect(errors({ minAge: 16 })).toEqual([])
