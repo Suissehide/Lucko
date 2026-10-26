@@ -21,6 +21,8 @@ export function StatusPill({ label, tone = 'neutral' }: { label: string; tone?: 
         alignItems: 'center',
         gap: 6,
         alignSelf: 'flex-start',
+        // Colonne étroite : le libellé passe à la ligne plutôt que d'être coupé
+        maxWidth: '100%',
         backgroundColor: t.bg,
         borderWidth: border.thin,
         borderColor: colors.ink,
@@ -45,6 +47,7 @@ export function StatusPill({ label, tone = 'neutral' }: { label: string; tone?: 
           ...font('body', 700),
           fontSize: 12,
           color: tone === 'strong' ? colors.white : colors.ink,
+          flexShrink: 1,
         }}
       >
         {label}

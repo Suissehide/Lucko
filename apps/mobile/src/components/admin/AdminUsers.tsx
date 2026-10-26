@@ -24,7 +24,7 @@ const TWO_PANELS = 1100
 const person: Column<AdminUser> = {
   key: 'pseudo',
   label: 'Joueur',
-  flex: 2.4,
+  flex: 2,
   render: (u) => (
     <PersonCell name={u.pseudo ?? 'Sans pseudo'} subtitle={u.email} muted={!u.pseudo} />
   ),
@@ -43,7 +43,8 @@ const reports: Column<AdminUser> = {
 const status: Column<AdminUser> = {
   key: 'status',
   label: 'Statut',
-  flex: 1.3,
+  // « Suspendu jusqu'au 13 nov. » tient sur deux lignes au plus à 1024 px
+  flex: 1.7,
   render: (u) => <UserStatus user={u} />,
 }
 const columns: Column<AdminUser>[] = [
