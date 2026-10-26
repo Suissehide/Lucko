@@ -37,7 +37,7 @@ export function DetailScreen({
   }
 
   return (
-    <WebScreen nav={<PlayerNav active="explorer" create={false} />}>
+    <WebScreen nav={<PlayerNav active="" create={false} />}>
       <View style={{ width: '100%', maxWidth: 760, alignSelf: 'center', gap: 28 }}>
         <View style={{ alignSelf: 'flex-start' }}>
           <TextLink icon={ArrowLeft} label="Retour" onPress={goBack} />
