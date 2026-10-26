@@ -55,8 +55,9 @@ export default function AuthScreen() {
   const { width } = useWindowDimensions()
   const [step, setStep] = useState<Step>('welcome')
   const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
   const [mode, setMode] = useState<AccountMode>('login')
+  /** Création par e-mail : date de naissance demandée d'abord, le compte est créé à l'étape e-mail (LKO-162). */
+  const [birth, setBirth] = useState<{ date: string; regime: AgeRegime } | null>(null)
   /** Connecté par Apple / Google, il ne manque que la date de naissance (le compte existe déjà). */
   const [social, setSocial] = useState(false)
   const [providerError, setProviderError] = useState(false)
@@ -94,7 +95,10 @@ export default function AuthScreen() {
     await resume()
   }
 
-  /** Fin de l'étape date de naissance : crée le compte e-mail, ou complète celui d'Apple / Google. */
+  /**
+   * Fin de l'étape date de naissance : complète le compte d'Apple / Google ; en création par e-mail,
+   * retient la date et passe à l'e-mail et au mot de passe (refus immédiat avant 13 ans).
+   */
   const finishBirth = async (date: Date): Promise<string | undefined> => {
     const regime = !social && (await refusedRecently()) ? 'too-young' : ageRegime(date)
     const birthDate = date.toISOString().slice(0, 10)
@@ -108,14 +112,28 @@ export default function AuthScreen() {
         await authClient.signOut().catch(() => undefined)
       else if (error) return 'Impossible d’enregistrer ta date de naissance. Réessaie.'
     } else if (regime !== 'too-young') {
-      const { error } = await authClient.signUp.email({ email, password, name: '', birthDate })
-      if (error?.code?.startsWith('USER_ALREADY_EXISTS'))
-        return 'Un compte existe déjà avec cet e-mail. Reviens en arrière pour te connecter.'
-      if (error) return 'Impossible de créer ton compte pour l’instant. Réessaie.'
+      setBirth({ date: birthDate, regime })
+      setMode('create')
+      return void setStep('email')
     }
     if (regime === 'too-young')
       await AsyncStorage.setItem(TOO_YOUNG_KEY, String(Date.now())).catch(() => {})
     setStep(regime)
+  }
+
+  /** Création du compte e-mail, date de naissance connue : l'erreur revient sur le champ e-mail. */
+  const createAccount = async (address: string, password: string) => {
+    if (!birth) return void setStep('birth')
+    const { error } = await authClient.signUp.email({
+      email: address,
+      password,
+      name: '',
+      birthDate: birth.date,
+    })
+    if (error?.code?.startsWith('USER_ALREADY_EXISTS'))
+      return 'Un compte existe déjà avec cet e-mail : utilise « Se connecter ».'
+    if (error) return 'Impossible de créer ton compte pour l’instant. Réessaie.'
+    setStep(birth.regime)
   }
 
   let content: ReactNode
@@ -174,13 +192,14 @@ export default function AuthScreen() {
       <AccountStep
         email={email}
         mode={mode}
-        onMode={setMode}
-        onBack={() => setStep('welcome')}
-        onCreate={(e, p) => {
-          setEmail(e)
-          setPassword(p)
-          setStep('birth')
+        onMode={(next, typed) => {
+          setMode(next)
+          setEmail(typed)
+          // Créer un compte : la date de naissance d'abord
+          if (next === 'create' && !birth) setStep('birth')
         }}
+        onBack={() => setStep('welcome')}
+        onCreate={createAccount}
         onForgot={(e) => {
           setEmail(e)
           setStep('forgot')
@@ -191,7 +210,13 @@ export default function AuthScreen() {
     content = <ForgotStep email={email} onBack={() => setStep('email')} />
   } else if (step === 'birth') {
     content = (
-      <BirthStep onBack={() => setStep(social ? 'welcome' : 'email')} onDone={finishBirth} />
+      <BirthStep
+        onBack={() => {
+          setMode('login')
+          setStep(social ? 'welcome' : 'email')
+        }}
+        onDone={finishBirth}
+      />
     )
   } else {
     content = (
@@ -234,7 +259,7 @@ function WideLayout({ children }: { children: ReactNode }) {
 
 type AccountMode = 'login' | 'create'
 
-/** E-mail + mot de passe : connexion à un compte existant, ou début de la création (suivie de la date de naissance). */
+/** E-mail + mot de passe : connexion à un compte existant, ou fin de la création (après la date de naissance). */
 function AccountStep({
   email,
   mode,
@@ -245,9 +270,11 @@ function AccountStep({
 }: {
   email: string
   mode: AccountMode
-  onMode: (mode: AccountMode) => void
+  /** `typed` : l'e-mail déjà saisi, gardé si on passe par la date de naissance. */
+  onMode: (mode: AccountMode, typed: string) => void
   onBack: () => void
-  onCreate: (email: string, password: string) => void
+  /** Renvoie un message d'erreur si le compte n'a pas pu être créé (e-mail déjà utilisé…). */
+  onCreate: (email: string, password: string) => Promise<string | undefined>
   onForgot: (email: string) => void
 }) {
   const passwordRef = useRef<TextInput>(null)
@@ -256,8 +283,11 @@ function AccountStep({
     defaultValues: { email, password: '' },
     onSubmit: async ({ value, formApi }) => {
       const address = emailSchema.parse(value.email)
-      // Création : le compte n'est créé qu'après la date de naissance (âge vérifié par l'API)
-      if (create) return onCreate(address, value.password)
+      if (create) {
+        const failure = await onCreate(address, value.password)
+        if (failure) formApi.setErrorMap({ onSubmit: { fields: { email: failure } } })
+        return
+      }
       const { error } = await authClient.signIn.email({ email: address, password: value.password })
       if (error)
         return formApi.setErrorMap({
@@ -271,11 +301,11 @@ function AccountStep({
     <Frame
       title={create ? 'Créer un compte' : 'Se connecter'}
       onBack={onBack}
-      progress={create ? 1 : undefined}
+      progress={create ? 2 : undefined}
       footer={
         <form.AppForm>
           <StepAction>
-            <form.SubmitButton label={create ? 'Continuer' : 'Se connecter'} />
+            <form.SubmitButton label={create ? 'Créer mon compte' : 'Se connecter'} />
           </StepAction>
         </form.AppForm>
       }
@@ -284,7 +314,7 @@ function AccountStep({
         items={['Se connecter', 'Créer un compte']}
         value={create ? 1 : 0}
         onChange={(i) => {
-          onMode(i ? 'create' : 'login')
+          onMode(i ? 'create' : 'login', form.state.values.email.trim())
           // Les erreurs de l'autre mode ne valent plus : on garde la saisie
           form.reset(form.state.values)
         }}
@@ -456,7 +486,7 @@ function BirthStep({
     <Frame
       title="Ta date de naissance"
       onBack={onBack}
-      progress={2}
+      progress={1}
       footer={
         <form.AppForm>
           <StepAction>
