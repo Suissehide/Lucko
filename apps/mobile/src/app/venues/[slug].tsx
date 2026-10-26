@@ -71,7 +71,7 @@ export default function VenueScreen() {
   const [gameTab, setGameTab] = useState(0)
   const [viewer, setViewer] = useState(false)
 
-  const nav = <PlayerNav active="explorer" />
+  const nav = <PlayerNav active="" />
 
   if (!venue) {
     const body = failed ? (
