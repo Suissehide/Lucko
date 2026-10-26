@@ -147,9 +147,11 @@ export default function CreateRoomScreen() {
     : ''
 
   const whereBlocker = draft.atHome
-    ? draft.home
-      ? null
-      : 'Choisis ton adresse dans la liste.'
+    ? me?.minor
+      ? 'Les rooms à domicile sont réservées aux adultes : choisis un lieu.'
+      : draft.home
+        ? null
+        : 'Choisis ton adresse dans la liste.'
     : !venue
       ? 'Choisis un lieu.'
       : venue.openNow === false
@@ -234,6 +236,7 @@ export default function CreateRoomScreen() {
       radiusKm={me?.searchRadiusKm ?? RADIUS_KM.default}
       suggestedId={suggestion?.id}
       wide={wide}
+      minor={!!me?.minor}
     />
   ) : (
     <PlayersStep
@@ -521,6 +524,7 @@ function WhereStep({
   radiusKm,
   suggestedId,
   wide,
+  minor,
 }: {
   draft: RoomDraft
   set: (patch: Partial<RoomDraft>) => void
@@ -530,6 +534,8 @@ function WhereStep({
   radiusKm: number
   suggestedId?: string
   wide: boolean
+  /** Moins de 18 ans : « Chez moi » refusé d'emblée, sans les conseils de sécurité (LKO-162). */
+  minor: boolean
 }) {
   const [month, setMonth] = useState(draft.day.slice(0, 7))
   const [mapView, setMapView] = useState(false)
@@ -738,7 +744,9 @@ function WhereStep({
           onChange={(i) => set({ atHome: i === 1 })}
           color={colors.ink}
         />
-        {draft.atHome ? (
+        {draft.atHome && minor ? (
+          <Banner tone="info" message="Les rooms à domicile sont réservées aux adultes." />
+        ) : draft.atHome ? (
           <HomeAddressPicker
             value={draft.home}
             saveAddress={draft.saveAddress}

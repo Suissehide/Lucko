@@ -38,6 +38,8 @@ export default function PlayIntentsScreen() {
   }, [intents.loaded, intents.gameIds, intents.when])
 
   const selected = gameIds ?? []
+  // Tout décocher n'a de sens que pour retirer des envies déjà enregistrées (LKO-162)
+  const clearing = selected.length === 0 && intents.gameIds.length > 0
   const toggle = (id: string) =>
     setGameIds(selected.includes(id) ? selected.filter((g) => g !== id) : [...selected, id])
   const save = async () => {
@@ -58,7 +60,11 @@ export default function PlayIntentsScreen() {
       header={<ScreenHeader title="Je veux jouer à…" onBack={goBack} />}
       footer={
         <View style={wide ? { alignSelf: 'flex-start' } : null}>
-          <Button label="Me prévenir" disabled={intents.saving} onPress={() => void save()} />
+          <Button
+            label={clearing ? 'Ne plus me prévenir' : 'Me prévenir'}
+            disabled={intents.saving || (selected.length === 0 && !clearing)}
+            onPress={() => void save()}
+          />
         </View>
       }
     >

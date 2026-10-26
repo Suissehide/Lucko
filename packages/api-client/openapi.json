@@ -505,6 +505,9 @@
                     "parentalConsentPending": {
                       "type": "boolean"
                     },
+                    "minor": {
+                      "type": "boolean"
+                    },
                     "childCount": {
                       "type": "integer",
                       "minimum": -9007199254740991,
@@ -703,6 +706,7 @@
                     "name",
                     "hasBirthDate",
                     "parentalConsentPending",
+                    "minor",
                     "childCount",
                     "role",
                     "avatarUrl",
@@ -838,6 +842,9 @@
                     "parentalConsentPending": {
                       "type": "boolean"
                     },
+                    "minor": {
+                      "type": "boolean"
+                    },
                     "childCount": {
                       "type": "integer",
                       "minimum": -9007199254740991,
@@ -1036,6 +1043,7 @@
                     "name",
                     "hasBirthDate",
                     "parentalConsentPending",
+                    "minor",
                     "childCount",
                     "role",
                     "avatarUrl",
@@ -1122,6 +1130,9 @@
                     "parentalConsentPending": {
                       "type": "boolean"
                     },
+                    "minor": {
+                      "type": "boolean"
+                    },
                     "childCount": {
                       "type": "integer",
                       "minimum": -9007199254740991,
@@ -1320,6 +1331,7 @@
                     "name",
                     "hasBirthDate",
                     "parentalConsentPending",
+                    "minor",
                     "childCount",
                     "role",
                     "avatarUrl",
@@ -1398,6 +1410,9 @@
                     "parentalConsentPending": {
                       "type": "boolean"
                     },
+                    "minor": {
+                      "type": "boolean"
+                    },
                     "childCount": {
                       "type": "integer",
                       "minimum": -9007199254740991,
@@ -1596,6 +1611,7 @@
                     "name",
                     "hasBirthDate",
                     "parentalConsentPending",
+                    "minor",
                     "childCount",
                     "role",
                     "avatarUrl",

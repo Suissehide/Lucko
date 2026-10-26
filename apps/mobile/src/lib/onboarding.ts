@@ -4,7 +4,16 @@ import type { Game } from '@lucko/shared'
 export const onboarding = { deferred: false }
 
 // ponytail: ordre fixe de la maquette ; à trier par nombre de joueurs dans la ville quand l'API le donnera
-const FEATURED = ['magic', 'pokemon', 'lorcana', 'one-piece', 'flesh-and-blood', 'digimon']
+// Yu-Gi-Oh! et les jeux de société d'emblée, pas derrière « Autre jeu… » (LKO-162)
+const FEATURED = [
+  'magic',
+  'pokemon',
+  'lorcana',
+  'one-piece',
+  'yugioh',
+  'jeux-de-societe',
+  'flesh-and-blood',
+]
 
 /** Les `count` jeux montrés d'emblée, puis le reste du catalogue (recherche « Autre jeu… »). */
 export function splitCatalog(catalog: Game[], count = 7) {

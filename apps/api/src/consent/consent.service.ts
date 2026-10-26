@@ -8,6 +8,8 @@ import {
   BadRequestException,
   ConflictException,
   ForbiddenException,
+  HttpException,
+  HttpStatus,
   Injectable,
   Logger,
   NotFoundException,
@@ -27,6 +29,7 @@ import {
   fifteenthBirthdays,
   parentEmailRefusal,
   reminderTimes,
+  resendRefusal,
   signConsentToken,
   turnedFifteenMail,
   verifyConsentToken,
@@ -187,6 +190,13 @@ export class ConsentService implements OnModuleInit {
     if (parentEmail === child.email)
       throw new BadRequestException('Indique l’e-mail d’un parent, pas le tien')
     const now = new Date()
+    const last = await this.prisma.parentalConsent.findFirst({
+      where: { childId: child.id, status: 'PENDING' },
+      orderBy: { createdAt: 'desc' },
+      select: { parentEmail: true, createdAt: true },
+    })
+    const tooSoon = resendRefusal(last, parentEmail, now)
+    if (tooSoon) throw new HttpException(tooSoon, HttpStatus.TOO_MANY_REQUESTS)
     const deadline = consentDeadline(child.createdAt)
     await this.prisma.$transaction(async (tx) => {
       await tx.parentalConsent.deleteMany({ where: { childId: child.id, status: 'PENDING' } })

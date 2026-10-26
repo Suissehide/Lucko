@@ -5,6 +5,7 @@ import {
   consentMail,
   fifteenthBirthdays,
   reminderTimes,
+  resendRefusal,
   signConsentToken,
   verifyConsentToken,
 } from './consent.rules'
@@ -12,6 +13,20 @@ import {
 const key = consentKey('secret-de-test-assez-long-pour-better-auth')
 const now = new Date('2026-10-13T10:00:00Z')
 const later = new Date('2026-10-27T10:00:00Z')
+
+describe('renvoi de l’e-mail au parent (LKO-162)', () => {
+  const last = { parentEmail: 'Mum@x.fr', createdAt: new Date(now.getTime() - 20_000) }
+  it('refuse un renvoi au même parent dans la minute, avec le temps restant', () => {
+    expect(resendRefusal(last, 'mum@x.fr', now)).toBe(
+      'L’e-mail vient de partir : réessaie dans 40 s',
+    )
+  })
+  it('accepte une autre adresse, une première demande, ou après la minute', () => {
+    expect(resendRefusal(last, 'dad@x.fr', now)).toBeNull()
+    expect(resendRefusal(null, 'mum@x.fr', now)).toBeNull()
+    expect(resendRefusal(last, 'mum@x.fr', new Date(now.getTime() + 40_000))).toBeNull()
+  })
+})
 
 describe('jeton du lien parent (LKO-49)', () => {
   it('rend la demande d’un jeton authentique', () => {

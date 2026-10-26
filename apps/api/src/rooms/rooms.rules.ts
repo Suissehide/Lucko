@@ -97,7 +97,9 @@ export function joinOutcome(
     return { refused: 'Cette room n’accepte plus de joueurs' }
   if (room.startsAt <= now) return { refused: 'Cette room a déjà commencé' }
   if (current && ACTIVE.includes(current)) return { status: current }
-  if (current === 'DECLINED') return { refused: 'L’hôte a refusé ta demande pour cette room' }
+  // DECLINED couvre la demande refusée et le joueur retiré par l'hôte
+  if (current === 'DECLINED')
+    return { refused: 'L’hôte a refusé ta demande ou t’a retiré de cette room' }
   if (accepted >= room.capacity) return { status: 'WAITLISTED' }
   return { status: room.autoAccept ? 'ACCEPTED' : 'PENDING' }
 }

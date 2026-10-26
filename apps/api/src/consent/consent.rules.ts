@@ -30,6 +30,20 @@ export const parentEmailRefusal = (accountEmail: string, parentEmail: string) =>
 export const consentDeadline = (accountCreatedAt: Date) =>
   new Date(accountCreatedAt.getTime() + PARENTAL_CONSENT_DAYS * DAY_MS)
 
+/** Délai entre deux envois au même parent : « Renvoyer l'e-mail » ne sert pas à l'inonder (LKO-162). */
+export const RESEND_COOLDOWN_MS = 60_000
+
+/** Motif du refus si le même parent vient de recevoir l'e-mail, sinon null. */
+export function resendRefusal(
+  last: { parentEmail: string; createdAt: Date } | null,
+  parentEmail: string,
+  now = new Date(),
+) {
+  if (!last || last.parentEmail.toLowerCase() !== parentEmail.toLowerCase()) return null
+  const wait = Math.ceil((last.createdAt.getTime() + RESEND_COOLDOWN_MS - now.getTime()) / 1000)
+  return wait > 0 ? `L’e-mail vient de partir : réessaie dans ${wait} s` : null
+}
+
 /** Relances encore utiles : avant l'échéance. */
 export const reminderTimes = (requestedAt: Date, deadline: Date) =>
   REMINDER_DAYS.map((days) => new Date(requestedAt.getTime() + days * DAY_MS)).filter(

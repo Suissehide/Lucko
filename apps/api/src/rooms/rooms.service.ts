@@ -149,6 +149,9 @@ export class RoomsService implements OnModuleInit {
   /** Crée la room ; l'hôte en est le premier joueur accepté. */
   async create(host: User, { home, ...input }: z.output<typeof createRoomSchema>) {
     const now = new Date()
+    // Mineur : refus avant de lui demander d'accepter les conseils de sécurité (LKO-162)
+    if (home && isMinor(host, now))
+      throw new BadRequestException('Les rooms à domicile sont réservées aux adultes')
     if (home) requireHomeSafety(host)
     const [game, venue, hostOpenRooms] = await Promise.all([
       this.prisma.game.findUnique({
