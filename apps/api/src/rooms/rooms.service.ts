@@ -172,7 +172,7 @@ export class RoomsService implements OnModuleInit {
         where: { hostId: host.id, status: { in: ['OPEN', 'FULL'] }, startsAt: { gte: now } },
       }),
     ])
-    if (!game) throw new NotFoundException('Jeu introuvable')
+    if (!game || game.hidden) throw new NotFoundException('Jeu introuvable')
     if (input.venueId && !venue) throw new NotFoundException('Lieu introuvable')
 
     const refusal = createRoomRefusal(

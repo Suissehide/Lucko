@@ -25,6 +25,7 @@ const valuesOf = (game: AdminGame) => ({
   kind: game.kind,
   minPlayers: String(game.minPlayers),
   maxPlayers: String(game.maxPlayers),
+  hidden: game.hidden,
   formats: game.formats.map((f) => ({
     id: f.id as string | undefined,
     name: f.name,
@@ -62,6 +63,7 @@ export function GameForm({
           kind: 'TCG' as GameKind,
           minPlayers: '2',
           maxPlayers: '4',
+          hidden: false,
           formats: [{ ...newFormat(), name: 'Standard' }],
         },
     onSubmit: async ({ value, formApi }) => {
@@ -71,6 +73,7 @@ export function GameForm({
         kind: value.kind,
         minPlayers: Number(value.minPlayers),
         maxPlayers: Number(value.maxPlayers),
+        hidden: value.hidden,
         formats: tcg
           ? value.formats.map((f) => ({
               id: f.id,
@@ -186,6 +189,14 @@ export function GameForm({
           </View>
         </View>
       )}
+      <form.AppField name="hidden">
+        {(field) => (
+          <field.Switch
+            label="Masquer aux joueurs"
+            description="Doublon à fusionner : absent de « Créer une room », des filtres et de « Je veux jouer à… ». Il reste ici."
+          />
+        )}
+      </form.AppField>
       {confirmDelete && game ? (
         <View style={{ gap: 8 }}>
           <Typography variant="small" weight={800} style={{ color: colors.room }}>

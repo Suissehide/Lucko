@@ -5303,6 +5303,7 @@ export interface operations {
                         kind: "TCG" | "BOARD_GAME";
                         minPlayers: number;
                         maxPlayers: number;
+                        hidden: boolean;
                         formats: {
                             id: string;
                             slug: string;
@@ -5334,6 +5335,8 @@ export interface operations {
                     kind: "TCG" | "BOARD_GAME";
                     minPlayers: number;
                     maxPlayers: number;
+                    /** @default false */
+                    hidden?: boolean;
                     formats: {
                         id?: string;
                         name: string;
@@ -5358,6 +5361,7 @@ export interface operations {
                         kind: "TCG" | "BOARD_GAME";
                         minPlayers: number;
                         maxPlayers: number;
+                        hidden: boolean;
                         formats: {
                             id: string;
                             slug: string;
@@ -5391,6 +5395,8 @@ export interface operations {
                     kind: "TCG" | "BOARD_GAME";
                     minPlayers: number;
                     maxPlayers: number;
+                    /** @default false */
+                    hidden?: boolean;
                     formats: {
                         id?: string;
                         name: string;
@@ -5415,6 +5421,7 @@ export interface operations {
                         kind: "TCG" | "BOARD_GAME";
                         minPlayers: number;
                         maxPlayers: number;
+                        hidden: boolean;
                         formats: {
                             id: string;
                             slug: string;

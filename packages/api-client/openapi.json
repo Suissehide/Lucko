@@ -12811,6 +12811,9 @@
                         "minimum": -9007199254740991,
                         "maximum": 9007199254740991
                       },
+                      "hidden": {
+                        "type": "boolean"
+                      },
                       "formats": {
                         "type": "array",
                         "items": {
@@ -12874,6 +12877,7 @@
                       "kind",
                       "minPlayers",
                       "maxPlayers",
+                      "hidden",
                       "formats",
                       "rooms",
                       "events",
@@ -12920,6 +12924,10 @@
                     "type": "integer",
                     "minimum": 1,
                     "maximum": 20
+                  },
+                  "hidden": {
+                    "default": false,
+                    "type": "boolean"
                   },
                   "formats": {
                     "maxItems": 20,
@@ -13006,6 +13014,9 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991
                     },
+                    "hidden": {
+                      "type": "boolean"
+                    },
                     "formats": {
                       "type": "array",
                       "items": {
@@ -13069,6 +13080,7 @@
                     "kind",
                     "minPlayers",
                     "maxPlayers",
+                    "hidden",
                     "formats",
                     "rooms",
                     "events",
@@ -13126,6 +13138,10 @@
                     "minimum": 1,
                     "maximum": 20
                   },
+                  "hidden": {
+                    "default": false,
+                    "type": "boolean"
+                  },
                   "formats": {
                     "maxItems": 20,
                     "type": "array",
@@ -13211,6 +13227,9 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991
                     },
+                    "hidden": {
+                      "type": "boolean"
+                    },
                     "formats": {
                       "type": "array",
                       "items": {
@@ -13274,6 +13293,7 @@
                     "kind",
                     "minPlayers",
                     "maxPlayers",
+                    "hidden",
                     "formats",
                     "rooms",
                     "events",

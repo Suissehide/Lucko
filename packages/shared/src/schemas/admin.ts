@@ -320,6 +320,8 @@ export const gameInputSchema = z
     kind: z.enum(GAME_KINDS),
     minPlayers: playersSchema,
     maxPlayers: playersSchema,
+    /** Masqué aux joueurs (doublon en attente de fusion, LKO-164). */
+    hidden: z.boolean().default(false),
     formats: z.array(gameFormatInputSchema).max(20),
   })
   .refine(playerRange, { message: 'Au moins le minimum', path: ['maxPlayers'] })
@@ -337,6 +339,7 @@ export const adminGameSchema = z.object({
   kind: z.enum(GAME_KINDS),
   minPlayers: z.number().int(),
   maxPlayers: z.number().int(),
+  hidden: z.boolean(),
   formats: z.array(
     z.object({
       id: z.string(),

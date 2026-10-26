@@ -858,8 +858,9 @@ async function main() {
   // Doublon de Magic à fusionner, avec un joueur et un profil Commander
   const duplicate = await prisma.game.upsert({
     where: { slug: 'mtg-demo' },
-    update: {},
-    create: { slug: 'mtg-demo', name: 'MTG', kind: 'TCG' },
+    // Masqué aux joueurs en attendant la fusion (LKO-164)
+    update: { hidden: true },
+    create: { slug: 'mtg-demo', name: 'MTG', kind: 'TCG', hidden: true },
   })
   const duplicateCommander = await prisma.gameFormat.upsert({
     where: { gameId_slug: { gameId: duplicate.id, slug: 'commander' } },

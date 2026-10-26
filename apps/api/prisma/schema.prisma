@@ -214,6 +214,8 @@ model Game {
   kind        GameKind
   minPlayers  Int           @default(2)
   maxPlayers  Int           @default(4)
+  /// Masqué aux joueurs (LKO-164) : doublon en attente de fusion, visible du seul back-office
+  hidden      Boolean       @default(false)
   formats     GameFormat[]
   rooms       Room[]
   events      Event[]       @relation("EventGames")

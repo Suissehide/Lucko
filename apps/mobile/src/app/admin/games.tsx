@@ -70,6 +70,7 @@ export default function AdminGamesScreen() {
               {g.name}
             </Typography>
             {duplicateOf(g, all) ? <Tag label="Doublon ?" variant="tonight" /> : null}
+            {g.hidden ? <Tag label="Masqué" /> : null}
           </View>
           <Typography variant="number" weight={400} style={{ fontSize: 12 }}>
             {g.slug}
