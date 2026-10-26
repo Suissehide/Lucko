@@ -56,6 +56,13 @@ export default function QrScreen() {
               />
             </View>
             <Typography variant="small">Nouveau QR dans {left} s</Typography>
+            {/* Repli du comptoir sans caméra (LKO-160) */}
+            <View style={{ alignItems: 'center', gap: 2 }}>
+              <Typography variant="label">Ou donne ce code</Typography>
+              <Typography variant="number" style={{ fontSize: 26, letterSpacing: 4 }}>
+                {`${data.code.slice(0, 3)} ${data.code.slice(3)}`}
+              </Typography>
+            </View>
           </>
         ) : isError ? (
           <Banner

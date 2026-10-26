@@ -4,8 +4,17 @@ import { isoDateTime } from './common'
 /** QR Lucko (LKO-77) : jeton signé par l'API, valable QR_TOKEN_TTL_MS, que l'app renouvelle avant la fin. */
 export const QR_TOKEN_TTL_MS = 60_000
 
-export const qrTokenSchema = z.object({ token: z.string(), expiresAt: isoDateTime })
+export const qrTokenSchema = z.object({
+  token: z.string(),
+  expiresAt: isoDateTime,
+  /** Code à 6 chiffres affiché sous le QR, à saisir au comptoir sans caméra (LKO-160). */
+  code: z.string(),
+})
 
+/** Code saisi à la main au comptoir (sans caméra) : 6 chiffres, espace toléré (« 482 913 »). */
+export const MANUAL_CODE = /^\d{3} ?\d{3}$/
+
+/** `token` : jeton lu dans le QR, ou code à 6 chiffres saisi à la main. */
 export const scanBodySchema = z.object({ token: z.string().trim().min(1).max(500) })
 
 /** Résultat d'un scan au comptoir, montré au staff du lieu. */

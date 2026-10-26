@@ -1,5 +1,6 @@
+import { MANUAL_CODE } from '@lucko/shared'
 import { describe, expect, it } from 'vitest'
-import { businessDate, qrKey, signQrToken, verifyQrToken } from './qr.rules'
+import { businessDate, ManualCodes, qrKey, signQrToken, verifyQrToken } from './qr.rules'
 
 const key = qrKey('secret-de-test')
 const now = new Date('2026-10-10T18:00:00Z')
@@ -31,6 +32,20 @@ describe('QR Lucko (LKO-77)', () => {
     expect(verifyQrToken(qrKey('autre-secret'), token, now)).toHaveProperty('refused')
     expect(verifyQrToken(key, 'https://lucko.fr', now)).toHaveProperty('refused')
     expect(verifyQrToken(key, 'lk1..', now)).toHaveProperty('refused')
+  })
+
+  it('code manuel (LKO-160) : 6 chiffres qui renvoient au jeton tant qu’il est valable', () => {
+    const codes = new ManualCodes()
+    const { token, expiresAt } = signQrToken(key, 'joueur-1', now)
+    const code = codes.add(token, expiresAt, now.getTime())
+    expect(code).toMatch(MANUAL_CODE)
+    expect(codes.token(code, now.getTime())).toBe(token)
+    expect(codes.token(`${code.slice(0, 3)} ${code.slice(3)}`, now.getTime())).toBe(token)
+    expect(codes.token(code, expiresAt.getTime())).toBeNull()
+    // Codes distincts pour des jetons valables en même temps
+    const other = codes.add(signQrToken(key, 'joueur-2', now).token, expiresAt, now.getTime())
+    expect(other).not.toBe(code)
+    expect(codes.token(other, now.getTime())).not.toBe(token)
   })
 
   it('soirée de rattachement : jusqu’à 6 h (Paris), c’est encore la veille', () => {

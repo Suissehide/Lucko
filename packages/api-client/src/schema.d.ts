@@ -5733,6 +5733,7 @@ export interface operations {
                         token: string;
                         /** Format: date-time */
                         expiresAt: string;
+                        code: string;
                     };
                 };
             };

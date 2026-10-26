@@ -1,4 +1,4 @@
-import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
+import { createHmac, randomBytes, randomInt, timingSafeEqual } from 'node:crypto'
 import { addDays, localDateTime, QR_TOKEN_TTL_MS } from '@lucko/shared'
 
 /** Préfixe de version du jeton : changer de format ou de clé = nouveau préfixe. */
@@ -48,6 +48,30 @@ export function verifyQrToken(
   if (data.e <= now.getTime())
     return { refused: 'QR expiré : demande au joueur de rouvrir son QR Lucko' }
   return { userId: data.u, nonce: data.n }
+}
+
+/**
+ * Codes à 6 chiffres affichés sous le QR (LKO-160) : chacun renvoie au jeton émis avec lui, le temps
+ * de sa validité. Le jeton reste vérifié comme un QR scanné ; son nonce garde l'usage unique.
+ */
+// ponytail: en mémoire, une seule instance d'API ; table en base si l'API passe à plusieurs instances
+export class ManualCodes {
+  private readonly codes = new Map<string, { token: string; expiresAt: number }>()
+
+  add(token: string, expiresAt: Date, now = Date.now()) {
+    for (const [code, entry] of this.codes) if (entry.expiresAt <= now) this.codes.delete(code)
+    let code: string
+    do code = String(randomInt(1_000_000)).padStart(6, '0')
+    while (this.codes.has(code))
+    this.codes.set(code, { token, expiresAt: expiresAt.getTime() })
+    return code
+  }
+
+  /** Jeton du code saisi, ou null s'il est inconnu ou expiré. */
+  token(input: string, now = Date.now()) {
+    const entry = this.codes.get(input.replace(' ', ''))
+    return entry && entry.expiresAt > now ? entry.token : null
+  }
 }
 
 /** Heure (Paris) avant laquelle un passage compte pour la soirée de la veille. */
