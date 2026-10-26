@@ -19,6 +19,9 @@ COPY --from=pruner /app/out/full/ .
 # Fichiers racine non inclus par `turbo prune`
 COPY tsconfig.base.json ./
 RUN pnpm turbo run build --filter=@lucko/api
+# Retire les dépendances de développement (Nest CLI, TypeScript, Vitest…) avant l'image finale.
+# `prisma` reste : `migrate deploy` tourne au démarrage du conteneur.
+RUN CI=true pnpm install --prod --frozen-lockfile --offline
 
 # 3. Image finale
 FROM base AS runner

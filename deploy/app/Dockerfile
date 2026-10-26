@@ -31,6 +31,7 @@ RUN cd apps/mobile && pnpm maplibre-worker && pnpm exec expo export --platform w
 
 FROM nginx:1.29-alpine AS runner
 COPY deploy/app/nginx.conf /etc/nginx/conf.d/default.conf
+COPY deploy/app/security-headers.conf /etc/nginx/snippets/security-headers.conf
 COPY --from=builder /app/apps/mobile/dist /usr/share/nginx/html
 EXPOSE 80
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \

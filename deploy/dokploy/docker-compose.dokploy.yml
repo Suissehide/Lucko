@@ -12,7 +12,7 @@ services:
     build:
       context: ../..
       dockerfile: deploy/api/Dockerfile
-    image: ${APP_IMAGE_NAME:-lucko}-api:${VERSION:-latest}
+    image: ${APP_IMAGE_NAME:-lucko}-api:${VERSION:?VERSION manquante (ex. 0.1.0)}
     environment:
       - NODE_ENV=production
       - API_PORT=3000
@@ -67,7 +67,7 @@ services:
         NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
         NEXT_PUBLIC_SENTRY_DSN: ${SENTRY_DSN_WEB:-}
         NEXT_PUBLIC_SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-production}
-    image: ${APP_IMAGE_NAME:-lucko}-web:${VERSION:-latest}
+    image: ${APP_IMAGE_NAME:-lucko}-web:${VERSION:?VERSION manquante (ex. 0.1.0)}
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"]
       interval: 30s
@@ -93,7 +93,7 @@ services:
         EXPO_PUBLIC_UMAMI_WEBSITE_ID: ${EXPO_PUBLIC_UMAMI_WEBSITE_ID:-}
         EXPO_PUBLIC_SENTRY_DSN: ${SENTRY_DSN_APP:-}
         EXPO_PUBLIC_SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-production}
-    image: ${APP_IMAGE_NAME:-lucko}-app:${VERSION:-latest}
+    image: ${APP_IMAGE_NAME:-lucko}-app:${VERSION:?VERSION manquante (ex. 0.1.0)}
     logging:
       driver: "json-file"
       options:

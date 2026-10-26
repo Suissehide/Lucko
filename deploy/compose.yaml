@@ -42,7 +42,7 @@ services:
   mailpit:
     container_name: lucko-mailpit
     # Boîte mail de test : http://localhost:8025 (SMTP sur le port 1025)
-    image: axllent/mailpit:latest
+    image: axllent/mailpit:v1.31.3
     profiles: [db]
     restart: unless-stopped
     ports:
@@ -54,7 +54,7 @@ services:
   s3:
     container_name: lucko-s3
     # Stockage S3 des photos (RustFS, compatible MinIO) : API sur le port 9000, console sur http://localhost:9001
-    image: rustfs/rustfs:latest
+    image: rustfs/rustfs:1.0.1
     profiles: [db]
     restart: unless-stopped
     environment:
@@ -72,7 +72,7 @@ services:
   s3-init:
     container_name: lucko-s3-init
     # Crée le bucket « lucko » : les photos de profil sont lisibles par URL, le bucket n'est pas listable
-    image: amazon/aws-cli:latest
+    image: amazon/aws-cli:2.38.1
     profiles: [db]
     depends_on: [s3]
     environment:
