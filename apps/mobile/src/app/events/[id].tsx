@@ -81,7 +81,7 @@ export default function EventScreen() {
   const details = [
     { title: 'Quand', value: eventWhen(event.startsAt, event.endsAt) },
     { title: 'Récurrence', value: event.recurrenceLabel },
-    { title: 'Prix', value: formatPrice(event.priceCents) ?? 'Non renseigné' },
+    { title: 'Prix', value: formatPrice(event.priceCents) },
     { title: 'Places', value: eventPlaces(event) },
     { title: 'Âge minimum', value: event.minAge ? `${event.minAge} ans` : null },
   ].filter((row): row is { title: string; value: string } => !!row.value)

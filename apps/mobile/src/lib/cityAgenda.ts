@@ -106,8 +106,9 @@ function eventEntry(e: EventListItem): AgendaEntry {
     venue: e.venue,
     games: e.games,
     places,
-    price: formatPrice(e.priceCents) ?? 'Gratuit',
-    free: !e.priceCents,
+    // Prix absent = non renseigné : rien d'affiché, et pas compté comme gratuit
+    price: formatPrice(e.priceCents) ?? '',
+    free: e.priceCents === 0,
     full,
     adult: (e.minAge ?? 0) >= ADULT_AGE,
     action: agendaAction(e),
