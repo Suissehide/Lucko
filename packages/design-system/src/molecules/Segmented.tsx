@@ -45,6 +45,7 @@ function Segment({
     <Pressable
       role="tab"
       aria-selected={active}
+      aria-label={label}
       onPress={onPress}
       {...hoverProps}
       style={{

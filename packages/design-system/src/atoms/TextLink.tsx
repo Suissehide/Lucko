@@ -33,7 +33,7 @@ export function TextLink({
         ? colors.muted
         : colors.event
   return (
-    <Pressable role="link" onPress={onPress} {...hoverProps}>
+    <Pressable role="link" aria-label={label} onPress={onPress} {...hoverProps}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
         {Icon && !iconAfter ? <Icon size={15} color={color} strokeWidth={2.5} /> : null}
         <Text
