@@ -6,7 +6,7 @@ import type { Place } from '@/lib/useLocation'
 import { mapVenuesQueryOptions } from '@/queries/useExplore'
 import { ExploreMap } from './ExploreMap'
 import { MAP_LEGEND } from './mapLayers'
-import { type MapBounds, type MapPin, mergePins, pinsArea } from './mapPins'
+import { type MapBounds, type MapPin, mergePins, openingFrame, pinsArea } from './mapPins'
 
 /**
  * Carte des lieux dans son cadre (accueil, liste des lieux) : les lieux de la liste, plus tous ceux de
@@ -43,6 +43,7 @@ export function MapFrame({
         <ExploreMap
           {...map}
           venues={mergePins(venues, area.data ?? [])}
+          frame={openingFrame(map.center, venues)}
           onBoundsChange={setBounds}
         />
       </View>

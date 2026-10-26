@@ -30,12 +30,15 @@ export function ExploreMap({
   selectedId,
   onSelect,
   onBoundsChange,
+  frame,
 }: {
   center: Place
   venues: MapPin[]
   selectedId: string | null
   onSelect: (id: string) => void
   onBoundsChange?: (bounds: MapBounds) => void
+  /** Cadre d'ouverture (joueur et lieux les plus proches), appliqué une fois. */
+  frame?: MapBounds | null
 }) {
   const container = useRef<HTMLDivElement>(null)
   const map = useMapLibre(container, center, 14)
@@ -102,6 +105,20 @@ export function ExploreMap({
   useEffect(() => {
     map?.getSource<GeoJSONSource>('venues')?.setData(venuesGeoJSON(venues, selectedId))
   }, [map, venues, selectedId])
+
+  // Une seule fois, dès que la liste arrive : ensuite, la carte reste là où le joueur la déplace
+  const framed = useRef(false)
+  useEffect(() => {
+    if (!map || !frame || framed.current) return
+    framed.current = true
+    map.fitBounds(
+      [
+        [frame.west, frame.south],
+        [frame.east, frame.north],
+      ],
+      { padding: 40, maxZoom: 15, duration: 0 },
+    )
+  }, [map, frame])
 
   // Lieu choisi (épingle ou liste) : la carte s'y déplace, assez près pour défaire les regroupements
   const selected = venues.find((v) => v.id === selectedId)
