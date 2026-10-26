@@ -19,6 +19,7 @@ import {
   parseBirthDate,
   passwordSchema,
 } from '@lucko/shared'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import * as Linking from 'expo-linking'
 import { router, useLocalSearchParams } from 'expo-router'
 import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react'
@@ -35,6 +36,16 @@ type Step = 'welcome' | 'email' | 'forgot' | 'birth' | AgeRegime
 /** Page à rouvrir après la connexion (`/auth?next=/consent/…`), seulement un chemin de l'app. */
 const afterAuth = { next: '/' }
 const goNext = () => router.replace(afterAuth.next as '/')
+
+/**
+ * Refus « moins de 13 ans » retenu 24 h sur l'appareil (LKO-162) : pas de nouvel essai tout de suite avec
+ * une autre date. Seule l'heure du refus est gardée, jamais la date de naissance.
+ */
+const TOO_YOUNG_KEY = 'lucko.too-young-at'
+const TOO_YOUNG_MS = 24 * 60 * 60 * 1000
+const refusedRecently = async () =>
+  Date.now() - Number((await AsyncStorage.getItem(TOO_YOUNG_KEY).catch(() => null)) ?? 0) <
+  TOO_YOUNG_MS
 
 /**
  * Accueil (A1), e-mail (A2) et date de naissance obligatoire (A3, LKO-44), branchés sur Better Auth (LKO-9).
@@ -85,7 +96,7 @@ export default function AuthScreen() {
 
   /** Fin de l'étape date de naissance : crée le compte e-mail, ou complète celui d'Apple / Google. */
   const finishBirth = async (date: Date): Promise<string | undefined> => {
-    const regime = ageRegime(date)
+    const regime = !social && (await refusedRecently()) ? 'too-young' : ageRegime(date)
     const birthDate = date.toISOString().slice(0, 10)
     if (social) {
       const error = await setBirthDate
@@ -102,6 +113,8 @@ export default function AuthScreen() {
         return 'Un compte existe déjà avec cet e-mail. Reviens en arrière pour te connecter.'
       if (error) return 'Impossible de créer ton compte pour l’instant. Réessaie.'
     }
+    if (regime === 'too-young')
+      await AsyncStorage.setItem(TOO_YOUNG_KEY, String(Date.now())).catch(() => {})
     setStep(regime)
   }
 

@@ -1534,6 +1534,7 @@ export interface operations {
                         name: string;
                         hasBirthDate: boolean;
                         parentalConsentPending: boolean;
+                        minor: boolean;
                         childCount: number;
                         /** @enum {string} */
                         role: "PLAYER" | "VENUE_STAFF" | "ADMIN";
@@ -1629,6 +1630,7 @@ export interface operations {
                         name: string;
                         hasBirthDate: boolean;
                         parentalConsentPending: boolean;
+                        minor: boolean;
                         childCount: number;
                         /** @enum {string} */
                         role: "PLAYER" | "VENUE_STAFF" | "ADMIN";
@@ -1700,6 +1702,7 @@ export interface operations {
                         name: string;
                         hasBirthDate: boolean;
                         parentalConsentPending: boolean;
+                        minor: boolean;
                         childCount: number;
                         /** @enum {string} */
                         role: "PLAYER" | "VENUE_STAFF" | "ADMIN";
@@ -1770,6 +1773,7 @@ export interface operations {
                         name: string;
                         hasBirthDate: boolean;
                         parentalConsentPending: boolean;
+                        minor: boolean;
                         childCount: number;
                         /** @enum {string} */
                         role: "PLAYER" | "VENUE_STAFF" | "ADMIN";

@@ -100,6 +100,8 @@ export const meSchema = z.object({
   hasBirthDate: z.boolean(),
   /** 13-14 ans sans accord d'un parent (LKO-49) : compte en lecture seule, l'app demande l'e-mail du parent. */
   parentalConsentPending: z.boolean(),
+  /** Moins de 18 ans : pas de room à domicile (LKO-72), dit avant les conseils de sécurité. */
+  minor: z.boolean(),
   /** Enfants liés à ce compte parent (Réglages → Mes enfants). */
   childCount: z.number().int(),
   role: z.enum(USER_ROLES),
