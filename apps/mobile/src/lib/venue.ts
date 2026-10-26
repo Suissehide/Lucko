@@ -239,7 +239,7 @@ export function agendaItem(event: VenueEvent, playFeeCents: number | null) {
     timeZone: VENUE_TIME_ZONE,
     weekday: 'long',
   }).format(new Date(event.startsAt))
-  const price = formatPrice(event.priceCents) ?? (playFeeCents ? 'Droit de jeu' : 'Gratuit')
+  const price = formatPrice(event.priceCents) ?? (playFeeCents ? 'Droit de jeu' : '')
   const hour = formatHour(event.startsAt)
   const { day, month } = formatDayMonth(event.startsAt)
   const spots = places(event)

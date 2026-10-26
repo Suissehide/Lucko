@@ -117,7 +117,7 @@ export function VenueAgenda({ venue, wide }: { venue: VenueDetail; wide: boolean
             color={contentColor[item.kind]}
             label={`${item.hour} · ${wide ? item.label : item.games}`}
             title={item.title}
-            meta={`${item.price} · ${item.places}`}
+            meta={[item.price, item.places].filter(Boolean).join(' · ')}
             metaAlert={item.placesAlert}
             action={wide ? button(event.id, item.action) : undefined}
             onPress={() => openEvent(event.id)}
