@@ -3,6 +3,7 @@ import { config } from 'dotenv'
 // Lit apps/api/.env s'il existe, sinon le .env à la racine du monorepo
 config({ path: ['.env', '../../.env'], quiet: true })
 
+import { presenceXp } from '@lucko/shared'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { hashPassword } from 'better-auth/crypto'
 import type { PlayVibe, UserRole } from '../src/generated/prisma/client'
@@ -553,7 +554,7 @@ async function main() {
         [3, pixel, 'GAME_NIGHT', 'Soirée Pokémon pour tous', 18, 0, 16, 0, 'pokemon'],
         [3, gobelin, 'TOURNAMENT', 'Tournoi Riftbound', 19, 30, 16, 600, 'riftbound'],
         [4, ludotheque, 'GAME_NIGHT', 'Grands jeux en famille', 17, 0, 24, 0, 'jeux-de-societe'],
-        [4, shop, 'GAME_NIGHT', 'Draft du vendredi', 19, 30, 8, 1500, 'magic'],
+        [4, shop, 'GAME_NIGHT', 'Draft Magic', 19, 30, 8, 1500, 'magic'],
         [5, pixel, 'TOURNAMENT', 'Tournoi Altered', 14, 0, 20, 800, 'altered'],
         [5, bar, 'THEMED', 'Murder party', 20, 30, 12, 1200, 'jeux-de-societe'],
         [6, gobelin, 'INITIATION', 'Découvrir Digimon', 15, 0, 8, 0, 'digimon'],
@@ -748,7 +749,19 @@ async function main() {
       status: 'FULL' as const,
       players: ['demo-alix', 'demo-ines'],
     },
-    // Passées
+    // Passées. Hier : classée, sans résultat, encore dans le délai de 48 h pour tester la saisie (LKO-83)
+    {
+      id: 'demo-room-hier-lorcana',
+      hostId: 'demo-noah',
+      gameId: lorcana.gameId,
+      formatId: lorcana.id,
+      mode: 'RANKED' as const,
+      status: 'FINISHED' as const,
+      venueId: pixel.id,
+      startsAt: daysAgo(1, 20, 0),
+      capacity: 2,
+      players: ['demo-noah', 'joueur-demo'],
+    },
     {
       id: 'demo-room-passee-commander',
       hostId: 'joueur-demo',
@@ -785,16 +798,36 @@ async function main() {
       players: ['demo-sam', 'joueur-demo'],
     },
   ]
+  const partnerVenues = new Set([bar.id, pixel.id])
   for (const { players, pending = [], ...room } of rooms) {
     await prisma.room.upsert({ where: { id: room.id }, update: room, create: room })
+    // Rooms passées : joueurs pointés présents par l'hôte, avec l'XP gagné (« Derniers gains »)
+    const finished = room.status === 'FINISHED'
+    const presence = finished
+      ? {
+          present: true,
+          presenceSource: 'HOST' as const,
+          presenceMarkedById: room.hostId,
+          checkedInAt: room.startsAt,
+        }
+      : {}
     for (const [userId, status] of [
       ...players.map((id) => [id, 'ACCEPTED'] as const),
       ...pending.map((id) => [id, 'PENDING'] as const),
     ]) {
+      const data = { status, ...(status === 'ACCEPTED' ? presence : {}) }
       await prisma.roomParticipant.upsert({
         where: { roomId_userId: { roomId: room.id, userId } },
-        update: { status },
-        create: { roomId: room.id, userId, status },
+        update: data,
+        create: { roomId: room.id, userId, ...data },
+      })
+      if (!finished || status !== 'ACCEPTED') continue
+      // Le total `xp` des comptes inclut déjà ces gains : on ne fait qu'en garder la trace
+      const xp = presenceXp({ partnerVisit: partnerVenues.has(room.venueId ?? '') })
+      await prisma.xpEvent.upsert({
+        where: { userId_roomId: { userId, roomId: room.id } },
+        update: xp,
+        create: { userId, roomId: room.id, ...xp, businessDate: localDate(room.startsAt) },
       })
     }
   }
