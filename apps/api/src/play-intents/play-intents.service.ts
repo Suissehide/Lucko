@@ -90,7 +90,10 @@ export class PlayIntentsService implements OnModuleInit {
   async demand({ lat, lng, radiusKm }: GeoQuery): Promise<GameDemand[]> {
     // ponytail: tri en mémoire de toutes les envies actives, une requête PostGIS quand il y en aura des milliers
     const [games, intents] = await Promise.all([
-      this.prisma.game.findMany({ select: { id: true, slug: true, name: true } }),
+      this.prisma.game.findMany({
+        where: { hidden: false },
+        select: { id: true, slug: true, name: true },
+      }),
       this.prisma.playIntent.findMany({
         where: {
           expiresAt: { gt: new Date() },
