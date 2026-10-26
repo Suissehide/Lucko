@@ -89,18 +89,17 @@ export default function AdminGamesScreen() {
         </View>
       ),
     },
-    count('rooms', 'Rooms', 70),
-    count('events', 'Événem.', 90),
-    count('players', 'Joueurs', 80),
+    // Colonnes fixes resserrées : à 1024 px, la barre latérale ne laisse que ~700 px au tableau
+    count('rooms', 'Rooms', 60),
+    count('events', 'Événem.', 70),
+    count('players', 'Joueurs', 65),
     {
       key: 'merge',
       label: '',
-      width: 290,
+      width: 120,
       align: 'right',
       render: (g) => (
-        <View
-          style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-end', gap: 6 }}
-        >
+        <View style={{ alignItems: 'flex-end', gap: 6 }}>
           <Button
             small
             kind={editingId === g.id ? 'rating' : 'ghost'}
@@ -114,7 +113,7 @@ export default function AdminGamesScreen() {
           <Button
             small
             kind={mergingId === g.id ? 'rating' : 'ghost'}
-            label="Fusionner dans…"
+            label="Fusionner…"
             onPress={() => open(g)}
           />
         </View>
