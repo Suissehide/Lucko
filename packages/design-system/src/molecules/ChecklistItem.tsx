@@ -1,4 +1,4 @@
-import { Check } from 'lucide-react-native'
+import { Check, TriangleAlert } from 'lucide-react-native'
 import { Text, View } from 'react-native'
 import { border, colors, font, radius } from '../tokens'
 
@@ -53,7 +53,7 @@ export function ChecklistRow({
         {state === 'done' || state === 'locked' ? (
           <Check size={14} color={colors.white} strokeWidth={3.5} />
         ) : state === 'warn' ? (
-          <Text style={{ ...font('body', 800), fontSize: 12, color: colors.ink }}>!</Text>
+          <TriangleAlert size={14} color={colors.ink} strokeWidth={3} />
         ) : null}
       </View>
       <View style={{ flex: 1, gap: 1 }}>
@@ -69,7 +69,7 @@ export function ChecklistRow({
   )
 }
 
-/** Point de vérification : coché (vert) ou à surveiller (« ! » jaune), libellé et détail. */
+/** Point de vérification : coché (vert) ou à surveiller (triangle jaune), libellé et détail. */
 export function ChecklistItem({
   ok,
   label,
@@ -96,7 +96,7 @@ export function ChecklistItem({
         {ok ? (
           <Check size={13} color={colors.white} strokeWidth={3.5} />
         ) : (
-          <Text style={{ ...font('body', 800), fontSize: 12, color: colors.ink }}>!</Text>
+          <TriangleAlert size={13} color={colors.ink} strokeWidth={3} />
         )}
       </View>
       <Text style={{ ...font('body', 800), fontSize: 14, color: colors.ink }}>{label}</Text>

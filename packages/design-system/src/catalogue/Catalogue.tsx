@@ -862,7 +862,7 @@ export function Catalogue() {
           items={playerNavItems}
           active={tab}
           onSelect={(key) => setTab(key as PlayerTab)}
-          right={<Button small kind="rating" label="+ Créer une room" />}
+          right={<Button small kind="rating" icon={Plus} label="Créer une room" />}
         />
         <View style={{ maxWidth: 420, width: '100%', gap: 12 }}>
           <PlayerTabBar active={tab} onSelect={setTab} onCreate={() => {}} bottomInset={10} />

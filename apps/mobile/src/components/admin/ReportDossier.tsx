@@ -23,6 +23,7 @@ import {
   dateTime,
   dossierStats,
   openAdminUser,
+  resolutionNotice,
   SUSPENSION_DURATIONS,
   suspensionDays,
 } from '@/lib/admin'
@@ -31,7 +32,14 @@ import { openEvent } from '@/lib/navigation'
 import { useAdminModerationMutations, useAdminUserQuery } from '@/queries/useAdminModeration'
 
 /** Dossier d'un signalement : le joueur visé, ses antécédents, le motif et la décision. */
-export function ReportDossier({ report, onDone }: { report: AdminReport; onDone: () => void }) {
+export function ReportDossier({
+  report,
+  onDone,
+}: {
+  report: AdminReport
+  /** Décision enregistrée : message à afficher au-dessus de la file (LKO-163). */
+  onDone: (notice: string) => void
+}) {
   const user = useAdminUserQuery(report.target.id).data
   const { resolveReport } = useAdminModerationMutations()
   const [choice, setChoice] = useState<ReportResolution | null>(null)
@@ -136,23 +144,24 @@ export function ReportDossier({ report, onDone }: { report: AdminReport; onDone:
                   busy={resolveReport.isPending}
                   error={resolveReport.error?.message}
                   onCancel={() => setChoice(null)}
+                  // mutateAsync : le signalement traité quitte la file et ce dossier disparaît avant la fin du mutate
                   onConfirm={({ text, duration }) =>
-                    resolveReport.mutate(
-                      choice === 'SUSPENDED'
-                        ? {
-                            id: report.id,
-                            resolution: choice,
-                            reason: text,
-                            days: suspensionDays(duration ?? ''),
-                          }
-                        : { id: report.id, resolution: choice, reason: text },
-                      {
-                        onSuccess: () => {
-                          setChoice(null)
-                          onDone()
-                        },
-                      },
-                    )
+                    void resolveReport
+                      .mutateAsync(
+                        choice === 'SUSPENDED'
+                          ? {
+                              id: report.id,
+                              resolution: choice,
+                              reason: text,
+                              days: suspensionDays(duration ?? ''),
+                            }
+                          : { id: report.id, resolution: choice, reason: text },
+                      )
+                      .then(() => {
+                        setChoice(null)
+                        onDone(resolutionNotice(pseudo, choice, duration))
+                      })
+                      .catch(() => {})
                   }
                 />
               ) : null}

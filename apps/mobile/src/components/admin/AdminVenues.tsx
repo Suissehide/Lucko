@@ -34,6 +34,7 @@ export function AdminVenues({ initialId }: { initialId?: string }) {
   const [filter, setFilter] = useState(initialId ? 2 : 0)
   const [q, setQ] = useState('')
   const [selectedId, setSelectedId] = useState(initialId ?? null)
+  const [notice, setNotice] = useState<string | null>(null)
   const venues = useAdminVenuesQuery({ q: q.trim(), status: FILTERS[filter]?.status })
   const pending = useAdminDashboardQuery().data?.pendingVenues
   const list = venues.data ?? []
@@ -44,6 +45,7 @@ export function AdminVenues({ initialId }: { initialId?: string }) {
       section="venues"
       note="Un lieu proposé ou importé reste caché tant qu’il n’est pas publié."
     >
+      {notice ? <Banner tone="ok" message={notice} /> : null}
       <View
         style={{ flexDirection: twoPanels ? 'row' : 'column', gap: 20, alignItems: 'flex-start' }}
       >
@@ -95,7 +97,10 @@ export function AdminVenues({ initialId }: { initialId?: string }) {
                     )
                   }
                   selected={venue.id === selected?.id}
-                  onPress={() => setSelectedId(venue.id)}
+                  onPress={() => {
+                    setNotice(null)
+                    setSelectedId(venue.id)
+                  }}
                   last={i === list.length - 1}
                 />
               ))}
@@ -104,7 +109,15 @@ export function AdminVenues({ initialId }: { initialId?: string }) {
         </View>
         {selected ? (
           <View style={{ flex: twoPanels ? 1 : undefined, width: twoPanels ? undefined : '100%' }}>
-            <VenueDetail key={selected.id} venue={selected} />
+            <VenueDetail
+              key={selected.id}
+              venue={selected}
+              onPublished={(name) =>
+                setNotice(
+                  `« ${name} » est publié : il apparaît dans Explorer, l’agenda et la carte.`,
+                )
+              }
+            />
           </View>
         ) : null}
       </View>

@@ -14,7 +14,7 @@ import {
 } from '@lucko/design-system'
 import { EVENT_TYPE_LABELS, type VenueEvent } from '@lucko/shared'
 import { useLocalSearchParams } from 'expo-router'
-import { CalendarX } from 'lucide-react-native'
+import { CalendarX, Plus } from 'lucide-react-native'
 import { useState } from 'react'
 import { View } from 'react-native'
 import { DetailScreen } from '@/components/DetailScreen'
@@ -91,7 +91,8 @@ export default function ManageVenueEventsScreen() {
         <View style={{ alignSelf: 'flex-start' }}>
           <Button
             kind="event"
-            label="+ Nouvel événement"
+            icon={Plus}
+            label="Nouvel événement"
             onPress={() => edit({ kind: 'create' })}
           />
         </View>

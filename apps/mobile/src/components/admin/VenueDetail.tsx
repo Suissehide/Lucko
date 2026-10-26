@@ -2,6 +2,7 @@ import {
   Banner,
   Button,
   ChecklistItem,
+  ConfirmDialog,
   colors,
   DetailCard,
   HoursCard,
@@ -11,6 +12,7 @@ import {
   Typography,
 } from '@lucko/design-system'
 import { type AdminEvent, type AdminVenue, formatPrice, VENUE_TYPE_LABELS } from '@lucko/shared'
+import { ArrowUpRight, Plus } from 'lucide-react-native'
 import { useState } from 'react'
 import { View } from 'react-native'
 import { venueChecklist } from '@/lib/admin'
@@ -34,13 +36,21 @@ const eventLine = (event: AdminEvent) =>
     .join(' · ')
 
 /** Fiche d'un lieu : vérifications avant publication, horaires, réglages, événements. */
-export function VenueDetail({ venue }: { venue: AdminVenue }) {
+export function VenueDetail({
+  venue,
+  onPublished,
+}: {
+  venue: AdminVenue
+  /** Lieu publié : il quitte la liste « À valider », le parent affiche le message (LKO-163). */
+  onPublished?: (name: string) => void
+}) {
   const events = useAdminEventsQuery(venue.id)
   const games = useGamesQuery().data ?? []
   const { updateVenue, cancelEvent } = useAdminCatalogMutations()
   const [editing, setEditing] = useState<AdminEvent | 'new' | null>(null)
   const [cancelling, setCancelling] = useState<{ event: AdminEvent; series: boolean } | null>(null)
   const [perk, setPerk] = useState(false)
+  const [publishing, setPublishing] = useState(false)
   const pending = venue.status === 'PENDING'
   const update = (body: Parameters<typeof updateVenue.mutate>[0]) => updateVenue.mutate(body)
   const upcoming = (events.data ?? []).filter(
@@ -49,6 +59,24 @@ export function VenueDetail({ venue }: { venue: AdminVenue }) {
 
   return (
     <>
+      <ConfirmDialog
+        visible={publishing}
+        title="Publier ce lieu ?"
+        message={`« ${venue.name} » apparaîtra tout de suite dans Explorer, l’agenda et la carte.`}
+        confirmLabel="Publier"
+        cancelLabel="Annuler"
+        confirmDisabled={updateVenue.isPending}
+        destructive={false}
+        // mutateAsync : publié, le lieu quitte « À valider » et cette fiche disparaît avant la fin du mutate
+        onConfirm={() =>
+          void updateVenue
+            .mutateAsync({ id: venue.id, status: 'PUBLISHED' })
+            .then(() => onPublished?.(venue.name))
+            .catch(() => {})
+            .finally(() => setPublishing(false))
+        }
+        onCancel={() => setPublishing(false)}
+      />
       <DetailCard
         sections={[
           {
@@ -77,13 +105,14 @@ export function VenueDetail({ venue }: { venue: AdminVenue }) {
                     kind="venue"
                     label="Publier"
                     disabled={updateVenue.isPending}
-                    onPress={() => update({ id: venue.id, status: 'PUBLISHED' })}
+                    onPress={() => setPublishing(true)}
                   />
                 ) : (
                   <Button
                     small
                     kind="ghost"
-                    label="Voir la fiche ↗"
+                    icon={ArrowUpRight}
+                    label="Voir la fiche"
                     onPress={() => openVenue(venue.slug)}
                   />
                 )}
@@ -172,7 +201,8 @@ export function VenueDetail({ venue }: { venue: AdminVenue }) {
                   <Button
                     small
                     kind="rating"
-                    label="+ Créer un événement"
+                    icon={Plus}
+                    label="Créer un événement"
                     onPress={() => setEditing('new')}
                   />
                 </View>
