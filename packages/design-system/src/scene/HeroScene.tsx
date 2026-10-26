@@ -318,7 +318,7 @@ export default function HeroScene({
           { y: height },
           {
             y: 0,
-            duration: 1.1,
+            duration: 0.8,
             delay,
             ease: 'bounce.out',
           },
@@ -329,7 +329,7 @@ export default function HeroScene({
             x: Math.PI * 2 * gsap.utils.random([-2, -1, 1, 2]),
             z: Math.PI * 2 * gsap.utils.random([-1, 1]),
           },
-          { x: 0, z: 0, duration: 1, delay, ease: 'power2.out' },
+          { x: 0, z: 0, duration: 0.75, delay, ease: 'power2.out' },
         )
       })
     }
@@ -349,7 +349,7 @@ export default function HeroScene({
 
     holders.forEach((holder, i) => {
       holder.scale.setScalar(0) // invisible jusqu'au lancer
-      toss(holder, 0.25 + i * 0.14)
+      toss(holder, 0.05 + i * 0.08)
     })
     gsap.to(el, { opacity: 1, duration: 0.3 })
 
