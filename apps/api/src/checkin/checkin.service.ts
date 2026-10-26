@@ -1,4 +1,4 @@
-import type { ScanResult } from '@lucko/shared'
+import { MANUAL_CODE, type ScanResult } from '@lucko/shared'
 import {
   BadRequestException,
   ConflictException,
@@ -13,7 +13,7 @@ import { loadEnv } from '../config/env'
 import { Prisma } from '../generated/prisma/client'
 import { PrismaService } from '../prisma/prisma.service'
 import { XpService } from '../xp/xp.service'
-import { businessDate, qrKey, signQrToken, verifyQrToken } from './qr.rules'
+import { businessDate, ManualCodes, qrKey, signQrToken, verifyQrToken } from './qr.rules'
 
 /**
  * QR Lucko (LKO-77, archi §10) : jeton généré et vérifié côté serveur uniquement. Un scan au comptoir
@@ -22,6 +22,7 @@ import { businessDate, qrKey, signQrToken, verifyQrToken } from './qr.rules'
 @Injectable()
 export class CheckinService {
   private readonly key = qrKey(loadEnv().BETTER_AUTH_SECRET)
+  private readonly codes = new ManualCodes()
 
   constructor(
     private readonly prisma: PrismaService,
@@ -56,11 +57,18 @@ export class CheckinService {
   }
 
   token(userId: string) {
-    return signQrToken(this.key, userId)
+    const signed = signQrToken(this.key, userId)
+    return { ...signed, code: this.codes.add(signed.token, signed.expiresAt) }
   }
 
-  async scan(venueId: string, token: string): Promise<ScanResult> {
+  /** `input` : jeton lu dans le QR, ou code à 6 chiffres saisi à la main (sans caméra). */
+  async scan(venueId: string, input: string): Promise<ScanResult> {
     const now = new Date()
+    const token = MANUAL_CODE.test(input) ? this.codes.token(input, now.getTime()) : input
+    if (!token)
+      throw new BadRequestException(
+        'Code inconnu ou expiré : demande au joueur le code affiché sous son QR Lucko',
+      )
     const check = verifyQrToken(this.key, token, now)
     if ('refused' in check) throw new BadRequestException(check.refused)
     const [venue, player] = await Promise.all([

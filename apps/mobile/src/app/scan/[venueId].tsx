@@ -1,7 +1,8 @@
-import { Banner, Button, colors, Typography } from '@lucko/design-system'
+import { Banner, Button, colors, TextField, Typography } from '@lucko/design-system'
+import { MANUAL_CODE } from '@lucko/shared'
 import { CameraView, useCameraPermissions } from 'expo-camera'
 import { useLocalSearchParams } from 'expo-router'
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { View } from 'react-native'
 import { DetailScreen } from '@/components/DetailScreen'
 import { useScanMutation } from '@/queries/useCheckin'
@@ -20,9 +21,14 @@ export default function ScanScreen() {
   const busy = scan.isPending || scan.isSuccess || scan.isError
   // La caméra signale le même QR plusieurs fois avant le rendu suivant : un seul envoi
   const locked = useRef(false)
+  const [code, setCode] = useState('')
   const next = () => {
     locked.current = false
+    setCode('')
     scan.reset()
+  }
+  const submitCode = () => {
+    if (MANUAL_CODE.test(code)) scan.mutate(code)
   }
 
   return (
@@ -34,12 +40,19 @@ export default function ScanScreen() {
       {venue ? <Typography variant="small">{venue.name}</Typography> : null}
 
       {!permission ? null : !permission.granted ? (
-        <Banner
-          tone="warn"
-          message="Autorise la caméra pour scanner le QR Lucko des joueurs."
-          action="Autoriser"
-          onAction={() => void requestPermission()}
-        />
+        permission.canAskAgain ? (
+          <Banner
+            tone="warn"
+            message="Autorise la caméra pour scanner le QR Lucko des joueurs, ou saisis leur code."
+            action="Autoriser"
+            onAction={() => void requestPermission()}
+          />
+        ) : (
+          <Banner
+            tone="warn"
+            message="Caméra refusée : saisis le code affiché sous le QR du joueur."
+          />
+        )
       ) : busy ? null : (
         <View
           style={{
@@ -63,6 +76,24 @@ export default function ScanScreen() {
               scan.mutate(data)
             }}
           />
+        </View>
+      )}
+
+      {/* Sans caméra (ordinateur du comptoir, accès refusé) : code à 6 chiffres sous le QR du joueur (LKO-160) */}
+      {busy ? null : (
+        <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 8 }}>
+          <View style={{ flex: 1 }}>
+            <TextField
+              label="Ou code du joueur"
+              placeholder="482 913"
+              value={code}
+              onChangeText={setCode}
+              keyboardType="number-pad"
+              maxLength={7}
+              onSubmitEditing={submitCode}
+            />
+          </View>
+          <Button label="Valider" disabled={!MANUAL_CODE.test(code)} onPress={submitCode} />
         </View>
       )}
 
