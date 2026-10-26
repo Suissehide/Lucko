@@ -55,7 +55,7 @@ export function Toast({
         {message}
       </Text>
       {action ? (
-        <Pressable role="button" onPress={onAction}>
+        <Pressable role="button" aria-label={action} onPress={onAction}>
           <Text
             style={{
               ...font('body', 800),

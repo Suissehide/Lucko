@@ -46,6 +46,7 @@ function Option({
     <Pressable
       role="tab"
       aria-selected={active}
+      aria-label={label}
       onPress={onPress}
       hitSlop={(sizes.touch - 32) / 2}
       {...hoverProps}

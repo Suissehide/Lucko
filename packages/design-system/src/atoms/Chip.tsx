@@ -69,6 +69,7 @@ export function Chip({
   return (
     <Pressable
       role="button"
+      aria-label={count === undefined ? label : `${label} (${count})`}
       aria-pressed={!!active}
       onPress={onPress}
       {...hoverProps}

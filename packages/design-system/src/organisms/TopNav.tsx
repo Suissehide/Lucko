@@ -135,6 +135,7 @@ function NavLink({
   return (
     <Pressable
       role="link"
+      aria-label={badge ? `${label}, ${badge} non lus` : label}
       aria-current={active ? 'page' : undefined}
       onPress={onPress}
       {...hoverProps}

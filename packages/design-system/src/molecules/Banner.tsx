@@ -36,7 +36,7 @@ export function Banner({
         {message}
       </Text>
       {action ? (
-        <Pressable role="button" onPress={onAction}>
+        <Pressable role="button" aria-label={action} onPress={onAction}>
           <Text style={{ ...font('body', 800), fontSize: 13, color: colors.event }}>{action}</Text>
         </Pressable>
       ) : null}
