@@ -31,7 +31,7 @@ import {
 } from '@lucko/design-system'
 import { formatDistance, metersBetween, VENUE_TYPE_LABELS } from '@lucko/shared'
 import { useLocalSearchParams } from 'expo-router'
-import { ArrowLeft } from 'lucide-react-native'
+import { ArrowLeft, Plus } from 'lucide-react-native'
 import { type ReactNode, useState } from 'react'
 import { Linking, Text, useWindowDimensions, View, type ViewStyle } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -119,7 +119,12 @@ export default function VenueScreen() {
       <PerkBanner text={venue.luckoPerk} compact={!wide} />
     ) : null
   const createRoom = (
-    <Button kind="rating" label="+ Créer une room ici" onPress={() => openCreateRoom(venue.slug)} />
+    <Button
+      kind="rating"
+      icon={Plus}
+      label="Créer une room ici"
+      onPress={() => openCreateRoom(venue.slug)}
+    />
   )
   const itineraryButton = <Button kind="ghost" label="Itinéraire" onPress={itinerary} />
 

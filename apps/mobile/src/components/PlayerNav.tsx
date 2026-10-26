@@ -1,5 +1,6 @@
 import { Button, playerNavItems, TopNav } from '@lucko/design-system'
 import { router } from 'expo-router'
+import { Plus } from 'lucide-react-native'
 import { openCreateRoom, openHome, openSettings, openSite, openTab } from '@/lib/navigation'
 import { visibleAvatar } from '@/lib/profile'
 import { useTabBadges } from '@/queries/useChat'
@@ -17,7 +18,13 @@ export function PlayerNav({ active, create = true }: { active: string; create?: 
       onHome={openHome}
       right={
         create ? (
-          <Button small kind="rating" label="+ Créer une room" onPress={() => openCreateRoom()} />
+          <Button
+            small
+            kind="rating"
+            icon={Plus}
+            label="Créer une room"
+            onPress={() => openCreateRoom()}
+          />
         ) : null
       }
       account={

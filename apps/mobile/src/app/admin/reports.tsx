@@ -23,6 +23,7 @@ export default function AdminReportsScreen() {
   const twoPanels = useWindowDimensions().width >= TWO_PANELS
   const reports = useAdminReportsQuery()
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
   const list = reports.data ?? []
   const selected = list.find((r) => r.id === selectedId) ?? list[0]
   const minors = list.filter((r) => r.target.minor).length
@@ -32,6 +33,7 @@ export default function AdminReportsScreen() {
       section="reports"
       note={reports.data ? reportsNote(list.length, minors) : undefined}
     >
+      {notice ? <Banner tone="ok" message={notice} /> : null}
       {reports.isError ? (
         <Banner
           tone="err"
@@ -63,7 +65,10 @@ export default function AdminReportsScreen() {
                 meta={`par ${report.reporter.pseudo ?? 'compte supprimé'}`}
                 stripe={report.target.minor ? colors.room : colors.rating}
                 selected={report.id === selected.id}
-                onPress={() => setSelectedId(report.id)}
+                onPress={() => {
+                  setNotice(null)
+                  setSelectedId(report.id)
+                }}
               />
             ))}
             <Typography variant="small">
@@ -71,7 +76,14 @@ export default function AdminReportsScreen() {
             </Typography>
           </View>
           <View style={{ flex: twoPanels ? 1 : undefined, width: twoPanels ? undefined : '100%' }}>
-            <ReportDossier key={selected.id} report={selected} onDone={() => setSelectedId(null)} />
+            <ReportDossier
+              key={selected.id}
+              report={selected}
+              onDone={(message) => {
+                setNotice(message)
+                setSelectedId(null)
+              }}
+            />
           </View>
         </View>
       )}

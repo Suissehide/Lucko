@@ -353,6 +353,14 @@ export const SUSPENSION_DURATIONS: { key: string; label: string; days: number | 
 export const suspensionDays = (key: string) =>
   SUSPENSION_DURATIONS.find((d) => d.key === key)?.days ?? null
 
+/** Message après une décision sur un signalement (LKO-163) : « noah suspendu 1 jour. ». */
+export function resolutionNotice(pseudo: string, resolution: ReportResolution, duration?: string) {
+  if (resolution === 'DISMISSED') return `Signalement sur ${pseudo} classé.`
+  if (resolution === 'WARNED') return `${pseudo} a reçu l’avertissement.`
+  const d = SUSPENSION_DURATIONS.find((x) => x.key === duration)
+  return d?.days ? `${pseudo} suspendu ${d.label}.` : `${pseudo} suspendu définitivement.`
+}
+
 // * LIEUX
 
 /** Avant de publier : adresse, horaires, photos (avertissement seulement), accueil des mineurs. */
