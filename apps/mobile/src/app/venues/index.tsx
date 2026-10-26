@@ -9,7 +9,7 @@ import {
   Typography,
   VenueRow,
 } from '@lucko/design-system'
-import { RADIUS_KM } from '@lucko/shared'
+import { PARTNER_TIE_METERS, RADIUS_KM } from '@lucko/shared'
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useWindowDimensions, View } from 'react-native'
@@ -98,7 +98,10 @@ export default function VenuesScreen() {
     </ListCard>
   )
   const note = (
-    <Typography variant="small">Classés par distance, à {radiusKm} km autour de toi.</Typography>
+    <Typography variant="small">
+      À {radiusKm} km autour de toi, classés par distance par tranches de {PARTNER_TIE_METERS} m :
+      dans une même tranche, les lieux partenaires d’abord.
+    </Typography>
   )
 
   return (
