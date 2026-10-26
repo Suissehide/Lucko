@@ -53,19 +53,19 @@ export function Landing() {
       const mm = gsap.matchMedia()
       mm.add('(prefers-reduced-motion: no-preference)', () => {
         gsap
-          .timeline({ defaults: { ease: 'power3.out', duration: 0.9 } })
-          .from('[data-hero-line]', { yPercent: 40, opacity: 0, stagger: 0.12 })
+          .timeline({ defaults: { ease: 'power3.out', duration: 0.5 } })
+          .from('[data-hero-line]', { yPercent: 20, opacity: 0, stagger: 0.06 })
           .from(
             '[data-hero-card]',
-            { y: 80, opacity: 0, stagger: 0.12, clearProps: 'transform,opacity' },
-            '-=0.6',
+            { y: 40, opacity: 0, stagger: 0.06, clearProps: 'transform,opacity' },
+            '-=0.35',
           )
 
         for (const step of gsap.utils.toArray<HTMLElement>('[data-reveal]')) {
           gsap.from(step, {
-            y: 60,
+            y: 30,
             opacity: 0,
-            duration: 0.8,
+            duration: 0.5,
             ease: 'power3.out',
             scrollTrigger: { trigger: step, start: 'top 85%' },
           })
