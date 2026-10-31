@@ -34,7 +34,7 @@ function PageViews() {
 
 function RootLayout() {
   // Noms identiques à ceux du design system (tokens `font()`)
-  const [fontsLoaded] = useFonts({
+  const [fontsLoaded, fontError] = useFonts({
     Archivo_400Regular,
     Archivo_500Medium,
     Archivo_600SemiBold,
@@ -44,7 +44,11 @@ function RootLayout() {
     SpaceMono_400Regular,
     SpaceMono_700Bold,
   })
-  if (!fontsLoaded) return null
+  // Échec du chargement : on affiche l'app avec les polices système plutôt qu'un écran blanc
+  useEffect(() => {
+    if (fontError) Sentry.captureException(fontError)
+  }, [fontError])
+  if (!fontsLoaded && !fontError) return null
 
   return (
     <PersistQueryClientProvider client={queryClient} persistOptions={persistOptions}>
