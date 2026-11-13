@@ -10,6 +10,7 @@ import {
   type AdminUserDetail,
   type AdminUserFilter,
   type AdminVenue,
+  type AdminWaitlistEntry,
   type CreateVenueInput,
   formatAgo,
   formatTime,
@@ -18,6 +19,7 @@ import {
   type ReportResolution,
   VENUE_TIME_ZONE,
   type VenueType,
+  type WaitlistPeriod,
 } from '@lucko/shared'
 import { type Href, router } from 'expo-router'
 import { shortDay } from './explore'
@@ -34,6 +36,7 @@ export type AdminSection =
   | 'visits'
   | 'venues'
   | 'games'
+  | 'waitlist'
 
 const ROUTES: Record<AdminSection, Href> = {
   dashboard: '/admin',
@@ -44,6 +47,7 @@ const ROUTES: Record<AdminSection, Href> = {
   visits: '/admin/visits',
   venues: '/admin/venues',
   games: '/admin/games',
+  waitlist: '/admin/waitlist',
 }
 
 export const openAdmin = (section: string) => router.navigate(ROUTES[section as AdminSection])
@@ -77,6 +81,7 @@ export const adminSidebarItems = (dashboard?: AdminDashboard): SidebarItem[] => 
     badge: badge(dashboard?.pendingVenues),
   },
   { key: 'games', label: 'Jeux' },
+  { key: 'waitlist', label: 'Liste d’attente', group: 'Lancement' },
 ]
 
 export const ADMIN_TITLES: Record<AdminSection, string> = {
@@ -88,6 +93,7 @@ export const ADMIN_TITLES: Record<AdminSection, string> = {
   visits: 'Venues contestées',
   venues: 'Lieux et événements',
   games: 'Jeux',
+  waitlist: 'Liste d’attente',
 }
 
 export const ADMIN_KICKERS: Record<AdminSection, string> = {
@@ -99,6 +105,7 @@ export const ADMIN_KICKERS: Record<AdminSection, string> = {
   visits: 'Modération',
   venues: 'Catalogue',
   games: 'Catalogue',
+  waitlist: 'Lancement',
 }
 
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n > 1 ? many : one}`
@@ -565,3 +572,19 @@ export const venueBody = (
   osmId: draft.osmId,
   openingHours: keepHours ? draft.openingHours : [],
 })
+
+export const WAITLIST_PERIOD_FILTERS: { key: WaitlistPeriod; label: string }[] = [
+  { key: 'all', label: 'Depuis le début' },
+  { key: '30d', label: '30 derniers jours' },
+  { key: '7d', label: '7 derniers jours' },
+]
+
+const csvCell = (value: string) =>
+  /[";\n]/.test(value) ? `"${value.replaceAll('"', '""')}"` : value
+
+/** CSV (séparateur « ; » pour Excel en français) des inscrits affichés. */
+export const waitlistCsv = (entries: AdminWaitlistEntry[]) =>
+  [
+    'email;ville;inscrit le',
+    ...entries.map((e) => [e.email, e.city ?? '', e.createdAt].map(csvCell).join(';')),
+  ].join('\n')

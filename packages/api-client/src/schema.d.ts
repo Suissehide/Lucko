@@ -1156,6 +1156,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/waitlist": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AdminWaitlistController_waitlist"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/me/chats": {
         parameters: {
             query?: never;
@@ -5483,6 +5499,43 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    AdminWaitlistController_waitlist: {
+        parameters: {
+            query?: {
+                q?: string;
+                city?: string;
+                period?: "all" | "30d" | "7d";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        entries: {
+                            id: string;
+                            email: string;
+                            city: string | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                        }[];
+                        matching: number;
+                        total: number;
+                        cities: {
+                            city: string | null;
+                            count: number;
+                        }[];
+                    };
+                };
             };
         };
     };

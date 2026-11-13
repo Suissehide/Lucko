@@ -110,6 +110,7 @@ export const ADMIN = {
   MERGE_GAMES: 'admin_merge_games',
   SAVE_GAME: 'admin_save_game',
   DELETE_GAME: 'admin_delete_game',
+  WAITLIST: 'admin_waitlist',
 } as const
 
 export const CHAT = {
