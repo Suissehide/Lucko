@@ -355,3 +355,37 @@ export const adminGameSchema = z.object({
   players: z.number().int(),
 })
 export type AdminGame = z.infer<typeof adminGameSchema>
+
+/** Liste d'attente de la landing : période d'inscription. */
+export const WAITLIST_PERIODS = ['all', '30d', '7d'] as const
+export type WaitlistPeriod = (typeof WAITLIST_PERIODS)[number]
+/** Filtre « sans ville » (la ville est facultative à l'inscription). */
+export const WAITLIST_NO_CITY = '-'
+
+/** GET /admin/waitlist : recherche par e-mail, ville (vide : toutes) et période. */
+export const adminWaitlistQuerySchema = adminSearchSchema.extend({
+  city: z.string().trim().max(80).default(''),
+  period: z.enum(WAITLIST_PERIODS).default('all'),
+})
+export type AdminWaitlistQuery = z.input<typeof adminWaitlistQuerySchema>
+
+export const adminWaitlistEntrySchema = z.object({
+  id: z.string(),
+  email: z.string(),
+  city: z.string().nullable(),
+  createdAt: isoDateTime,
+})
+export type AdminWaitlistEntry = z.input<typeof adminWaitlistEntrySchema>
+
+/**
+ * GET /admin/waitlist : inscrits du filtre (les plus récents d'abord), leur nombre, le total de la
+ * liste, et les villes (sans tenir compte des majuscules) pour la même recherche et la même période.
+ */
+export const adminWaitlistSchema = z.object({
+  entries: z.array(adminWaitlistEntrySchema),
+  matching: z.number().int(),
+  total: z.number().int(),
+  /** `city` null : inscrits sans ville. Triées par nombre d'inscrits décroissant. */
+  cities: z.array(z.object({ city: z.string().nullable(), count: z.number().int() })),
+})
+export type AdminWaitlist = z.input<typeof adminWaitlistSchema>
