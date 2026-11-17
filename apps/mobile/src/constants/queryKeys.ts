@@ -111,6 +111,8 @@ export const ADMIN = {
   SAVE_GAME: 'admin_save_game',
   DELETE_GAME: 'admin_delete_game',
   WAITLIST: 'admin_waitlist',
+  FEEDBACK: 'admin_feedback',
+  UPDATE_FEEDBACK: 'admin_update_feedback',
 } as const
 
 export const CHAT = {
@@ -159,4 +161,9 @@ export const RESULTS = {
   VENUE_DISPUTES: 'venue_result_disputes',
   ADMIN_DISPUTES: 'admin_result_disputes',
   DECIDE: 'decide_result',
+} as const
+
+/** Retours utilisateurs envoyés depuis l'app (LKO-166). */
+export const FEEDBACK = {
+  SEND: 'send_feedback',
 } as const

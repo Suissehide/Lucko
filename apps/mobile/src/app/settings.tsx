@@ -27,11 +27,11 @@ import {
 } from '@lucko/shared'
 import Constants from 'expo-constants'
 import { router } from 'expo-router'
-import { ChevronRight, ExternalLink, Mail } from 'lucide-react-native'
+import { ChevronRight, ExternalLink, Mail, MessageSquare } from 'lucide-react-native'
 import { type ReactNode, useEffect, useState } from 'react'
 import { Linking, Platform, useWindowDimensions, View } from 'react-native'
 import { PlayerScreen } from '@/components/PlayerScreen'
-import { openSite } from '@/lib/navigation'
+import { openFeedback, openSite } from '@/lib/navigation'
 import { visibleAvatar } from '@/lib/profile'
 import { registerPush } from '@/lib/push'
 import { useSectionNav } from '@/lib/sectionNav'
@@ -49,6 +49,13 @@ const LUCKO_LINKS = [
     description: 'Questions fréquentes',
     icon: ExternalLink,
     onPress: () => openSite('/help'),
+  },
+  // Retours des testeurs, lus dans le back-office (LKO-166)
+  {
+    label: 'Envoyer un retour',
+    description: 'Un bug, une idée',
+    icon: MessageSquare,
+    onPress: () => openFeedback('Réglages'),
   },
   // Contact du support exigé par Apple et Google (LKO-19)
   {

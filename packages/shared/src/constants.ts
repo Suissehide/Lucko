@@ -303,6 +303,7 @@ export const ADMIN_ACTION_KINDS = [
   'VISIT_DECIDE',
   'RESULT_DECIDE',
   'RESULT_VOID',
+  'FEEDBACK_UPDATE',
 ] as const
 export type AdminActionKind = (typeof ADMIN_ACTION_KINDS)[number]
 
@@ -327,6 +328,7 @@ export const ADMIN_ACTION_LABELS: Record<AdminActionKind, string> = {
   VISIT_DECIDE: 'Venue contestée tranchée',
   RESULT_DECIDE: 'Résultat contesté tranché',
   RESULT_VOID: 'Résultat annulé',
+  FEEDBACK_UPDATE: 'Retour traité',
 }
 
 /** Suspension : 1 jour à 1 an, ou définitive. */
@@ -334,3 +336,33 @@ export const SUSPENSION_MAX_DAYS = 365
 
 /** Événement récurrent créé depuis le back-office : 26 semaines de plus au maximum. */
 export const EVENT_REPEAT_MAX_WEEKS = 26
+
+// ---------- Retours utilisateurs (LKO-166) ----------
+
+/** Nature d'un retour envoyé depuis l'app (identique à l'enum Prisma FeedbackCategory). */
+export const FEEDBACK_CATEGORIES = ['BUG', 'IDEA', 'OTHER'] as const
+export type FeedbackCategory = (typeof FEEDBACK_CATEGORIES)[number]
+
+export const FEEDBACK_CATEGORY_LABELS: Record<FeedbackCategory, string> = {
+  BUG: 'Un bug',
+  IDEA: 'Une idée',
+  OTHER: 'Autre chose',
+}
+
+/** Suivi d'un retour par l'équipe (identique à l'enum Prisma FeedbackStatus). */
+export const FEEDBACK_STATUSES = ['NEW', 'IN_PROGRESS', 'DONE', 'ARCHIVED'] as const
+export type FeedbackStatus = (typeof FEEDBACK_STATUSES)[number]
+
+export const FEEDBACK_STATUS_LABELS: Record<FeedbackStatus, string> = {
+  NEW: 'Nouveau',
+  IN_PROGRESS: 'En cours',
+  DONE: 'Traité',
+  ARCHIVED: 'Archivé',
+}
+
+/** Plateforme d'où vient le retour (identique à l'enum Prisma FeedbackPlatform). */
+export const FEEDBACK_PLATFORMS = ['IOS', 'ANDROID', 'WEB'] as const
+export type FeedbackPlatform = (typeof FEEDBACK_PLATFORMS)[number]
+
+/** Limite d'envoi par joueur : 5 retours par tranche de 10 minutes. */
+export const FEEDBACK_RATE_LIMIT = { max: 5, windowMinutes: 10 } as const

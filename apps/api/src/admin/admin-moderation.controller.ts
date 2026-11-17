@@ -132,6 +132,7 @@ export class AdminModerationController {
       suspendedPlayers,
       disputedResults,
       disputedVisits,
+      newFeedback,
     ] = await Promise.all([
       this.prisma.report.findMany({
         where: { resolvedAt: null },
@@ -152,6 +153,7 @@ export class AdminModerationController {
       this.prisma.user.count({ where: suspendedNow(now) }),
       this.prisma.matchResult.count({ where: { status: 'DISPUTED' } }),
       this.prisma.visit.count({ where: { status: 'DISPUTED' } }),
+      this.prisma.feedback.count({ where: { status: 'NEW' } }),
     ])
     return {
       openReports: open.length,
@@ -161,6 +163,7 @@ export class AdminModerationController {
       suspendedPlayers,
       disputedResults,
       disputedVisits,
+      newFeedback,
       oldestReportAt: open[0]?.createdAt ?? null,
       oldestAvatarAt: oldestAvatar?.updatedAt ?? null,
       pendingVenueNames: pendingVenues.slice(0, 3).map((v) => v.name),

@@ -22,6 +22,7 @@ import { useWindowDimensions, View } from 'react-native'
 import { MeLoading } from '@/components/MeLoading'
 import { PlayerScreen } from '@/components/PlayerScreen'
 import {
+  openFeedback,
   openManageVenue,
   openQr,
   openScan,
@@ -179,6 +180,14 @@ export default function ProfileScreen() {
       onPress: () => openVenueAttendance(venue.id),
     },
   ])
+  // Retour sur l'espace lieu (LKO-166), une fois pour tous ses lieux
+  if (venueRows.length)
+    venueRows.push({
+      key: 'feedback',
+      title: 'Un souci, une idée ?',
+      subtitle: 'Envoyer un retour à l’équipe Lucko',
+      onPress: () => openFeedback('Profil · espace lieu'),
+    })
   const myVenues = venueRows.length ? (
     <Section title={me.venues.length > 1 ? 'Mes lieux' : 'Mon lieu'}>
       <ListCard>

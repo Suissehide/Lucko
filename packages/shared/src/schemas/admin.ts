@@ -78,6 +78,8 @@ export const adminDashboardSchema = z.object({
   disputedResults: z.number().int(),
   /** Venues facturables contestées par les lieux (LKO-146). */
   disputedVisits: z.number().int(),
+  /** Retours utilisateurs pas encore lus (LKO-166). */
+  newFeedback: z.number().int(),
   oldestReportAt: isoDateTime.nullable(),
   oldestAvatarAt: isoDateTime.nullable(),
   /** Les 3 premiers lieux en attente. */

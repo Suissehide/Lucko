@@ -9,6 +9,7 @@ import { CheckinModule } from './checkin/checkin.module'
 import { ConsentModule } from './consent/consent.module'
 import { EventsModule } from './events/events.module'
 import { ExploreModule } from './explore/explore.module'
+import { FeedbackModule } from './feedback/feedback.module'
 import { GamesModule } from './games/games.module'
 import { HealthModule } from './health/health.module'
 import { JobsModule } from './jobs/jobs.module'
@@ -44,6 +45,7 @@ import { WaitlistModule } from './waitlist/waitlist.module'
     EventsModule,
     WaitlistModule,
     ModerationModule,
+    FeedbackModule,
     RoomsModule,
     AdminModule,
     ChatModule,
