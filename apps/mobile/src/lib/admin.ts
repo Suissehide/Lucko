@@ -1,10 +1,11 @@
-import { colors, type SidebarItem } from '@lucko/design-system'
+import { colors, type SidebarItem, type StatusTone } from '@lucko/design-system'
 import {
   type AdminActionItem,
   type AdminActionKind,
   type AdminDashboard,
   type AdminEvent,
   type AdminEventInput,
+  type AdminFeedback,
   type AdminGame,
   type AdminUser,
   type AdminUserDetail,
@@ -12,6 +13,9 @@ import {
   type AdminVenue,
   type AdminWaitlistEntry,
   type CreateVenueInput,
+  type FeedbackCategory,
+  type FeedbackPlatform,
+  type FeedbackStatus,
   formatAgo,
   formatTime,
   localDateTime,
@@ -37,6 +41,7 @@ export type AdminSection =
   | 'venues'
   | 'games'
   | 'waitlist'
+  | 'feedback'
 
 const ROUTES: Record<AdminSection, Href> = {
   dashboard: '/admin',
@@ -48,6 +53,7 @@ const ROUTES: Record<AdminSection, Href> = {
   venues: '/admin/venues',
   games: '/admin/games',
   waitlist: '/admin/waitlist',
+  feedback: '/admin/feedback',
 }
 
 export const openAdmin = (section: string) => router.navigate(ROUTES[section as AdminSection])
@@ -82,6 +88,7 @@ export const adminSidebarItems = (dashboard?: AdminDashboard): SidebarItem[] => 
   },
   { key: 'games', label: 'Jeux' },
   { key: 'waitlist', label: 'Liste d’attente', group: 'Lancement' },
+  { key: 'feedback', label: 'Retours', badge: badge(dashboard?.newFeedback) },
 ]
 
 export const ADMIN_TITLES: Record<AdminSection, string> = {
@@ -94,6 +101,7 @@ export const ADMIN_TITLES: Record<AdminSection, string> = {
   venues: 'Lieux et événements',
   games: 'Jeux',
   waitlist: 'Liste d’attente',
+  feedback: 'Retours utilisateurs',
 }
 
 export const ADMIN_KICKERS: Record<AdminSection, string> = {
@@ -106,6 +114,7 @@ export const ADMIN_KICKERS: Record<AdminSection, string> = {
   venues: 'Catalogue',
   games: 'Catalogue',
   waitlist: 'Lancement',
+  feedback: 'Lancement',
 }
 
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n > 1 ? many : one}`
@@ -191,6 +200,13 @@ export function queueCards(d: AdminDashboard) {
       color: colors.venue,
       note: d.disputedVisits ? 'Contestées par les lieux, à trancher' : 'File vide',
     },
+    {
+      key: 'feedback',
+      value: d.newFeedback,
+      label: 'Nouveaux retours',
+      color: colors.event,
+      note: d.newFeedback ? 'Bugs et idées envoyés depuis l’app' : 'Rien de nouveau',
+    },
   ] as const
 }
 
@@ -227,6 +243,7 @@ const ACTION_GROUP: Record<AdminActionKind, Exclude<JournalFilter, 'all'>> = {
   VISIT_DECIDE: 'moderation',
   RESULT_DECIDE: 'moderation',
   RESULT_VOID: 'moderation',
+  FEEDBACK_UPDATE: 'moderation',
 }
 
 export const inJournal = (filter: JournalFilter) => (a: AdminActionItem) =>
@@ -254,6 +271,7 @@ export const ACTION_COLOR: Record<AdminActionKind, string> = {
   VISIT_DECIDE: colors.rating,
   RESULT_DECIDE: colors.rating,
   RESULT_VOID: colors.room,
+  FEEDBACK_UPDATE: colors.venue,
 }
 
 export function openTarget(target: NonNullable<AdminActionItem['target']>) {
@@ -588,3 +606,33 @@ export const waitlistCsv = (entries: AdminWaitlistEntry[]) =>
     'email;ville;inscrit le',
     ...entries.map((e) => [e.email, e.city ?? '', e.createdAt].map(csvCell).join(';')),
   ].join('\n')
+
+// * RETOURS UTILISATEURS (LKO-166)
+
+export const FEEDBACK_STATUS_TONE: Record<FeedbackStatus, StatusTone> = {
+  NEW: 'warn',
+  IN_PROGRESS: 'info',
+  DONE: 'ok',
+  ARCHIVED: 'neutral',
+}
+
+export const FEEDBACK_CATEGORY_SHORT: Record<FeedbackCategory, string> = {
+  BUG: 'Bug',
+  IDEA: 'Idée',
+  OTHER: 'Autre',
+}
+
+export const FEEDBACK_PLATFORM_LABELS: Record<FeedbackPlatform, string> = {
+  IOS: 'iOS',
+  ANDROID: 'Android',
+  WEB: 'Web',
+}
+
+/** « Réglages · iOS · v1.0.0 » : d'où vient le retour. */
+export const feedbackContext = (f: AdminFeedback) =>
+  [f.screen, FEEDBACK_PLATFORM_LABELS[f.platform], f.appVersion && `v${f.appVersion}`]
+    .filter(Boolean)
+    .join(' · ')
+
+export const feedbackAuthor = (f: AdminFeedback) =>
+  f.author.deleted ? 'Compte supprimé' : (f.author.pseudo ?? f.author.email ?? 'Sans pseudo')

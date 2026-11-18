@@ -90,3 +90,7 @@ export function openTab(tab: string) {
   const route = TAB_ROUTES[tab as keyof typeof TAB_ROUTES]
   if (route) router.navigate(route)
 }
+
+/** Envoyer un retour à l'équipe (LKO-166) ; `from` : écran d'origine, joint au retour pour le contexte. */
+export const openFeedback = (from: string) =>
+  router.push({ pathname: '/feedback', params: { from } })

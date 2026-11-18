@@ -484,6 +484,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/feedback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["FeedbackController_send"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/rooms/{id}": {
         parameters: {
             query?: never;
@@ -1170,6 +1186,38 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/admin/feedback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AdminFeedbackController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/feedback/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["AdminFeedbackController_update"];
         trace?: never;
     };
     "/me/chats": {
@@ -3142,6 +3190,37 @@ export interface operations {
             };
         };
     };
+    FeedbackController_send: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    category: "BUG" | "IDEA" | "OTHER";
+                    message: string;
+                    /** @default  */
+                    screen?: string;
+                    /** @default  */
+                    appVersion?: string;
+                    /** @enum {string} */
+                    platform: "IOS" | "ANDROID" | "WEB";
+                };
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     RoomsController_detail: {
         parameters: {
             query?: never;
@@ -4472,6 +4551,7 @@ export interface operations {
                         suspendedPlayers: number;
                         disputedResults: number;
                         disputedVisits: number;
+                        newFeedback: number;
                         /** Format: date-time */
                         oldestReportAt: string | null;
                         /** Format: date-time */
@@ -4664,7 +4744,7 @@ export interface operations {
                         actions: {
                             id: string;
                             /** @enum {string} */
-                            action: "REPORT_DISMISS" | "REPORT_WARN" | "REPORT_SUSPEND" | "USER_SUSPEND" | "USER_UNSUSPEND" | "AVATAR_APPROVE" | "AVATAR_REJECT" | "VENUE_CREATE" | "VENUE_UPDATE" | "EVENT_CREATE" | "EVENT_UPDATE" | "EVENT_CANCEL" | "EVENT_HIDE" | "GAME_MERGE" | "GAME_CREATE" | "GAME_UPDATE" | "GAME_DELETE" | "VISIT_DECIDE" | "RESULT_DECIDE" | "RESULT_VOID";
+                            action: "REPORT_DISMISS" | "REPORT_WARN" | "REPORT_SUSPEND" | "USER_SUSPEND" | "USER_UNSUSPEND" | "AVATAR_APPROVE" | "AVATAR_REJECT" | "VENUE_CREATE" | "VENUE_UPDATE" | "EVENT_CREATE" | "EVENT_UPDATE" | "EVENT_CANCEL" | "EVENT_HIDE" | "GAME_MERGE" | "GAME_CREATE" | "GAME_UPDATE" | "GAME_DELETE" | "VISIT_DECIDE" | "RESULT_DECIDE" | "RESULT_VOID" | "FEEDBACK_UPDATE";
                             targetId: string;
                             target: {
                                 /** @enum {string} */
@@ -4822,7 +4902,7 @@ export interface operations {
                     "application/json": {
                         id: string;
                         /** @enum {string} */
-                        action: "REPORT_DISMISS" | "REPORT_WARN" | "REPORT_SUSPEND" | "USER_SUSPEND" | "USER_UNSUSPEND" | "AVATAR_APPROVE" | "AVATAR_REJECT" | "VENUE_CREATE" | "VENUE_UPDATE" | "EVENT_CREATE" | "EVENT_UPDATE" | "EVENT_CANCEL" | "EVENT_HIDE" | "GAME_MERGE" | "GAME_CREATE" | "GAME_UPDATE" | "GAME_DELETE" | "VISIT_DECIDE" | "RESULT_DECIDE" | "RESULT_VOID";
+                        action: "REPORT_DISMISS" | "REPORT_WARN" | "REPORT_SUSPEND" | "USER_SUSPEND" | "USER_UNSUSPEND" | "AVATAR_APPROVE" | "AVATAR_REJECT" | "VENUE_CREATE" | "VENUE_UPDATE" | "EVENT_CREATE" | "EVENT_UPDATE" | "EVENT_CANCEL" | "EVENT_HIDE" | "GAME_MERGE" | "GAME_CREATE" | "GAME_UPDATE" | "GAME_DELETE" | "VISIT_DECIDE" | "RESULT_DECIDE" | "RESULT_VOID" | "FEEDBACK_UPDATE";
                         targetId: string;
                         target: {
                             /** @enum {string} */
@@ -5534,6 +5614,108 @@ export interface operations {
                             city: string | null;
                             count: number;
                         }[];
+                    };
+                };
+            };
+        };
+    };
+    AdminFeedbackController_list: {
+        parameters: {
+            query?: {
+                q?: string;
+                status?: "NEW" | "IN_PROGRESS" | "DONE" | "ARCHIVED";
+                category?: "BUG" | "IDEA" | "OTHER";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: {
+                            id: string;
+                            /** @enum {string} */
+                            category: "BUG" | "IDEA" | "OTHER";
+                            message: string;
+                            screen: string;
+                            appVersion: string;
+                            /** @enum {string} */
+                            platform: "IOS" | "ANDROID" | "WEB";
+                            /** @enum {string} */
+                            status: "NEW" | "IN_PROGRESS" | "DONE" | "ARCHIVED";
+                            adminNote: string;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                            author: {
+                                id: string;
+                                pseudo: string | null;
+                                email: string | null;
+                                deleted: boolean;
+                            };
+                        }[];
+                        matching: number;
+                        counts: {
+                            [key: string]: number;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    AdminFeedbackController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    status?: "NEW" | "IN_PROGRESS" | "DONE" | "ARCHIVED";
+                    adminNote?: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        id: string;
+                        /** @enum {string} */
+                        category: "BUG" | "IDEA" | "OTHER";
+                        message: string;
+                        screen: string;
+                        appVersion: string;
+                        /** @enum {string} */
+                        platform: "IOS" | "ANDROID" | "WEB";
+                        /** @enum {string} */
+                        status: "NEW" | "IN_PROGRESS" | "DONE" | "ARCHIVED";
+                        adminNote: string;
+                        /** Format: date-time */
+                        createdAt: string;
+                        /** Format: date-time */
+                        updatedAt: string;
+                        author: {
+                            id: string;
+                            pseudo: string | null;
+                            email: string | null;
+                            deleted: boolean;
+                        };
                     };
                 };
             };

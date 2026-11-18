@@ -89,6 +89,7 @@ model User {
   resultVotes        ResultConfirmation[]
   consentRequests    ParentalConsent[]    @relation("ConsentChild")
   consentsGiven      ParentalConsent[]    @relation("ConsentParent")
+  feedback           Feedback[]
 }
 
 enum NotificationTopic {
@@ -911,6 +912,7 @@ enum AdminActionKind {
   VISIT_DECIDE
   RESULT_DECIDE
   RESULT_VOID
+  FEEDBACK_UPDATE
 }
 
 /// Journal d'audit : chaque action d'un admin (qui, quoi, quand, cible, motif). Jamais modifié ni supprimé.
@@ -969,4 +971,47 @@ model WaitlistEntry {
   email     String   @unique
   city      String?
   createdAt DateTime @default(now())
+}
+
+// ---------- Retours utilisateurs (LKO-166) ----------
+
+enum FeedbackCategory {
+  BUG
+  IDEA
+  OTHER
+}
+
+enum FeedbackStatus {
+  NEW
+  IN_PROGRESS
+  DONE
+  ARCHIVED
+}
+
+enum FeedbackPlatform {
+  IOS
+  ANDROID
+  WEB
+}
+
+/// Retour envoyé depuis l'app (bug, idée), lu et suivi par l'équipe dans le back-office.
+/// Gardé à la suppression du compte : l'auteur est alors anonymisé comme le reste.
+model Feedback {
+  id         String           @id @default(cuid())
+  userId     String
+  user       User             @relation(fields: [userId], references: [id])
+  category   FeedbackCategory
+  message    String
+  /// Écran d'où le retour a été envoyé (route de l'app)
+  screen     String           @default("")
+  appVersion String           @default("")
+  platform   FeedbackPlatform
+  status     FeedbackStatus   @default(NEW)
+  /// Note interne de l'équipe, jamais montrée à l'auteur
+  adminNote  String           @default("")
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  @@index([status, createdAt])
+  @@index([userId, createdAt])
 }

@@ -109,6 +109,13 @@ export default function PrivacyPage() {
         légitime (sécurité des joueurs).
       </p>
 
+      <h3>Tes retours</h3>
+      <p>
+        Les retours que tu envoies depuis l’app (bug, idée), avec l’écran d’où tu écris, la version
+        de l’app et ton type d’appareil : pour corriger les problèmes et améliorer Lucko. Seule
+        l’équipe Lucko les lit. Base légale : intérêt légitime (amélioration du service).
+      </p>
+
       <h3>La liste d’attente du site</h3>
       <p>
         E-mail et ville (facultative) : uniquement pour te prévenir du lancement de Lucko près de
@@ -152,6 +159,10 @@ export default function PrivacyPage() {
         </li>
         <li>
           Identifiant de notification : jusqu’à ta déconnexion ou la désinstallation de l’app.
+        </li>
+        <li>
+          Retours envoyés depuis l’app : conservés pour le suivi des corrections, détachés de ton
+          identité à la suppression de ton compte, <ToFill>Durée maximale</ToFill>.
         </li>
         <li>Liste d’attente : jusqu’au lancement dans ta ville, au plus tard 3 ans.</li>
       </ul>

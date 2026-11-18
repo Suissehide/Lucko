@@ -142,7 +142,7 @@ export function gameUsage(usage: GameUsage) {
  */
 export const ACTION_TARGET: Record<
   AdminActionKind,
-  'report' | 'user' | 'venue' | 'event' | 'merge' | 'game' | 'visit' | 'room'
+  'report' | 'user' | 'venue' | 'event' | 'merge' | 'game' | 'visit' | 'room' | 'feedback'
 > = {
   REPORT_DISMISS: 'report',
   REPORT_WARN: 'report',
@@ -164,4 +164,5 @@ export const ACTION_TARGET: Record<
   VISIT_DECIDE: 'visit',
   RESULT_DECIDE: 'room',
   RESULT_VOID: 'room',
+  FEEDBACK_UPDATE: 'feedback',
 }
