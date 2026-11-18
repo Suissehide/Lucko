@@ -108,6 +108,10 @@ services:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB_NAME}
+    # Accès DataGrip via tunnel SSH uniquement : lié à 127.0.0.1, jamais exposé sur Internet.
+    # Un port différent par environnement s'ils partagent le serveur (ex. staging 5434, prod 5433).
+    ports:
+      - "127.0.0.1:${POSTGRES_HOST_PORT:-5433}:5432"
     volumes:
       - postgres:/var/lib/postgresql/data
     healthcheck:
